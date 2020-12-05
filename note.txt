@@ -1,0 +1,35 @@
+안녕, ~
+
+
+
+1. 우리가 만나는 NLP
+	1.1. 일상 속의 NLP 프로젝트
+		1.1.1. 이미지 캡셔닝
+		1.1.2. 번역 시스템
+		...
+		1.1.N.
+
+	1.2. 나도 한번 만들어보기
+		1.2.1. 이미지 캡셔닝
+		1.2.2. 번역 시스템
+		...
+		1.2.N.
+		
+	1.3. 회고해보기
+		1.3.1. 성능 비교
+		1.3.1. 어려웠던 점들
+		
+	1.4. 해결해보기
+	
+	
+2. 언어 모델 들어가기
+	2.1. 언어모델이란 무엇인가?
+	2.2. N-Gram 언어모델
+		2.2.1. N-Gram 언어모델 이해하기
+		2.2.2. N-Gram 언어모델 만들어보기
+		2.2.3. N-Gram 언어모델 활용하기
+		2.2.3. Interpolation과 Backoff
+		
+		
+		
+# http://intelligence.korea.ac.kr/members/wschoi//nlp/deeplearning/paperreview/Paper-Review-A-Neural-Probabilistic-Language-Model/
