@@ -26,10 +26,60 @@
 	2.1. 언어모델이란 무엇인가?
 	2.2. N-Gram 언어모델
 		2.2.1. N-Gram 언어모델 이해하기
-		2.2.2. N-Gram 언어모델 만들어보기
-		2.2.3. N-Gram 언어모델 활용하기
+		2.2.2. 만들어보기
+		2.2.3. 활용하기
 		2.2.3. Interpolation과 Backoff
 		
+	2.3. 확률 기반의 언어모델
+		2.3.1. 확률 기반의 언어 모델 이해하기
+		2.3.2. 만들어보기
+		2.3.3. 활용하기
+
+	2.4. Word2Vec
+		2.4.1. Word2Vec 언어 모델 이해하기
+		2.4.2. 만들어보기
+		2.4.3. 활용하기
+
+3. 언어 모델 발전시키기
+	3.1. LSTM 기반의 언어모델
+		3.1.1. Why LSTM?
+		3.1.2. LSTM 언어 모델 이해하기
+		3.1.3. 만들어보기
+		3.1.4. 활용하기
 		
+	3.2. 언어 모델 비교하기
+		3.2.1. 성능 비교
+		3.2.2. 어려웠던 점들
 		
-# http://intelligence.korea.ac.kr/members/wschoi//nlp/deeplearning/paperreview/Paper-Review-A-Neural-Probabilistic-Language-Model/
+4. Transformer 탄생
+	4.1. Attention의 출현
+		4.1.1. Why Attention?
+		4.1.2. Attention 이해하기
+		4.1.3. 만들어보기
+		4.1.4. 활용하기
+		
+	4.2. Attention is all you need
+		4.2.1. What's new in Transformer
+		4.2.2. 구조 알아보기
+	
+	
+	
+	
+# Reference
+- http://intelligence.korea.ac.kr/members/wschoi//nlp/deeplearning/paperreview/Paper-Review-A-Neural-Probabilistic-Language-Model/: 확률 기반의 언어모델에 대한 리뷰
+- https://wikidocs.net/46496: 딥 러닝을 이용한 자연어 처리 입문
+- https://towardsdatascience.com/evolution-of-language-models-n-grams-word-embeddings-attention-transformers-a688151825d2: LM history
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
