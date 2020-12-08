@@ -95,7 +95,7 @@
 - http://intelligence.korea.ac.kr/members/wschoi//nlp/deeplearning/paperreview/Paper-Review-A-Neural-Probabilistic-Language-Model/: 확률 기반의 언어모델에 대한 리뷰
 - https://wikidocs.net/46496: 딥 러닝을 이용한 자연어 처리 입문
 - https://towardsdatascience.com/evolution-of-language-models-n-grams-word-embeddings-attention-transformers-a688151825d2: LM history
-- 
+- https://huffon.github.io/2019/11/16/glue/: glue dataset 설명
 
 
 
