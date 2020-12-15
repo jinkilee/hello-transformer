@@ -132,7 +132,9 @@ transformers==4.1.0.dev0
 
 
 
-
+# Note
+- BPE 추가하기
+- SQuAD 추가하기
 
 
 
