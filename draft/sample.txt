@@ -388,4 +388,100 @@ class AttnDecoderRNN(nn.Module):
 
 `attn_weights`은 softmax를 취한 값이기 때문에 총 합이 1이고 길이는 `MAX_LENGTH`이다. 이 값을 인코더의 `encoder_outputs`에 곱해주면 인코더 `inputs` [3 4 5]에 가중치를 부여하는 셈이고 그것이 `attn_applied`이다. `attn_applied`와 `embedded`를 이어붙여보자. 이 두 값을 이어 붙인다는 것은 인코더의 입력 값과 디코더의 입력 값을 이어 붙인 셈이다. 이 값을 `attn_combine`을 이용해 행렬 곱을 해서 relu 연산을 한 다음에 GRU 셀에 입력으로 넣는다. 핵심은 인코더와 디코더의 입력 값을 합쳐서 GRU에 넣는다는 것이고 인코더의 입력은 어텐션 가중치가 적용된 값이다.
 
+모델링하는 부분을 요약해보자.
 
+우선 인코더를 만든다. 인코더의 입력인 `inputs`은 (batch_size,max_length) 형태의 벡터이다. 인코더의 출력은 `outputs`과 `hidden`인데, `outputs`은 (batch_size,max_length,hidden_size)이며 `hidden`은 (batch_size,1,hidden_size)이다.
+[그림12: 인코더 요약]
+
+그 다음에 디코더를 만드는데 디코더는 인코더처럼 하나의 시퀀스를 통채로 처리하지 않고 하나 하나(auto-regressive) 시퀀스 길이만큼 반복하여 처리한다. 디코더가 입력으로 받아들이는 `inputs`은 (batch_size, 1)과 앞서 계산했던 인코더의 출력인 `outputs`와 `hidden`이다. 이 과정을 디코더의 시퀀스 길이만큼 반복하게 된다.
+[그림13: 디코더 요약]
+
+인코더와 디코더의 입력과 출력을 하나로 정리하면 [그림14]와 같다.
+[그림14: 인코더/디코더 요약]
+
+##팁: 모델링을 하기 전에 전체적인 입력과 출력의 형태를 정리한 후에 코딩을 하면 훨씬 간단하고 정리된 코드를 작성할 수 있다.
+
+### 모델링 학습하기
+`trainIters`함수를 이용해서 Seq2Seq 모델을 학습할 수 있다. `trainIters`내에는 `train`함수를 사용하고 있고 SGD 옵티마이져와 NLLLoss를 이용한다.
+```
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH, with_attention=True):
+    batch_size = input_tensor.size(0)
+    encoder_hidden = encoder.initHidden(batch_size)
+
+    encoder_optimizer.zero_grad()
+    decoder_optimizer.zero_grad()
+
+    input_length = input_tensor.size(1)
+    target_length = target_tensor.size(1)
+    
+    encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
+    loss = 0
+
+    encoder_outputs, encoder_hidden = encoder(input_tensor, encoder_hidden)
+    
+    decoder_input = torch.tensor([bos]*batch_size, device=device)
+    decoder_input = decoder_input.unsqueeze(-1)    # (B,1)
+
+    decoder_hidden = encoder_hidden
+
+    use_teacher_forcing = True if np.random.random() < teacher_forcing_ratio else False
+    
+    for di in range(target_length):
+        decoder_output, decoder_hidden, decoder_attention = decoder(
+            decoder_input,    # (B,1)
+            decoder_hidden,   # (1,B,H)
+            encoder_outputs   # (B,M,H)
+        )
+        decoder_output = decoder_output.squeeze(1)
+        
+        loss += criterion(decoder_output, target_tensor[:,di])
+        
+        if use_teacher_forcing:
+            decoder_input = target_tensor[:,di].unsqueeze(-1)    # (B,1)
+        else:
+            topv, topi = decoder_output.topk(1)
+            decoder_input = topi    # (B,1)
+
+    loss.backward()
+
+    encoder_optimizer.step()
+    decoder_optimizer.step()
+
+    return loss.item() / target_length
+	
+	
+def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, learning_rate=0.01, with_attention=True):
+    start = time.time()
+    plot_losses = []
+    print_loss_total = 0  # print_every 마다 초기화
+    plot_loss_total = 0  # plot_every 마다 초기화
+
+    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
+    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
+    criterion = nn.NLLLoss()
+
+    for iter, batch in enumerate(train_dataloader):
+        input_tensor, target_tensor, length_tensor = batch
+        input_tensor = input_tensor.to(device)
+        target_tensor = target_tensor.to(device)
+        length_tensor = length_tensor.to(device)
+        
+        loss = train(input_tensor, target_tensor, encoder,
+                     decoder, encoder_optimizer, decoder_optimizer, criterion, with_attention=with_attention)
+        print_loss_total += loss
+        plot_loss_total += loss
+
+        if (iter+1) % print_every == 0:
+            print_loss_avg = print_loss_total / print_every
+            print_loss_total = 0
+            print('%s (%d %d%%) %.4f' % (timeSince(start, (iter+1) / n_iters),
+                                         (iter+1), (iter+1) / n_iters * 100, print_loss_avg))
+
+        if (iter+1) % plot_every == 0:
+            plot_loss_avg = plot_loss_total / plot_every
+            plot_losses.append(plot_loss_avg)
+            plot_loss_total = 0
+
+    showPlot(plot_losses)
+```
+위의 코드를 자세하게 설명하지는 않을 것이다. 레포지토리에 있는 코드와 주피터 노트북을 통해서 스스로 학습해보도록 하자.
