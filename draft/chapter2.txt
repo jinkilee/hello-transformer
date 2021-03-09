@@ -177,6 +177,7 @@ then i'm sure she sells sea-shore shells.
 
 위의 예시를 n=2로 설정해서 preprocess() 함수를 사용하면 [코드6]과 같은 결과를 얻을 수 있다.
 <코드 시작>
+코드6
 >>> import nltk
 >>> from language_model import preprocess
 >>> text = '''she sells sea-shells by the sea-shore. the shells she sells are sea-shells, I'm sure. for if she sells sea-shells by the sea-shore then i'm sure she sells sea-shore shells.'''
