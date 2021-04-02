@@ -21,11 +21,15 @@ RNN 구조의 언어 모델부터는 문맥을 이해할 수 있는 능력을 �
 [RNN의 Auto-Regressive한 특징]
 
 5평짜리 방에서 사는 것을 상상해보자. 혼자 산다고 가정하면 그래도 어느 정도 괜찮을 것이다. 그런데 친구 5명이서 그 방에서 산다면 어떨까? 잠을 잘 때도 서로 엉겨붙어서 자야 할 것이다. RNN은 입력 문장의 총 길이에 상관없이 그 입력을 고정된 길이의 벡터로 인코딩한다. 입력문장이 길어지면 길어질수록 많은 정보를 벡터에 넣어야 하기 때문에 인코딩이 힘들어질 수 밖에 없다. 실제로 [그림1]과 같이 문장의 길이가 길어질수록 LSTM의 성능이 떨어진다는 연구결과가 있다.
+<그림 시작>
 [그림1:https://arxiv.org/pdf/1409.1259.pdf Figure4]
+<그림 끝>
 
 조금 더 구체적인 예를 들어보자. RNN으로 번역 시스템을(NMT) 만든다고 가정해보자. NMT는 기본적으로 입력 문장을(Sequence) 번역문(Sequence)으로 바꿔주는 Sequence-To-Sequence(Seq2Seq) 구조를 갖게 된다. 입력 문장의 각 단어를 하나하나 RNN으로 인코딩해서 나온 마지막 결과를 활용하여(h3) 번역문의 각 단어를 하나 하나 만드는 것이다.
+<그림 시작>
 [그림2:Seq2Seq 직관적: http://www.wildml.com/2016/01/attention-and-memory-in-deep-learning-and-nlp/]
 (encoder/decoder)
+<그림 끝>
 
 [그림2]의 Seq2Seq 구조의 모델이 훌륭한 번역기로 학습되려면 h3가 입력문장의 모든 단어를 표현하고 있어야 한다. 짧은 문장에서는 가능할지 모르겠지만 문장이 길수록 힘들어질 것이란 것을 직관적으로 이해할 수 있다.
 
@@ -36,7 +40,9 @@ ENG: My name is Dooli.
 KOR: 내 이름은 둘리__.
 
 빈 칸에 들어갈 정답은 "입니다", "이다" 등이 적절하다. 저 빈 칸을 채우기 위해서 "My name" "Dooli" 등에 집중할 이유가 있을까? 물론 부분적으로 있지만, 가장 집중해야 되는 부분은 "is"이다. RNN에서 집중을 해야하는 특정 부분에만 집중하도록 weight을 주는 것이 바로 어텐션 메커니즘이다. [그림2]에 어텐션 네트워크를 추가하면 [그림3]과 같은 구조가 된다.
+<그림 시작>
 [그림3: Seq2Seq with Attention]
+<그림 끝>
 
 디코더에서 번역 단어를 하나 하나 출력할 때마다 어텐션 가중치를 추가해주는데, 이 어텐션 가중치는 인코더의 output 정보를 통해서 계산된다. [그림2]와 [그림3]을 비교해보자. [그림2]에서 디코더를 연산할 때 인코더의 히든스테이트 값만 들어간다. 하지만 [그림3]에서는 디코더에 인코더의 히든스테이트 값에 인코더의 아웃풋 값이 추가된다. 인코더의 아웃풋은 T개의 값으로 이루어져 있는데, 그 T개의 아웃풋이 가중치로 계산되어 디코더의 입력으로 사용된다. 어텐션 네트워크에 대한 자세한 구조는 다음 절에서 자세하게 설명할 예정이다.
 
@@ -46,23 +52,32 @@ KOR: 내 이름은 둘리__.
 이번 절에서는 어텐션에 대한 구체적인 이야기를 해보려고 한다. 어텐션을 공부할 때 이해해야 하는 쿼리, 키, 벨류(Query, Key, Value)가 무엇인지 그리고 그것을 이용해서 어떻게 어탠션을 구현할 수 있는지 알아보자.
 
 3.3.1. 묻고 참고하고 답하기
-'''
+<박스 시작>
 영어 울렁증이 심한 윤우아빠가 길을 걸어가고 있는데, 갑자기 파란 눈의 외국인이 말을 걸었다.
 
 외국인: I want to go to the N-Tower. Where can I take a bus?
 윤우아빠: 음.... 엔타워 버스 스테이션... 인프론트오브 맬도날드... 쓰리투제로 버스...
-'''
+<박스 끝>
+
 영어 울렁증이 심한 윤우아빠에게 언제라도 있을 수 있는 일이다. 외국인이 유창한 영어로 물어봐도 윤우아빠 귀에는 몇 단어 들리지 않았을 것이다.
+<그림 시작>
 [그림4: n-tower, go, bus, where 쿼리]
+<그림 끝>
 
 윤우아빠는 이 몇 단어를 조합해서 머리 속에 있는 몇 개 없는 영어 단어와 매칭해서 외국인이 뭘 원하는지 이해하려고 쩔쩔매고 있었을 것이다.
+<그림 시작>
 [그림5: 단어 키-밸류]
+<그림 끝>
 
 이렇게 저렇게 조합하여 윤우아빠는 드디어 외국인이 원하는 그림을 머리속으로 그려낸다.
+<그림 시작>
 [그림6: 컨택스트 그림]
+<그림 끝>
 
 이것이 쿼리, 키, 밸류의 기본적인 개념이다. 쿼리는 외국인이 말한 문장에서 들은 몇 개의 단어들(N-Tower, go, bus, where)이다. 그리고 윤우아빠가 외구고 있는 영어-한국어 단어가 각각 키, 밸류이다. 문법을 모르는 윤우아빠는 자기가 들은 몇 개의 단어만을 조합해서 상황을 판단해야 하는데, 최대한 자기가 이미 알고 있는 것과 유사한 조합으로 상황을 이해하려고 노력하게 된다.
+<그림 시작>
 [그림7: 확률그림]
+<그림 끝>
 
 [그림7]을 보면 리스닝한 영어 단어마다 연상되는 영어단어를 확률적으로 매칭했고, 윤우아빠는 그 모든 결과를 조합해서 드디어 그 상황(컨택스트)를 이해했다.
 
@@ -102,13 +117,13 @@ cosine = 행렬곱 / (|a_vec| |b_vec|)
 아직은 구체적이지 않다고 느껴질 수 있을 것이다. 이를 더욱 구체적으로 이해하기 위해 다음 절에서 어텐션을 코드로 구현해보자.
 
 3.3.3. 어탠션 구현하기
-어탠션을 이해했으니 간단하게 어탠션을 구현해보자. 실제 번역기 등을 만들어볼 수도 있지만 여기에서는 간단하게 알파벳을 거꾸로 뒤집는 Seq2Seq 모델을 만들어보려고 한다.
+어탠션을 구현해보자. 실제 번역기 등을 만들어볼 수도 있지만 여기에서는 간단하게 알파벳을 거꾸로 뒤집는 Seq2Seq 모델을 만들어보려고 한다.
 
-'''
+<박스 시작>
 ex-1) thb → bht
 ex-2) pqovqh → hqvoqp
 ex-3) vnwqjkm → mkjqwnv
-'''
+<박스 끝>
 
 갑자기 문자열을 뒤집는 모델을 만드는 이유는 어텐션을 설명하기에 조금 쉽다고 생각했기 때문이다. t를 입력으로 받았을 때 아웃풋으로 가장 집중해야 되는 부분이 b이다. h를 입력으로 받았을 때는 h이고 b를 입력으로 받았을 때는 t에 가장 집중해야 한다. 그림으로 나타내면 아래와 같다.
 <그림 시작>
@@ -119,31 +134,35 @@ tbh → hbt 어텐션 그림(우상향 그림)
 [그림9]에서 하얀 부분일수록 어텐션의 가중치 값이 크다는 것을 의미한다. 입력문자의 b를 놓고 봤을 때 가장 가중치가 큰 부분은 h이다.
 
 위와 같은 모델을 어탠션을 활용해서 만들면 어떤 결과가 나오게 될까? ex-1의 제일 마지막 알파벳 h를 예측할때 출력값의 가장 처음 부분에 가중치를 많이 주면 된다. 마찬가지 원리로 ex-1의 제일 첫번째 알파벳인 p를 예측할 때는 출력값의 가장 마지막 부분에 가중치를 많이 주면 된다. 따라서 그림으로 그려보면 아래와 같이 어탠션 가중치를 시각화할 수 있다.
+<그림 시작>
 [그림8: 어탠션 가중치 시각화]
+<그림 끝>
 
 이제 구현을해보자. 전체 소스코드는 이 책의 레포지토리 /chapter4/attention 폴더에 있다. 
 
 ### 데이터셋 생성하기
-우선 랜덤 알파벳 스트링을 생성하는 함수를 만들어보자.
-'''
+우선 랜덤 알파벳 스트링을 생성하는 함수를 [코드1]과 같이 만들어보자.
+<코드 시작>
+코드1
 def generate_random_alphabet_index():
     random_length = np.random.randint(10, MAX_LENGTH-2)    # -2 because of <s> and </s>
     random_alphabet_index = np.random.randint(0, 26, random_length) + 3
     return random_alphabet_index.tolist(), random_length
-'''
+<코드 끝>
 
 위의 함수를 실행하면 아래와 같이 랜덤한 길이의 알파벳 인덱스 리스트와 그 길이를 얻을 수 있다. 
-'''
+<코드 시작>
 >>> from dataset import generate_random_alphabet_index
 >>> generate_random_alphabet_index()
 ([21, 6, 26, 23, 28, 15, 18, 4, 21, 15, 19, 19], 12)
 >>> generate_random_alphabet_index()
 ([13, 22, 19, 4, 10, 19, 25, 27, 6, 23, 25, 14, 18], 13)
-'''
+<코드 끝>
 
-보통 AI 모델에 입력을 넣을 때는 데이터의 길이가 고정이어야 한다. 여기에서는 최대 길이를 15로 정의하자. 그러면 최대 길이 15 이내에 대해서 </s>와 <pad> 등을 추가해줘야 한다. 이러한 작업을 AlphabetToyDataset 클래스를 통해서 해보자.
+보통 AI 모델에 입력을 넣을 때는 데이터의 길이가 고정이어야 한다. 여기에서는 최대 길이를 15로 정의하자. 그러면 최대 길이 15 이내에 대해서 </s>와 <pad> 등을 추가해줘야 한다. 이러한 작업을 AlphabetToyDataset 클래스를 통해서 해보자. [코드2]는 AlphabetToyDataset을 구현한 것이다.
 
-'''
+<코드 시작>
+코드2
 from torch.utils.data import Dataset
 
 # 데이터셋 만들기
@@ -188,19 +207,21 @@ class AlphabetToyDataset(Dataset):
             torch.tensor(self.labels[index], dtype=torch.long),
             torch.tensor(self.length[index], dtype=torch.long)
         ]
-'''
+<코드 끝>
 
 위의 AlphabetToyDataset을 클래스는 generate_random_alphabet_index 함수를 통해서 생성된 랜덤 알파벳 a부터 z까지를 각각 3부터 28까지 치환하여 inputs을 만들고, 그것을 역순으로 배열하여 labels를 만든 것이다. 즉, 랜덤하게 생성된 알파벳을 역순으로 배열하는 간단한 AI 모델을 만들기 위한 데이터셋이다.
 
-AlphabetToyDataset을 아래와 같이 사용해서 데이터셋을 만들수 있다.
-'''
+AlphabetToyDataset을 [코드3]과 같이 사용해서 데이터셋을 만들수 있다.
+<코드 시작>
+코드3
 train_dataset = AlphabetToyDataset(n_dataset=3000)
 valid_dataset = AlphabetToyDataset(n_dataset=300)
-'''
+<코드 끝>
 
 ### 데이터로더 생성하기
-AlphabetToyDataset으로 train_dataset과 valid_dataset을 만들고, 그것을 DataLoader를 이용해서 AI 모델에 입력할 수 있도록 배치 사이즈도 설정해줄 수 있다.
-'''
+AlphabetToyDataset으로 train_dataset과 valid_dataset을 만들고, 그것을 DataLoader를 이용해서 AI 모델에 입력할 수 있도록 배치 사이즈도 설정해줄 수 있다. [코드4]를 보자.
+<코드 시작>
+코드4
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
@@ -218,10 +239,19 @@ def collate_fn(batch):
 
 train_dataloader = DataLoader(train_dataset, collate_fn=collate_fn, batch_size=16)
 valid_dataloader = DataLoader(valid_dataset, collate_fn=collate_fn, batch_size=1)
-'''
+<코드 끝>
 
-for문을 통해서 DataLoader가 내뱉어내는 데이터를 검토해보자.
-'''
+[코드5]에서 for문을 통해서 DataLoader가 내뱉어내는 데이터를 검토해보자.
+<코드 시작>
+코드5
+for d in train_dataloader:
+    inputs, targets, lengths = d
+    print(inputs)
+    print(targets)
+    print(lengths)
+    print(inputs.shape, targets.shape, lengths.shape)
+    break
+	
 tensor([[ 6, 24, 18, 24,  6, 16, 20, 27, 20, 18, 24, 19,  1,  2,  2],
         [25, 14, 18, 19, 23,  7, 13, 28,  3, 24, 25, 21,  1,  2,  2],
         [ 4,  7, 25, 18, 16, 17, 27, 27, 21, 10,  6, 19,  1,  2,  2],
@@ -256,12 +286,13 @@ tensor([[19, 24, 18, 20, 27, 20, 16,  6, 24, 18, 24,  6,  1,  2,  2],
         [ 5, 24, 19, 11,  4, 20, 13, 28, 20, 25,  1,  2,  2,  2,  2]])
 tensor([12, 12, 12, 11, 11, 11, 11, 11, 11, 10, 10, 10, 10, 10, 10, 10])
 torch.Size([16, 15]) torch.Size([16, 15]) torch.Size([16])
-'''
+<코드 끝>
 
 ### 모델링 구현하기
 이 데이터를 이용해서 학습할 모델을 만들어보자. 기본적으로 Seq2Seq 모델을 어텐션과 함께 구현했다. 레포지토리 상에서 /chapter4/research/attention/seq2seq.py에 구현돼 있다.
 
-'''
+<코드 시작>
+코드6
 class EncoderRNN(nn.Module):
     def __init__(self, input_size, hidden_size):
         super(EncoderRNN, self).__init__()
@@ -431,35 +462,48 @@ class AttnDecoderRNN(nn.Module):
 
     def initHidden(self, batch_size):
         return torch.zeros(1, batch_size, self.hidden_size, device=device)
-'''
+<코드 끝>
 
 모델링 부분은 조금 더 자세하게 설명해보려고 한다. 이 모델은 알파벳 시퀀스를 역순으로 배열하는 Seq2Seq 모델임을 상기하며 아래의 그림을 보라.
+<그림 시작>
 [그림9: 알파벳 시퀀스 어텐션 매커니즘 - 인코더]
+<그림 끝>
 
 [그림9]는 [3 4 5]가 `inputs`으로 들어갈 때 인코더에서 일어나는 연산 과정을 그림으로 나타낸 것이다. 인코더 부분은 간단하다. 우선 `inputs`를 임베딩하여 `embedded`가 됐다. (##각주1 임베딩한 값을 3.0 4.0 5.0 등으로 체웠는데, 이는 이해를 쉽게 하기 위해 친숙한 숫자로 표현한 것이다. 실제로는 랜덤한 값으로 임베딩된다.) `embedded`는 `hidden`과 함께 GRU에 입력된다. GRU는 `output`과 `hidden`을 리턴한다. 여기에서 `hidden`은 [3 4 5]라는 시퀀스를 하나의 벡터로 나타낸 것이다. 여기에서 `hidden`만으로는 `inputs` 시퀀스를 모두 표현하기 힘들기 때문에 디코더에서 `output`을 이용해서 어탠션을 적용한다.
+<그림 시작>
 [그림10: 알파벳 시퀀스 어텐션 매커니즘 - 디코더:어텐션]
+<그림 끝>
 
 인코더에서 [3 4 5]를 `inputs`으로 넣었을 때 기대하는 디코더의 `output`은 [5 4 3]이다. 디코더에서 어텐션이 적용되는 방법이 [그림10]에 표현돼 있다. Seq2Seq 모델의 디코더는 [5 4 3]의 값을 하나씩 타임스텝마다 넣어준다. [5] 하나가 [그림10]의 `inputs`이다. `inputs`을 임베딩하여 `embedded`를 만들고 그것을 인코더의 `hidden`과 이어붙인다. 그렇게 이은 벡터를 `attn`을 통해서 행렬곱을 해준다. (##각주2 행렬곱의 의미는 선형대수학에서의 projection이다. 즉 다른 차원의 점으로 이동시키는 것이다.) 여기에 softmax를 취하면 `attn_weight`을 얻을 수 있다.
+<그림 시작>
 [그림11: 알파벳 시퀀스 어텐션 매커니즘 - 디코더:디코딩]
+<그림 끝>
 
 `attn_weights`은 softmax를 취한 값이기 때문에 총 합이 1이고 길이는 `MAX_LENGTH`이다. 이 값을 인코더의 `encoder_outputs`에 곱해주면 인코더 `inputs` [3 4 5]에 가중치를 부여하는 셈이고 그것이 `attn_applied`이다. `attn_applied`와 `embedded`를 이어붙여보자. 이 두 값을 이어 붙인다는 것은 인코더의 입력 값과 디코더의 입력 값을 이어 붙인 셈이다. 이 값을 `attn_combine`을 이용해 행렬 곱을 해서 relu 연산을 한 다음에 GRU 셀에 입력으로 넣는다. 핵심은 인코더와 디코더의 입력 값을 합쳐서 GRU에 넣는다는 것이고 인코더의 입력은 어텐션 가중치가 적용된 값이다.
 
 모델링하는 부분을 요약해보자.
 
 우선 인코더를 만든다. 인코더의 입력인 `inputs`은 (batch_size,max_length) 형태의 벡터이다. 인코더의 출력은 `outputs`과 `hidden`인데, `outputs`은 (batch_size,max_length,hidden_size)이며 `hidden`은 (batch_size,1,hidden_size)이다.
+<그림 시작>
 [그림12: 인코더 요약]
+<그림 끝>
 
 그 다음에 디코더를 만드는데 디코더는 인코더처럼 하나의 시퀀스를 통채로 처리하지 않고 하나 하나(auto-regressive) 시퀀스 길이만큼 반복하여 처리한다. 디코더가 입력으로 받아들이는 `inputs`은 (batch_size, 1)과 앞서 계산했던 인코더의 출력인 `outputs`와 `hidden`이다. 이 과정을 디코더의 시퀀스 길이만큼 반복하게 된다.
+<그림 시작>
 [그림13: 디코더 요약]
+<그림 끝>
 
 인코더와 디코더의 입력과 출력을 하나로 정리하면 [그림14]와 같다.
+<그림 시작>
 [그림14: 인코더/디코더 요약]
+<그림 끝>
 
 ##팁: 모델링을 하기 전에 전체적인 입력과 출력의 형태를 정리한 후에 코딩을 하면 훨씬 간단하고 정리된 코드를 작성할 수 있다.
 
 ### 모델링 학습하기
-`trainIters`함수를 이용해서 Seq2Seq 모델을 학습할 수 있다. `trainIters`내에는 `train`함수를 사용하고 있고 SGD 옵티마이져와 NLLLoss를 이용한다.
-```
+`trainIters`함수를 이용해서 Seq2Seq 모델을 학습할 수 있다. `trainIters`내에는 `train`함수를 사용하고 있고 SGD 옵티마이져와 NLLLoss를 이용한다. [코드7]을 보자.
+<코드 시작>
+코드7
 def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH, with_attention=True):
     batch_size = input_tensor.size(0)
     encoder_hidden = encoder.initHidden(batch_size)
@@ -539,5 +583,155 @@ def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, lear
             plot_loss_total = 0
 
     showPlot(plot_losses)
-```
-위의 코드를 자세하게 설명하지는 않을 것이다. 레포지토리에 있는 코드와 주피터 노트북을 통해서 스스로 학습해보도록 하자.
+<코드 끝>
+위의 코드를 자세하게 설명하지는 않을 것이다. 레포지토리에 있는 코드와 주피터 노트북을 통해서 스스로 학습해보도록 하자. 
+
+[코드8]에서 모델을 선언하고 trainIters 함수로 모델을 학습해보자.
+<코드 시작>
+코드8
+hidden_size = 256
+encoder1 = EncoderRNN(26+3, hidden_size).to(device)
+decoder1 = AttnDecoderRNN(hidden_size, 26+3, dropout_p=0.1).to(device)
+
+for _ in range(15):
+    trainIters(encoder1, decoder1, 75000, print_every=30, with_attention=True)
+
+0m 0s (- 38m 29s) (30 0%) 3.0195
+0m 1s (- 37m 7s) (60 0%) 2.8927
+0m 2s (- 36m 36s) (90 0%) 2.7512
+0m 3s (- 36m 23s) (120 0%) 2.6641
+0m 4s (- 36m 14s) (150 0%) 2.4978
+0m 5s (- 36m 7s) (180 0%) 2.3319
+0m 0s (- 35m 46s) (30 0%) 2.0461
+0m 1s (- 35m 45s) (60 0%) 1.9150
+0m 2s (- 35m 45s) (90 0%) 1.7883
+0m 3s (- 35m 44s) (120 0%) 1.6298
+0m 4s (- 35m 45s) (150 0%) 1.6249
+0m 5s (- 35m 45s) (180 0%) 1.5884
+0m 0s (- 35m 50s) (30 0%) 1.4247
+0m 1s (- 35m 52s) (60 0%) 1.3634
+0m 2s (- 36m 24s) (90 0%) 1.3265
+0m 3s (- 36m 18s) (120 0%) 1.2368
+<코드 끝>
+
+학습을 한 다음에는 학습한 모델을 검증해봐야 한다. [코드9]의 evaluate 함수를 통해서 검증해볼 수 있다.
+<코드 시작>
+코드9
+def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
+    with torch.no_grad():
+        batch_size = input_tensor.size(0)
+        encoder_hidden = encoder.initHidden(batch_size)
+        #print(input_tensor.shape, encoder_hidden.shape)
+        encoder_outputs, encoder_hidden = encoder(input_tensor, encoder_hidden)
+        
+        decoder_input = torch.tensor([bos]*batch_size, device=device)
+        decoder_input = decoder_input.unsqueeze(-1)    # (B,1)
+        decoder_hidden = encoder_hidden
+
+        decoded_words = []
+        decoder_attentions = torch.zeros(max_length, max_length)
+
+        for di in range(max_length):
+            #print('** ', decoder_input.shape, decoder_hidden.shape, encoder_outputs.shape)
+            decoder_output, decoder_hidden, decoder_attention = decoder(
+                decoder_input,    # (B,1)
+                decoder_hidden,   # (1,B,H)
+                encoder_outputs   # (B,M,H)
+            )
+            decoder_output = decoder_output.squeeze(1)
+            decoder_attentions[:, di] = decoder_attention
+            
+            topv, topi = decoder_output.topk(1)
+            decoder_input = topi    # (B,1)
+            if topi.item() == eos:
+                decoded_words.append('</s>')
+                break
+            else:
+                decoded_words.append(i2a[topi.item()])
+
+        return decoded_words, decoder_attentions[:di + 1]
+
+for d in valid_dataloader:
+    input_tensor, target_tensor, length_tensor = d
+    input_string = list(map(lambda i: i2a[i], input_tensor.numpy()[0]))
+    output_string = list(map(lambda i: i2a[i], target_tensor.numpy()[0]))
+    input_string = np.array(input_string)
+    output_string = np.array(output_string)
+    print('input: {}'.format(input_string))
+    print('output: {}'.format(output_string))
+    
+    input_tensor = input_tensor.to(device)
+    target_tensor = target_tensor.to(device)
+    length_tensor = length_tensor.to(device)
+    
+    pred, attn_weight = evaluate(encoder1, decoder1, input_tensor)
+    pred = np.array(pred)
+    print('pred: {}'.format(pred))
+    print('-------------')
+	
+input: ['u' 'r' 'a' 'k' 't' 'r' 'g' 's' 'u' 'i' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+output: ['i' 'u' 's' 'g' 'r' 't' 'k' 'a' 'r' 'u' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+pred: ['i' 'u' 's' 'g' 'r' 't' 'k' 'a' 'r' 'u' '</s>']
+-------------
+input: ['v' 'b' 'z' 'p' 'v' 'n' 's' 'k' 'o' 'o' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+output: ['o' 'o' 'k' 's' 'n' 'v' 'p' 'z' 'b' 'v' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+pred: ['o' 'o' 'o' 'k' 's' 'n' 'v' 'p' 'z' 'b' 'v' '</s>']
+-------------
+input: ['w' 'g' 'l' 'e' 'm' 'h' 'o' 'q' 'c' 'r' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+output: ['r' 'c' 'q' 'o' 'h' 'm' 'e' 'l' 'g' 'w' '</s>' '<pad>' '<pad>' '<pad>'
+ '<pad>']
+pred: ['r' 'c' 'q' 'o' 'h' 'm' 'e' 'l' 'g' 'w' '</s>']
+<코드 끝>
+
+[코드9]의 결과를 보면 input, output, pred를 보여주고 있다. 모델에 input을 넣어서 pred를 생성해냈다. input을 역순으로 잘 생성한 것을 볼 수 있다. [코드9]에서 사용한 evaluate 함수를 잘 보자. 학습할 때와 다르게 teacher forcing이 들어가지 않고 오로지 모델이 한 글자씩 출력한 것을 연결한 것이다. teacher forcing은 모델 학습을 효과적으로 해주기 위함이므로 모델을 검증할 떄는 사용하지 않는다.
+
+마지막으로 어텐션을 출력해서 시각화해주는 코드를 작성해보자.
+<코드 시작>
+코드10
+def showAttention(input_sentence, output_words, attentions):
+    # colorbar로 그림 설정
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(attentions.numpy(), cmap='bone')
+    fig.colorbar(cax)
+
+    # 축 설정
+    ax.set_xticklabels([''] + input_sentence.split(' ') +
+                       ['</s>'], rotation=90)
+    ax.set_yticklabels([''] + output_words)
+
+    # 매 틱마다 라벨 보여주기
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+
+    plt.show()
+	
+def evaluateAndShowAttention():
+    input_tensor = make_alphabet_tensor()
+    output_words, attentions = evaluate(
+        encoder1, decoder1, input_tensor)
+    
+    input_sentence = input_tensor[0].tolist()
+    input_sentence = list(map(lambda x: i2a[x], input_sentence))
+    print('original input =', input_sentence)
+    input_length = input_sentence.index('<pad>')
+    input_sentence = ' '.join(input_sentence[:input_length])
+    print('input  =', input_sentence)
+    print('output =', ' '.join(output_words))
+    showAttention(input_sentence, output_words, attentions)
+	
+evaluateAndShowAttention()
+<코드 끝>
+
+[코드10]을 실행시키면 [그림15]와 같은 결과를 얻는다.
+
+<그림 시작>
+그림15 역방향 어텐션 그림
+<그림 끝>
+
+[그림15]는 [코드10]을 실행시켰을 때 계산되는 어텐션을 시각화한 결과이다. 가로가 input 방향이고 세로가 output 방향이다. input의 제일 첫 문자인 k를 생성할 때 output의 제일 뒷 문자인 </s> 부분에 가장 높은 어텐션 값을 갖는 것을 알 수 있다. 
