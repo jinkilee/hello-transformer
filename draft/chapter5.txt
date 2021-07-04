@@ -396,7 +396,85 @@ array([[ 31, 131],
 <코드 끝>
 
 
-5.3.2. 문서 요약 모델로 파인튜닝하기
+5.3.2. 질의응답 모델로 파인튜닝하기
+BERT를 이용해서 질의응답 모델을 만들어보자. 앞 절에서는 BERT를 이용해서 분류 모델을 만들었다. 이번 절에서는 질의응답 데이터셋으로 유명한 SQuAD(Stanford Question Answering Dataset) 데이터셋을 이용해서 질의응답 모델을 만들어보자. SQuAD 데이터셋은 1.1버전과 2.0버전이 있는데, 이 책에서는 2.0 버전을 사용하려고 한다. 우선 SQuAD 데이터셋의 예시를 살펴보자.
+
+<블록 시작>
+
+"paragraphs": 
+[
+	{
+		"qas": 
+		[
+			{
+				"question": "In what country is Normandy located?",
+				"id": "56ddde6b9a695914005b9628",
+				"answers": [
+					{"text": "France", "answer_start": 159}, {"text": "France", "answer_start": 159},
+					{"text": "France", "answer_start": 159}, {"text": "France", "answer_start": 159}
+				],
+				"is_impossible": false
+			},
+			{
+				"question": "When were the Normans in Normandy?",
+				"id": "56ddde6b9a695914005b9629",
+				"answers": [
+					{"text": "10th and 11th centuries", "answer_start": 94},
+					{"text": "in the 10th and 11th centuries", "answer_start": 87},
+					{"text": "10th and 11th centuries", "answer_start": 94},
+					{"text": "10th and 11th centuries", "answer_start": 94}
+				],
+				"is_impossible": false
+			},
+		]
+		"context": "The Normans (Norman: Nourmands; French: Normands; Latin: Normanni) were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse (\"Norman\" comes from \"Norseman\") raiders and pirates from Denmark, Iceland and Norway who, under their leader Rollo, agreed to swear fealty to King Charles III of West Francia. Through generations of assimilation and mixing with the native Frankish and Roman-Gaulish populations, their descendants would gradually merge with the Carolingian-based cultures of West Francia. The distinct cultural and ethnic identity of the Normans emerged initially in the first half of the 10th century, and it continued to evolve over the succeeding centuries."
+	}
+	...
+]
+<블록 끝>
+
+하나의 지문(context)에 대해서 여러 개의 질의응답 쌍(qas)을 갖고 있는 구조이다. qas는 여러 개의 질의응답 쌍이고, 각 쌍은 id, question, answers, is_impossible 등의 키를 가지고 있다. id는 질의응답 쌍에 대한 고유 키이다. question은 평문으로 된 질문이다. 이 질문은 context로부터 만들어진 질문이다. answers는 질문에 대한 응답이고, text와 answer_start로 이루어져 있다. 예를 들어서 In what country is Normandy located? 라는 질문에 대해서 answer는 France(text)이고 이는 context의 159번째 문자(answer_start)이다.
+
+SQuAD 데이터셋을 이용해서 질의응답 모델을 만들때 모델의 입출력은 아래와 같다.
+<블록 시작>
+# 평문으로 된 question/text
+question = "Who was Jim Henson?"
+text = "Jim Henson was a nice puppet"
+
+# question과 text를 구분자([CLS], [SEP])로 구분하여 아래와 같이 inputs을 만든다
+inputs = ['[CLS]',
+ 'who',
+ 'was',
+ 'jim',
+ 'henson',
+ '?',
+ '[SEP]',
+ 'jim',
+ 'henson',
+ 'was',
+ 'a',
+ 'nice',
+ 'puppet',
+ '[SEP]']
+
+# 위 입력에 대한 정답인 start_position과 end_position을 인덱스로 나타낸다.
+start_position = [10]
+end_position = [12]
+<블록 끝>
+
+inputs는 question과 text를 토큰화 하여 [CLS], [SEP]등으로 구분해서 연결한 것이다. 질의응답 모델의 입력은 inputs를 숫자로 변환한 값이며 이 때 inputs에 대한 token_type_ids와 attention_mask 값도 같이 입력된다.
+<코드 시작>
+from transformers import BertTokenizer, BertForQuestionAnswering
+model = BertForQuestionAnswering.from_pretrained('bert-base-uncased')
+input_ids = [[101, 2040, 2001, 3958, 27227, 1029, 102, 3958, 27227, 2001, 1037, 3835, 13997, 102]]
+token_type_ids = [[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]]
+attention_mask = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+inputs = {
+'input_ids':torch.tensor(input_ids),
+'token_type_ids':torch.tensor(token_type_ids),
+'attention_mask':torch.tensor(attention_mask)
+}
+<코드 끝>
 
 <그림 시작>
 레이어 추가해서 파인튜닝하는 그림
