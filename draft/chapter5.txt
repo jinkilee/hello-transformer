@@ -12,9 +12,9 @@
 
 BERT는 크게 사전학습 단계와 파인튜닝 단계로 나뉜다. 사전학습은 한번만 하면 되며 많은 데이터와 많은 학습시간 또는 자원(GPU 등등)이 요구된다. 파인튜닝은 사전학습된 것을 조금 변형해서 개발자가 최종적으로 원하는 모델로 학습시키는 과정이며, 사전학습 단계에 비해 적은 데이터, 적은 학습시간 또는 자원으로 학습할 수 있다.
 
-예를 들어서 설명해보자. A사에 다니는 홍길동 대리는 영화 감상평을 구분하는 모델을 개발하는 프로젝트를 수행하고 있다. B사에 다니고 있는 둘리 사원은 뉴스 기사를 요약하는 프로젝트를 수행하고 있다고 하자. 홍길동 대리와 둘리 사원은 서로 다른 회사에서 일하고 있기 때문에 사용하는 데이터의 성격이 매우 다를 것이다. 홍길동 대리는 사용자들이 뎃글에 남긴 영화 감상평을 다루게 될 것이고 둘리 사원은 기자들이 작성한 뉴스 데이터를 다루게 될 것이다. 뿐만 아니라 만드는 모델도 다르다. 홍길동 대리는 텍스트를 분류하는 텍스트 분류 모델을 만들어야 하고 둘리 사원은 문장을 요약하는 요약 모델을 만들어야 한다.
+예를 들어서 설명해보자. A사에 다니는 홍길동 대리는 영화 감상평을 구분하는 모델을 개발하는 프로젝트를 수행하고 있다. B사에 다니고 있는 둘리 사원은 뉴스 데이터에 대한 질의응답 프로젝트를 수행하고 있다고 하자. 홍길동 대리와 둘리 사원은 서로 다른 회사에서 일하고 있기 때문에 사용하는 데이터의 성격이 매우 다를 것이다. 홍길동 대리는 사용자들이 뎃글에 남긴 영화 감상평을 다루게 될 것이고 둘리 사원은 기자들이 작성한 뉴스 데이터를 다루게 될 것이다. 뿐만 아니라 만드는 모델도 다르다. 홍길동 대리는 텍스트를 분류하는 텍스트 분류 모델을 만들어야 하고 둘리 사원은 질의응답 기능을 가진 모델을 만들어야 한다.
 
-홍길동 대리와 둘리 사원이 BERT를 이용해서 프로젝트를 수행한다면, 둘은 서로 다른 회사에서 서로 다른 성격의 프로젝트를 수행 중이지만 똑같은 사전학습 모델을 사용할 수 있다. 둘이 사용하고 있는 데이터는 서로 다른 성격의 데이터이지만 모두 한국어 데이터이기 때문에 한국어를 사전학습한 한국어 BERT 모델을 공통으로 사용할 수 있다. 그 다음에는 홍길동 대리는 자기 나름대로 BERT 모델에 텍스트 분류를 위한 레이어를 추가해서 영화 감상평 데이터를 사용해 프로젝트를 수행하면 된다. 마찬가지로 둘리 사원은 BERT 모델에 문장 요약을 위한 레이어를 추가해서 뉴스 데이터로 프로젝트를 수행하면 된다.
+홍길동 대리와 둘리 사원이 BERT를 이용해서 프로젝트를 수행한다면, 둘은 서로 다른 회사에서 서로 다른 성격의 프로젝트를 수행 중이지만 똑같은 사전학습 모델을 사용할 수 있다. 둘이 사용하고 있는 데이터는 서로 다른 성격의 데이터이지만 모두 한국어 데이터이기 때문에 한국어를 사전학습한 한국어 BERT 모델을 공통으로 사용할 수 있다. 그 다음에는 홍길동 대리는 자기 나름대로 BERT 모델에 텍스트 분류를 위한 레이어를 추가해서 영화 감상평 데이터를 사용해 프로젝트를 수행하면 된다. 마찬가지로 둘리 사원은 BERT 모델에 질의응답을 위한 레이어를 추가해서 뉴스 데이터로 프로젝트를 수행하면 된다.
 
 BERT가 나오기 전이라면 홍길동 대리와 둘리 사원은 모델링을 처음부터 끝까지 각자 했어야 했다. 뿐만 아니라 데이터도 더 많이 필요했을 것이다. 충분히 일반화된 모델을 만들려면 충분히 많은 데이터가 있어야 하기 때문이다. BERT를 이용하면 이 두가지 단점을 모두 해결할 수 있다. BERT의 사전학습 모델을 로딩해서 사용하게 되기 때문에 기본적인 BERT 구조를 사용하면 된다. BERT 구조 뒤에 각자 다루는 모델의 성격에 따라 레이어를 추가해주면 끝이다. 이 때 추가하는 레이어는 보통 매우 단순한 형태이다. 이렇게 각자의 목적에 맞게 모델을 조금 추가하는 것을 파인튜닝이라고 한다. 사전학습 후 파인튜닝하는 구조를 취하게 되면 사용하는 데이터의 개수도 더 적게 사용할 수 있다. 충분히 일반화된 모델을 만들려면 충분히 많은 데이터가 있어야 하는 것이 기본인데, 사전학습 단계에서 충분히 많은 데이터로 미리 어느 정도 일반화 시켜뒀기 때문이다.
 
@@ -181,9 +181,9 @@ run_language_modeling.py에서는 NSP 학습은 수행하지 않았다. MLM에 �
 BERT의 사전학습 과정을 이해하는 것은 매우 중요하다. 단순히 BERT를 이해하기 위해서가 아니라 BERT 이후의 다른 모델들의 사전학습도 비슷한 과정이기 떄문이다.
 
 5.3 Fine-Tuning 이해하기
-앞 절에서 BERT를 어떻게 사전학습하는지 알아봤다. 이번 절에서는 파인튜닝하는 것에 대해서 알아보려고 한다. 5.1 절에서 소개했듯이, 파인튜닝은 사전학습된 모델 구조에 특정 목적을 위한 레이어를 추가하는 것이다. 예를 들면 BERT를 이용해서 텍스트 분류 모델을 만들 수도 있고, 질의응답 모델을 만들 수도 있고, 문단 요약 모델도 만들 수 있다. 즉 텍스트 분류 모델을 만들고 싶으면 BERT 모델 구조 이후에 텍스트 분류 모델을 위한 레이어를 추가하면 된다는 것이다. 5.1 절의 [그림1]을 다시 한번 보면 홍길동 대리와 둘리 사원 모두 사전학습된 BERT를 사용하고 있다. 그렇게 사전학습된 BERT에 홍길동 대리는 텍스트 분류 모델을 추가한 것이고 둘리 사원은 문서 요약 레이어를 추가하는 것이다. 이것이 파인 튜닝이다.
+앞 절에서 BERT를 어떻게 사전학습하는지 알아봤다. 이번 절에서는 파인튜닝하는 것에 대해서 알아보려고 한다. 5.1 절에서 소개했듯이, 파인튜닝은 사전학습된 모델 구조에 특정 목적을 위한 레이어를 추가하는 것이다. 예를 들면 BERT를 이용해서 텍스트 분류 모델을 만들 수도 있고, 질의응답 모델을 만들 수도 있다. 즉 텍스트 분류 모델을 만들고 싶으면 BERT 모델 구조 이후에 텍스트 분류 모델을 위한 레이어를 추가하면 된다는 것이다. 5.1 절의 [그림1]을 다시 한번 보면 홍길동 대리와 둘리 사원 모두 사전학습된 BERT를 사용하고 있다. 그렇게 사전학습된 BERT에 홍길동 대리는 텍스트 분류 모델을 추가한 것이고 둘리 사원은 질의응답 레이어를 추가하는 것이다. 이것이 파인 튜닝이다.
 
-이번 절에서는 BERT를 파인튜닝해서 텍스트 분류 모델과 문서 요약 모델을 만들어보자. 모델을 만들때 공통적으로 구현해야 하는 데이터셋/데이터로더를 구현하는 부분에 대한 설명은 생략하고 학습에 사용되는 데이터셋과 모델구조 그리고 추론 예시를 중점적으로 설명하려고 한다.
+이번 절에서는 BERT를 파인튜닝해서 텍스트 분류 모델과 질의응답 모델을 만들어보자. 모델을 만들때 공통적으로 구현해야 하는 데이터셋/데이터로더를 구현하는 부분에 대한 설명은 생략하고 학습에 사용되는 데이터셋과 모델구조 그리고 추론 예시를 중점적으로 설명하려고 한다.
 
 5.3.1. 텍스트 분류 모델로 파인튜닝하기
 BERT를 이용해서 텍스트 분류 모델을 만들어보자. 오픈 데이터셋 중에서 텍스트 분류를 위한 오픈 데이터셋이 많다. 그 중에서 이번 절에서는 CoLA(Corpus of Linguistic Acceptability) 데이터셋을 사용해보려고 한다. CoLA 데이터셋은 영어 문장 데이터셋이고, 각 문장이 언어학적으로 받아들여지는지(Acceptable=1) 그렇지 않은지(Unacceptable=0) 구분해둔 데이터셋이다.
@@ -463,7 +463,9 @@ end_position = [12]
 <블록 끝>
 
 inputs는 question과 text를 토큰화 하여 [CLS], [SEP]등으로 구분해서 연결한 것이다. 질의응답 모델의 입력은 inputs를 숫자로 변환한 값이며 이 때 inputs에 대한 token_type_ids와 attention_mask 값도 같이 입력된다.
+
 <코드 시작>
+코드10
 from transformers import BertTokenizer, BertForQuestionAnswering
 model = BertForQuestionAnswering.from_pretrained('bert-base-uncased')
 input_ids = [[101, 2040, 2001, 3958, 27227, 1029, 102, 3958, 27227, 2001, 1037, 3835, 13997, 102]]
@@ -474,12 +476,138 @@ inputs = {
 'token_type_ids':torch.tensor(token_type_ids),
 'attention_mask':torch.tensor(attention_mask)
 }
+start_position = torch.tensor([[10]])
+end_position = torch.tensor([[12]])
 <코드 끝>
 
+BertForQuestionAnswering의 구조는 [코드11]과 같다. 클래스를 정의하는 __init__ 부분을 보면 BERT 모델과 파인튜닝 레이어가 전부이다. [코드11]에는 입력 데이터를 self.bert에 넣어서 그 결과를 outputs에 저장하는 부분이 있다. 여기에서의 outputs은 길이가 1인 튜플이다. outputs[0]은 입력 데이터가 (1, 14)일 경우 (1, 14, 768)이다. outputs[0]을 self.qa_outputs의 입력으로 넣으면 (1, 14, 2) shape의 텐서가 logits에 저장된다. 이 logits을 split 함수를 통해서 두 개의 (1, 14, 1) 텐서로 쪼갠 후 각각을 squeeze하여 start_logits과 end_logits을 만든다. 이 값을 [코드10]에서 준비한 start_position, end_position과 대조해서 start_loss와 end_loss를 구한다. BertForQuestionAnswering의 forward 함수를 보면 각 단계별로 중요한 부분에 주석으로 텐서의 shape 또는 value를 남겨뒀다. 
+
+<코드 시작>
+코드11
+https://huggingface.co/transformers/_modules/transformers/models/bert/modeling_bert.html#BertForQuestionAnswering -> 일부 내용을 삭제/추가했습니다.
+class BertForQuestionAnswering(BertPreTrainedModel):
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.num_labels = config.num_labels
+
+        self.bert = BertModel(config, add_pooling_layer=False)
+        self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
+
+        self.init_weights()
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        start_positions=None,
+        end_positions=None,
+        output_attentions=None,
+        output_hidden_states=None,
+        return_dict=None,
+    ):
+        r"""
+		example:
+			- input_ids: [[101, 2040, 2001, 3958, 27227, 1029, 102, 3958, 27227, 2001, 1037, 3835, 13997, 102]]
+			- token_type_ids: [[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]]
+			- attention_mask: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        """
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        outputs = self.bert(
+            input_ids,                        # shape=torch.Size([1, 14])
+            attention_mask=attention_mask,    # shape=torch.Size([1, 14])
+            token_type_ids=token_type_ids,    # shape=torch.Size([1, 14])
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        sequence_output = outputs[0]    # shape=torch.Size([1, 14, 768])
+
+        logits = self.qa_outputs(sequence_output)               # shape=torch.Size([1, 14, 2])
+        start_logits, end_logits = logits.split(1, dim=-1)      # shape=torch.Size([1, 14, 1]), torch.Size([1, 14, 1])
+        start_logits = start_logits.squeeze(-1).contiguous()    # shape=torch.Size([1, 14])
+        end_logits = end_logits.squeeze(-1).contiguous()        # shape=torch.Size([1, 14])
+
+        total_loss = None
+        if start_positions is not None and end_positions is not None:
+            # If we are on multi-GPU, split add a dimension
+            if len(start_positions.size()) > 1:
+                start_positions = start_positions.squeeze(-1)
+            if len(end_positions.size()) > 1:
+                end_positions = end_positions.squeeze(-1)
+            # sometimes the start/end positions are outside our model inputs, we ignore these terms
+            ignored_index = start_logits.size(1)
+            start_positions = start_positions.clamp(0, ignored_index)
+            end_positions = end_positions.clamp(0, ignored_index)
+
+            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+            start_loss = loss_fct(start_logits, start_positions)    # value=tensor(2.7861, grad_fn=<NllLossBackward>)
+            end_loss = loss_fct(end_logits, end_positions)          # value=tensor(3.1949, grad_fn=<NllLossBackward>)
+            total_loss = (start_loss + end_loss) / 2                # value=tensor(2.9905, grad_fn=<DivBackward0>)
+
+        if not return_dict:
+            output = (start_logits, end_logits) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
+
+        return QuestionAnsweringModelOutput(
+            loss=total_loss,
+            start_logits=start_logits,
+            end_logits=end_logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+<코드 끝>
+
+[코드11]에 정의한 모델을 사용해서 질의응답 모델을 학습할 수 있다. 질의응답 모델의 학습은 research/squad/squad-training.ipynb를 참고하면 된다. 학습을 진행하면 아래와 같이 Loss가 감소하게 된다.
+
+<블록 시작>
+Average Loss = 1.1870): 100%|██████████| 8247/8247 [1:24:25<00:00,  1.63it/s]
+Average Loss = 0.6109): 100%|██████████| 8247/8247 [1:24:30<00:00,  1.63it/s]
+Average Loss = 0.2965): 100%|██████████| 8247/8247 [1:24:34<00:00,  1.63it/s]
+Average Loss = 0.1559): 100%|██████████| 8247/8247 [1:24:33<00:00,  1.63it/s]
+Average Loss = 0.1029): 100%|██████████| 8247/8247 [1:24:34<00:00,  1.63it/s]
+Average Loss = 0.0817): 100%|██████████| 8247/8247 [1:24:31<00:00,  1.63it/s]
+Average Loss = 0.0699): 100%|██████████| 8247/8247 [1:24:34<00:00,  1.63it/s]
+Average Loss = 0.0608): 100%|██████████| 8247/8247 [1:24:37<00:00,  1.62it/s]
+Average Loss = 0.0549): 100%|██████████| 8247/8247 [1:24:31<00:00,  1.63it/s]
+Average Loss = 0.0497): 100%|██████████| 8247/8247 [1:24:43<00:00,  1.62it/s]
+<블록 끝>
+
+squad-training.ipynb에서 학습한 질의응답 모델을 squad_model.bin에 저장하고, 이 파일을 이용해서 dev-v2.0.json 파일에 대한 추론을 하면 F1 스코어 73.30721044065311를 얻을 수 있다. squad_model.bin을 활용해서 F1 스코어를 구하는 과정은 파이선 스크립트로 작성했다. [코드12]를 참고하면 된다.
+
+<코드 시작>
+코드12
+$ python run_evaluate.py --cache_dir=caches --version_2_with_negative
+$ python evaluate.py data/dev-v2.0.json outputs/predictions_.json
+{
+  "exact": 68.97161627221426,
+  "f1": 73.30721044065311,
+  "total": 11873,
+  "HasAns_exact": 66.24493927125506,
+  "HasAns_f1": 74.92856099221858,
+  "HasAns_total": 5928,
+  "NoAns_exact": 71.69049621530698,
+  "NoAns_f1": 71.69049621530698,
+  "NoAns_total": 5945
+}
+<코드 끝>
+
+SQuAD v2.0의 리더보드를 확인해보면 73.30은 약 77~78등에 해당하는 점수이다. 2018년 이후 BERT를 능가하는 다른 모델들이 많이 나온 결과로 현재 BERT의 랭킹은 높지 않지만 데이터셋을 준비하고 질의응답 모델을 디자인하는 노력이 적었다는 점에서 노력대비 성능이 좋은 모델을 만들 수 있었다. BERT 모델의 사이즈를 늘리거나 전처리하는 방법 또는 모델 구조를 조금 더 좋은 방법으로 변경할 경우 성능이 더 좋아질 수 있겠지만 이 절에서는 적은 노력 대비 좋은 성능의 모델을 만들 수 있다는 점에만 집중하려고 한다.
+
 <그림 시작>
-레이어 추가해서 파인튜닝하는 그림
+그림3
 <그림 끝>
 
+이번 장에서는 BERT의 구조와 BERT를 사전학습/파인튜닝 학습 방법을 자세히 알아봤다. BERT는 트랜스포머의 인코더 구조를 기본으로 하고 있으며, MLM과 NSP 기법을 이용해서 사전학습된다. 그리고 사전학습된 BERT를 로딩해서 여러가지 테스크(븐류, 질의응답 등등)로 파인튜닝할 수 있다는 것을 배웠다. 다음 장에서는 트랜스포머의 디코더를 활용하는 GPT2에 대해서 알아보려고 한다.
 
 
 ### Reference
