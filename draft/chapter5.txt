@@ -630,12 +630,48 @@ Static 마스킹 전략보다 더 자유롭게 마스킹하는 방법이 Dynamic
 서로 다르게 마스킹된 그림 dynamic
 <그림 끝>
 
-SEGMENT-PAIR+NSP
-SENTENCE-PAIR+NSP
-FULL-SENTENCES
-DOC-SENTENCES
+5.3.2. NSP 전략
+RoBERTa에서는 BERT의 사전학습에서 사용하고 있는 NSP를 여러 가지 방법으로 변형시켜서 테스트했다.
+
+<그림 시작>
+그림5
+SEGMENT-PAIR+NSP: 세그먼트 단위로 NSP 학습. 단, 세그먼트는 여러 자연어 문장으로 구성돼 있음
+SENTENCE-PAIR+NSP: 자연어 문장으로 NSP 학습. 
+FULL-SENTENCES: 하나 이상의 문단에서 샘플링된 문장들로 512개의 토큰을 채운다.
+DOC-SENTENCES: 하나의 문단에서 샘플링된 문장들로 512개의 토큰을 채운다.
+<그림 끝>
 
 large batch size
+
+5.3.3. 큰 배치 사이즈
+이전 절에서 설명했었던 [그림5]에서 SENTENCE-PAIR+NSP와 DOC-SENTENCES는 토큰의 길이가 보통 512보다 작다. 이는 하나의 배치에서 학습할 수 있는 토큰의 개수가 적다는 것을 의미한다. 따라서 배치 사이즈를 조금 키워서 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 5.4. ALBERT
 ALBERT는 2019년 7월에 Google Research와 Toyota Technological Institute at Chicago가 연구해서 발표한 언어 모델이다. ALBERT는 BERT의 모델 사이즈가 크다는 단점을 극복한 언어 모델이며, 모델의 사이즈를 크게 줄이면서 동시에 성능도 비슷하거나 높은 수준으로 올렸다. 모델의 사이즈를 줄이는 방법으로 두 가지 기법을 사용했는데, 이 절에서 그 기법에 대해서 자세하게 살펴볼 것이고 ALBERT를 사용했을 때 모델의 크기가 얼마나 줄어들었는지 그리고 성능은 어떻게 바뀌었는지 알아보자.
@@ -660,8 +696,8 @@ needs
 <인용 끝>
 
 BERT의 임베딩 레이어의 파라미터 크기는 VxE이다. 그런데 BERT에서는 E=H이기 떄문에 임베딩 레이어의 파라미터 크기는 VxH와 같다. ALBERT에서는 VxE로 임베딩하고 이렇게 임베딩된 E 차원을 H 사이즈로 다시 변형한다. 이때 E는 H보다 훨씬 작게 설정한다. 논문에서는 이 내용을 수학적으로 설명하고 있다. VxH를 분해(decomposition)해서 VxE와 ExH로 만든다고 설명한다. ALBERT와 BERT의 임베딩 사이즈를 비교해보면 아래와 가탇.
-<노트 시작>
-노트??
+<블록 시작>
+블록??
 # BERT
 V=30000
 H=768
@@ -672,9 +708,9 @@ V=30000
 E=128
 H=4096
 ALBERT의 임베딩 레이어 파라미터 개수 = 30000 x 128 + 128 x 4096 = 3,840,000 + 524,288 = 4,364,288
-<노트 끝>
+<블록 끝>
 
-[노트??]을 보면 ALBERT의 임베딩 레이어 파라미터 개수는 BERT에 비해 약 80% 줄었다. [코드13]을 통해 Transformers에서 구현된 ALBERT와 BERT에서 각각의 임베딩 사이즈를 확인해보자.
+[블록??]을 보면 ALBERT의 임베딩 레이어 파라미터 개수는 BERT에 비해 약 80% 줄었다. [코드13]을 통해 Transformers에서 구현된 ALBERT와 BERT에서 각각의 임베딩 사이즈를 확인해보자.
 <코드 시작>
 코드13
 from transformers import BertModel, AlbertModel
@@ -691,13 +727,13 @@ print('number of BERT Embedding parameters: {}'.format(bert_embedding))
 print('number of ALBERT Embedding parameters: {}'.format(albert_embedding))
 <코드 끝>
 
-<노트 시작>
-노트??
+<블록 시작>
+블록??
 number of BERT Embedding parameters: 23837184
 number of ALBERT Embedding parameters: 4005120
-<노트 끝>
+<블록 끝>
 
-[노트??]를 보면 BERT의 임베딩 파라미터 개수는 ALBERT의 임베딩 파라미터 개수의 약 16.8%이다.
+[블록??]를 보면 BERT의 임베딩 파라미터 개수는 ALBERT의 임베딩 파라미터 개수의 약 16.8%이다.
 
 5.4.2. Cross-layer parameter sharing
 BERT의 파라미터 개수를 비약적으로 줄인 것은 Cross-layer parameter sharing이다. BERT에서 Self-Attention을 계산해서 H차원의 결과값을 만들어내는 BertLayer 블록을 12번 반복한다. 이때 파라미터를 공유하지 않기 때문에 같은 구조의 블록을 12개 만든다. ALBERT에서는 이 구조의 블록을 한번만 만들되, 사용시에는 결과값을 다시 입력값으로 집어넣는 과정을 12번 반복해서 결과적으로 모델의 사이즈를 1/12로 줄인다. 이 과정에서 처음에 만든 구조를 반복해서 사용하기 때문에 파라미터를 공유하게 되는 것이다. [코드14]은 BERT와 ALBERT에서 인코더 동작 구조를 의사 코드로 작성한 것이다.
@@ -743,12 +779,12 @@ print('number of BERT Encoder parameters: {}'.format(bert_encoder))
 print('number of ALBERT Encoder parameters: {}'.format(albert_encoder))
 <코드 끝>
 
-[코드15]를 실행하면 [노트??]의 결과를 확인할 수 있다.
-<노트 시작>
-노트??
+[코드15]를 실행하면 [블록??]의 결과를 확인할 수 있다.
+<블록 시작>
+블록??
 number of BERT Encoder parameters: 85054464
 number of ALBERT Encoder parameters: 7186944
-<노트 끝>
+<블록 끝>
 
 BERT 인코더 파라미터의 개수는 ALBERT 인코더 파라미터 개수의 약 11.8배이다. 임베딩과 인코더의 파라미터 개수를 비교하는 코드는 research/chapter5/parameter_count_comparision.ipynb을 통해 확인하면 된다.
 
@@ -759,7 +795,34 @@ BERT 인코더 파라미터의 개수는 ALBERT 인코더 파라미터 개수의
 ALBERT paper Figure 1
 <그림 끝>
 
-ALBERT에서의 
+[그림6]은 입력 값 x를 AlbertLayer에 넣어서 계속 업데이트시키면 입력 x와 업데이트된 x의 차이가 점차 줄어들게 된다는 것을 보여주는 그림이다. ALBERT 논문에서는 이렇게 입력과 출력의 차이가 줄어드는 지점에 도달하는 것을 평행점(equilibrium point)에 도달한다고 표현하고 있다. 모델의 파라미터를 공유하므로서 평행점에 도달하면 같은 구조의 모델도 더 높은 성능을 보인다고 설명하고 있다.
+
+<인용 시작>
+https://arxiv.org/pdf/1909.11942.pdf
+Similar strategies have been explored by Dehghani et al. (2018) (Universal Transformer, UT) and
+Bai et al. (2019) (Deep Equilibrium Models, DQE) for Transformer networks. Different from our
+observations, Dehghani et al. (2018) show that UT outperforms a vanilla Transformer.
+<인용 끝>
+
+
+5.4.3. Sentence order prediction
+ALBERT에서 또 하나 집고 넘어가야 할 부분이 SOP(Sentence Order Prediction)이다. BERT에서의 NSP가 언어 모델을 학습하는데 있어서 유용한지에 대한 의구심이 있어서 NSP를 조금 다른 방식으로 변형한 것이다. SOP는 두 개의 연결된 문장을 사용한다. 그리고 문장의 순서를 바꾸지 않으면 1, 바꾸면 0으로 정의하고 학습한다.
+<블록 시작>
+예제 문단: 아침에 일어났다. 이상하게 배가 아팠다. 그래서 병원에 갔다.
+
+positive example: <CLS> 이상하게 배가 아팠다. <SEP> 그래서 병원에 갔다. <SEP>
+negative example: <CLS> 그래서 병원에 갔다. <SEP> 이상하게 배가 아팠다. <SEP>
+<블록 끝>
+
+ALBERT를 사전학습할 때 SOP를 학습하기 위해서 <CLS>와 <SEP>을 문장 앞뒤와 중간에 붙여준다. BERT의 NSP도 이와 같이 학습된다.
+
+5.4.4. ALBERT 정리
+ALBERT는 BERT 모델의 성능을 비슷하거나 높은 수준으로 향상시켰고, 동시에 모델의 사이즈는 약 1/10으로 줄였다. 모델의 사이즈를 줄이는 방법은 두 가지인데, 하나는 Factorized embedding parameters이고 다른 하나는 Cross-Layer parameter sharing이다. 또한 사전학습을 진행할 때도 NSP를 SOP로 변형했다.
+
+<표 시작>
+chapter5.xlsx
+t1 sheet
+<표 끝>
 
 ### Reference
 - 유투브 비디오: https://www.youtube.com/watch?v=q9NS5WpfkrU 
