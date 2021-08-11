@@ -613,7 +613,7 @@ SQuAD v2.0의 리더보드를 확인해보면 73.30은 약 77~78등에 해당하
 이번 장에서는 BERT의 구조와 BERT를 사전학습/파인튜닝 학습 방법을 자세히 알아봤다. BERT는 트랜스포머의 인코더 구조를 기본으로 하고 있으며, MLM과 NSP 기법을 이용해서 사전학습된다. 그리고 사전학습된 BERT를 로딩해서 여러가지 테스크(븐류, 질의응답 등등)로 파인튜닝할 수 있다는 것을 배웠다. 다음 장에서는 트랜스포머의 디코더를 활용하는 GPT2에 대해서 알아보려고 한다.
 
 5.3. RoBERTa
-RoBERTa는 Facebook에서 2019년 7월 26일에 발표한 논문이다. 논문 제목은 "RoBERTa: A Robustly Optimized BERT Pretraining Approach"이다. 이 논문의 핵심은 BERT를 최적으로 학습하는 것이다. 논문에서는 BERT의 성능을 추가적으로 더 향상시킬 수 있는 방법을 소개했다. RoBERTa의 모델 구조는 BERT의 구조와 동일하지만 MLM을 학습할 때 데이터를 처리하는 방법, NSP를 처리하는 방법, 배치 사이즈 조절, 토크나이저 변경 등의 방법을 통해 BERT의 성능을 뛰어넘었다.
+RoBERTa는 Facebook에서 2019년 7월 26일에 발표한 논문이다. 논문 제목은 "RoBERTa: A Robustly Optimized BERT Pretraining Approach"이다. 이 논문의 핵심은 BERT를 최적으로 학습하는 것이다. 논문에서는 BERT의 성능을 추가적으로 더 향상시킬 수 있는 방법을 소개했다. RoBERTa의 모델 구조는 BERT의 구조와 동일하지만 MLM을 학습할 때 데이터를 처리하는 방법, NSP를 처리하는 방법, 배치 사이즈 조절, 토크나이저 변경 등의 방법을 통해 몇몇 벤치마크 데이터셋 테스크에서 BERT의 성능을 뛰어넘었다.
 
 5.3.1. Static/Dynamic 마스킹 전략
 RoBERTa에서 MLM을 학습할 때 사용하는 마스킹 전략을 수정했다. Static 또는 Dynamic 두 가지 방법으로 수정했다.
@@ -641,40 +641,12 @@ FULL-SENTENCES: 하나 이상의 문단에서 샘플링된 문장들로 512개�
 DOC-SENTENCES: 하나의 문단에서 샘플링된 문장들로 512개의 토큰을 채운다.
 <그림 끝>
 
-large batch size
-
-5.3.3. 큰 배치 사이즈
-이전 절에서 설명했었던 [그림5]에서 SENTENCE-PAIR+NSP와 DOC-SENTENCES는 토큰의 길이가 보통 512보다 작다. 이는 하나의 배치에서 학습할 수 있는 토큰의 개수가 적다는 것을 의미한다. 따라서 배치 사이즈를 조금 키워서 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+5.3.3. 배치 사이즈와 데이터셋 크기
+이전 절에서 설명했었던 [그림5]에서 SENTENCE-PAIR+NSP와 DOC-SENTENCES의 경우에는 토큰의 길이가 보통 512보다 작다. 이는 하나의 배치에서 학습할 수 있는 토큰의 개수가 적다는 것을 의미한다. 따라서 배치 사이즈를 조금 키워서 하나의 배치 사이즈에서 충분한 개수의 토큰 수를 만족시킬 수 있도록 수정했다. 또한 학습에 사용하는 데이터셋의 크기도 키웠다. BERT에서 사전학습에 사용한 데이터셋은 Wikipedia 데이터셋으로 약 16GB이다. RoBERTa에서는 그 외 다른 데이터셋을 추가해서 총 160GB로 늘렸다.
 
 
 5.4. ALBERT
-ALBERT는 2019년 7월에 Google Research와 Toyota Technological Institute at Chicago가 연구해서 발표한 언어 모델이다. ALBERT는 BERT의 모델 사이즈가 크다는 단점을 극복한 언어 모델이며, 모델의 사이즈를 크게 줄이면서 동시에 성능도 비슷하거나 높은 수준으로 올렸다. 모델의 사이즈를 줄이는 방법으로 두 가지 기법을 사용했는데, 이 절에서 그 기법에 대해서 자세하게 살펴볼 것이고 ALBERT를 사용했을 때 모델의 크기가 얼마나 줄어들었는지 그리고 성능은 어떻게 바뀌었는지 알아보자.
+ALBERT는 2019년 7월에 Google Research와 Toyota Technological Institute at Chicago가 연구해서 발표한 언어 모델이다. ALBERT는 BERT의 모델 사이즈가 크다는 단점을 극복한 언어 모델이며, 모델의 사이즈를 크게 줄이면서 동시에 성능도 비슷하거나 높은 수준으로 올렸다. 모델의 사이즈를 줄이는 방법으로 두 가지 기법을 사용했는데, 이 절에서 그 기법에 대해서 자세하게 살펴볼 것이고 ALBERT를 사용했을 때 모델의 크기가 얼마나 줄어들었는지 알아보자.
 
 5.4.1. Factorized embedding parameterization
 ALBERT 논문에서 Factorized embedding parameterization은 임베딩 파라미터를 통해 모델의 크기를 줄이는 방법으로 소개하고 있다. 이 기법을 이해하기 위해서 우선 BERT에서 입력 데이터를 어떻게 임베딩하는지 다시 한번 되세겨보자. Factorized embedding parameterization을 이해하기 위해서는 ??절을 선행으로 이해해야한다. ??절을 공부하지 않은 독자들은 ??절을 먼저 공부하고 이 절을 다시 공부하길 바란다.
