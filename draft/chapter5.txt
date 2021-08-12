@@ -36,15 +36,7 @@ BERT의 모델 구조를 이해해보자. BERT의 모델 구조를 간단하게 
 BERT 모델 rough 구조(임베딩+인코더)
 <그림 끝>
 
-
-
-5.2.1. 사전학습 이해하기
-BERT는 사전 학습된 언어모델이다. BERT의 구조는 4장에서 소개한 트랜스포머의 인코더 구조를 띄고 있는데 이 구조에 데이터를 넣어서 미리 학습시킨 것이 사전학습된 BERT이고, 이 사전학습된 BERT는 이미 Google이나 HuggingFace, SKT 등등의 큰 기업 또는 오픈소스 프로젝트에서 많은 컴퓨팅 리소스를 이용해서 학습해뒀고, 학습된 모델을 다운로드 받아서 활용할 수 있다. 
-
-그러면 어떻게 BERT를 사전학습했을까? 직접 학습을 해보기는 힘들어도 원리를 이해해볼 수는 있다. BERT의 사전학습은 언어에 대한 사전학습이다. 따라서 언어를 학습할 때 어떤 식으로 학습하는지를 먼저 생각해보자. Masked Language Model(MLM)과 Next Sentence Prediction(NSP)를 통해 학습을 한다. BERT는 MLM과 NSP의 Loss를 낮추는 방식으로 학습된다. 그러면 MLM과 NSP가 각각 어떤 학습을 하는지 다음 절에서 자세하게 알아보자.
-
-5.2.2. BERT의 입력 살펴보기
-BERT에 대해서 자세하게 살펴보기 전에 우선 BERT의 입력 데이터가 어떤 형태를 띄는지 살펴보자. 4장 트랜스포머는 기계 번역을 학습한 모델이기 떄문에 입력 데이터가 번역할 문장(source)과 번역된 문장(target)으로 이뤄져 있었고, 이 문장들은 토크나이져를 통해서 토큰화되어 입력됐다. BERT도 트랜스포머처럼 토크나이저를 통해 트큰화된 문장이 입력으로 사용된다. 아래의 예시를 보자.
+우선 BERT의 입력 값부터 알아보자.
 <코드 시작>
 코드1
 >>> from transformers import BertTokenizer
@@ -57,7 +49,33 @@ BERT에 대해서 자세하게 살펴보기 전에 우선 BERT의 입력 데이�
 ['[CLS]', 'there', 'is', 'my', 'school', 'and', 'i', 'love', 'this', 'place', '[SEP]']
 <코드 끝>
 
-[코드1]은 BERT의 토크나이저를 로딩해서 문장 "There is my school and I love this place"를 토큰화한 코드이다. 위 결과에서 token_type_ids와 attention_mask에 대해서는 나중에 설명할 예정이니 지금은 무시하고 input_ids만 보자. input_ids는 101로 시작하고 102로 끝나는 텐서로 표현되고 있는데, 이것을 토크나이저의 vocab을 이용해서 역으로 치환하면 ['CLS', 'there', 'is', ..., 'place', '[SEP]']이 된다. 참고로 [코드1]에서 사용한 토크나이저는 사전에 학습돼 있는 토크나이저이고 from_pretrained를 이용해서 다운로드 받아서 사용할 수 있다.
+BERT의 입력값은 [코드1]에서 inp에 해당하는 값이다. 텍스트 데이터를 토큰화해서 입력으로 넣을 수 있는 최대 개수를 M이라고 하고 배치 사이즈를 B라고 했을때, BERT의 입력은 (B, M) 사이즈로 나타낼 수 있다. BERT의 임베딩 레이어는 입력 값 형태인 (B, M)을 (B, M, H)형태로 변형하는 레이어이다. 
+<그림 시작>
+https://github.com/huggingface/transformers/blob/c89180a9de1fc2e98654812fd1c233c3bc6a8d43/src/transformers/models/bert/modeling_bert.py#L167 참고
+
+input_ids=(B, M) -> (B, M, E)
+token_type_ids=(B, M) -> (B, M, E)
+position_ids= torch.arange(seq_length, dtype=torch.long, device=device)
+position_ids=(B, M) -> (B, M, E)
+
+self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
+self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
+self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
+
+embeddings = inputs_embeds + token_type_embeddings
+position_embeddings = self.position_embeddings(position_ids)
+embeddings += position_embeddings
+-> 이거 그림으로 그리기!!
+<그림 끝>
+
+[코드1]은 BERT의 토크나이저를 로딩해서 문장 "There is my school and I love this place"를 토큰화한 코드이다. 
+5.2.1. 사전학습 이해하기
+BERT는 사전 학습된 언어모델이다. BERT의 구조는 4장에서 소개한 트랜스포머의 인코더 구조를 띄고 있는데 이 구조에 데이터를 넣어서 미리 학습시킨 것이 사전학습된 BERT이고, 이 사전학습된 BERT는 이미 Google이나 HuggingFace, SKT 등등의 큰 기업 또는 오픈소스 프로젝트에서 많은 컴퓨팅 리소스를 이용해서 학습해뒀고, 학습된 모델을 다운로드 받아서 활용할 수 있다. 
+
+그러면 어떻게 BERT를 사전학습했을까? 직접 학습을 해보기는 힘들어도 원리를 이해해볼 수는 있다. BERT의 사전학습은 언어에 대한 사전학습이다. 따라서 언어를 학습할 때 어떤 식으로 학습하는지를 먼저 생각해보자. Masked Language Model(MLM)과 Next Sentence Prediction(NSP)를 통해 학습을 한다. BERT는 MLM과 NSP의 Loss를 낮추는 방식으로 학습된다. 그러면 MLM과 NSP가 각각 어떤 학습을 하는지 다음 절에서 자세하게 알아보자.
+
+5.2.2. BERT의 입력 살펴보기
+BERT에 대해서 자세하게 살펴보기 전에 우선 BERT의 입력 데이터가 어떤 형태를 띄는지 살펴보자. 4장 트랜스포머는 기계 번역을 학습한 모델이기 떄문에 입력 데이터가 번역할 문장(source)과 번역된 문장(target)으로 이뤄져 있었고, 이 문장들은 토크나이져를 통해서 토큰화되어 입력됐다. BERT도 트랜스포머처럼 토크나이저를 통해 트큰화된 문장이 입력으로 사용된다. [코드1]을 다시 살펴보자. [코드1]에서 token_type_ids와 attention_mask에 대해서는 나중에 설명할 예정이니 지금은 무시하고 input_ids만 보자. input_ids는 101로 시작하고 102로 끝나는 텐서로 표현되고 있는데, 이것을 토크나이저의 vocab을 이용해서 역으로 치환하면 ['CLS', 'there', 'is', ..., 'place', '[SEP]']이 된다. 참고로 [코드1]에서 사용한 토크나이저는 사전에 학습돼 있는 토크나이저이고 from_pretrained를 이용해서 다운로드 받아서 사용할 수 있다.
 
 정리하자면 BERT의 입력은 기본적으로 사전학습된 토크나이저를 통해서 토큰화해서 만들 수 있고 token_type_ids와 attention_mask 등이 추가되어 들어간다.
 
