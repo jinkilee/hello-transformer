@@ -49,26 +49,55 @@ BERT 모델 rough 구조(임베딩+인코더)
 ['[CLS]', 'there', 'is', 'my', 'school', 'and', 'i', 'love', 'this', 'place', '[SEP]']
 <코드 끝>
 
-BERT의 입력값은 [코드1]에서 inp에 해당하는 값이다. 텍스트 데이터를 토큰화해서 입력으로 넣을 수 있는 최대 개수를 M이라고 하고 배치 사이즈를 B라고 했을때, BERT의 입력은 (B, M) 사이즈로 나타낼 수 있다. BERT의 임베딩 레이어는 입력 값 형태인 (B, M)을 (B, M, H)형태로 변형하는 레이어이다. 
+BERT의 입력값은 [코드1]에서 inp에 해당하는 값이다. inp은 input_ids, token_type_ids, attention_mask를 가지고 있다. input_ids는 입력된 값을 토큰으로 변환해서 번호를 매긴 것이다. 각 토큰이 번호를 갖고 있다. token_type_ids는 토큰의 타입이다. 사실 BERT의 입력으로는 두 개의 시퀀스가 사용된다. [코드1]에서 사용된 There is my school and I love this place는 첫번째 시퀀스이고, 두번째 시퀀스는 [코드1]에서는 생략했다. 첫번째 시퀀스를 토큰 타입 0으로 정의하고 두번째 시퀀스는 토큰 타입 1로 정의한다. [코드1]은 시퀀스가 하나 뿐이기 때문에 token_type_ids는 0으로 체워져 있다. attention_mask는 어텐션을 적용할지 말지 결정하는 값이다. 시퀀스에는 모두 어텐션을 적용하지만 실제 학습에서 뒤에 붙는 [PAD] 토큰에 대해서는 어텐션을 계산할 필요가 없기 때문에 그것을 구분해주기 위해서 사용되는 값이다.
+
+input_ids, token_type_ids, attention_mask는 필수적으로 사용되는 BERT의 입력값이다. 여기에 추가적으로 position_ids를 더 넣을 수 있다. position_ids는 BERT에게 입력 값의 순서 정보를 제공하기 위함으로 단순히 0부터 차례대로 번호를 매긴 값이다.
+[그림3]은 BERT의 입력값을 그림으로 설명하고 있다.
+
 <그림 시작>
-https://github.com/huggingface/transformers/blob/c89180a9de1fc2e98654812fd1c233c3bc6a8d43/src/transformers/models/bert/modeling_bert.py#L167 참고
-
-input_ids=(B, M) -> (B, M, E)
-token_type_ids=(B, M) -> (B, M, E)
-position_ids= torch.arange(seq_length, dtype=torch.long, device=device)
-position_ids=(B, M) -> (B, M, E)
-
-self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
-self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
-self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
-
-embeddings = inputs_embeds + token_type_embeddings
-position_embeddings = self.position_embeddings(position_ids)
-embeddings += position_embeddings
--> 이거 그림으로 그리기!!
+BERT 입력값 그림
+그림3
 <그림 끝>
 
-[코드1]은 BERT의 토크나이저를 로딩해서 문장 "There is my school and I love this place"를 토큰화한 코드이다. 
+본격적으로 BERT의 구조를 설명해보자. [그림2]를 다시 보면 BERT의 구조는 크게 임베딩과 인코더로 나뉘어 있다. BERT의 입력 값을 처음으로 받는 곳은 임베딩 레이어이다. 임베딩 레이어에서 어떻게 입력 값을 처리하는지 [그림4]를 통해 알아보자.
+
+<그림 시작>
+https://github.com/huggingface/transformers/blob/c89180a9de1fc2e98654812fd1c233c3bc6a8d43/src/transformers/models/bert/modeling_bert.py#L167 참고
+그림4
+<그림 끝>
+
+[그림4]를 보자. [그림4]에서 사용되는 입력 값은 [그림3]의 input_ids, token_type_ids, position_ids를 사용하고 있다. [그림4]에서 input_ids는 임베딩 레이어에 의해서 input_vector로 바뀌게 된다. 기본 BERT를 기준으로 임베딩 레이어 E1은 토큰을 768 사이즈의 벡터로 변환한다. 따라서 input_vector는 11개의 서로 다른 768 사이즈 벡터가 된다. token_type_ids도 마찬가지로 임베딩 레이어 E2에 의해서 768 사이즈의 token_vector로 변환된다. position_ids 역시 임베딩 레이어 E3에 의해서 position_vector로 변환된다. 이 과정을 코드로 나타내면 코드2와 같다.
+
+<코드 시작>
+# E1 레이어 정의. 사용하는 가능한 토큰의 전체 수=30522, 임베딩될 벡터의 사이즈=768
+word_embeddings = nn.Embedding(30522, 768, padding_idx=config.pad_token_id)
+
+# E2 레이어 정의. token_type_ids에서 나올 수 있는 값의 개수=2, 임베딩될 벡터의 사이즈=768
+token_type_embeddings = nn.Embedding(2, 768)
+
+# E3 레이어 정의. 입력 값의 최대 길이=512, 임베딩될 벡터의 사이즈=768
+position_embeddings = nn.Embedding(512, 768)
+코드2
+<코드 끝>
+
+BERT의 임베딩 레이어 이후에는 인코딩 레이어가 있다. [그림5]를 보면 인코딩 레이어는 self-attention을 통해서 임베딩 레이어의 출력인 768 사이즈의 벡터들을 다른 768 사이즈의 벡터로 변환하는 레이어이다. BERT에서는 인코딩 레이어 12개를 사용한다.
+<그림 시작>
+그림5
+<그림 끝>
+
+[그림5]에서 보면 인코딩 레이어 L1의 입력 값은 임베딩 레이어의 출력값과 같다.([그림4]의 V0부터 V10) 임베딩 레이어의 출력을 인코딩 레이어 L1에 넣었을 때 H1_0부터 H1_10까지의 벡터가 출력이 된다. 이 과정을 12번 반복한 것이 BERT의 전체 인코딩 과정이다. 인코딩 레이어 내부는 [그림6]을 통해서 알아보자.
+
+<그림 시작>
+그림6
+<그림 끝>
+
+self-attention 레이어의 내부에 대한 자세한 내용은 앞서 4장에서 자세하게 설명했으므로 이번 장에서는 간단하게만 짚고 넘어가자. self-attention에서는 입력 값으로 주어진 11개의 벡터들 중에서 서로 유사한 벡터를 찾아서 가중치를 곱해준다. Intermediate과 Output 레이어에는 간단한 FeedForward 네트워크 구조를 하고 있다. Intermediate 레이어에서는 벡터의 크기를 4배 늘렸다가 다시 Output 레이어에서 원래의 크기로 줄인다. self-attention에 대한 자세한 과정을 이해하려면 4장의 4.1.1 인코더의 [코드1]부터 [코드3]까지를 참고하면 된다. 또한 이 장의 5.2.2에서도 BERT의 입력 값과 출력 값의 shape을 정리하고 있으니 그 부분을 참고해도 좋다. 
+
+[그림5]와 [그림6]을 통해서 BERT의 인코딩 레이어를 설명했다. [그림5]에서 BERT의 인코딩은 인코딩 레이어 12개를 반복한다고 설명하고 있고, 각 레이어에서 일어나는 연산들에 대해서 [그림6]에서 설명하고 있다. 이번 절에서는 BERT의 입력값으로 어떤 값이 들어가는지 알아봤고, BERT의 임베딩과 인코딩을 공부했다. 이 과정을 복잡하다고 느낄 수 있어서 다음 절에서는 BERT 입력의 모형(shape)에만 집중해서 정리를 했다. 
+
+5.2.2. BERT의 입출력 정리
+
+
 5.2.1. 사전학습 이해하기
 BERT는 사전 학습된 언어모델이다. BERT의 구조는 4장에서 소개한 트랜스포머의 인코더 구조를 띄고 있는데 이 구조에 데이터를 넣어서 미리 학습시킨 것이 사전학습된 BERT이고, 이 사전학습된 BERT는 이미 Google이나 HuggingFace, SKT 등등의 큰 기업 또는 오픈소스 프로젝트에서 많은 컴퓨팅 리소스를 이용해서 학습해뒀고, 학습된 모델을 다운로드 받아서 활용할 수 있다. 
 
