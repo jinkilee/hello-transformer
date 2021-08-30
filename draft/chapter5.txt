@@ -761,7 +761,25 @@ SQuAD v2.0의 리더보드를 확인해보면 73.30은 약 77~78등에 해당하
 그림3
 <그림 끝>
 
-이번 장에서는 BERT의 구조와 BERT를 사전학습/파인튜닝 학습 방법을 자세히 알아봤다. BERT는 트랜스포머의 인코더 구조를 기본으로 하고 있으며, MLM과 NSP 기법을 이용해서 사전학습된다. 그리고 사전학습된 BERT를 로딩해서 여러가지 테스크(븐류, 질의응답 등등)로 파인튜닝할 수 있다는 것을 배웠다. 다음 장에서는 트랜스포머의 디코더를 활용하는 GPT2에 대해서 알아보려고 한다.
+이번 장에서는 BERT의 구조와 BERT를 사전학습/파인튜닝 학습 방법을 자세히 알아봤다. BERT는 트랜스포머의 인코더 구조를 기본으로 하고 있으며, MLM과 NSP 기법을 이용해서 사전학습된다. 그리고 사전학습된 BERT를 로딩해서 여러가지 테스크(븐류, 질의응답 등등)로 파인튜닝할 수 있다는 것을 배웠다. 다음 절에서는 트랜스포머의 디코더를 활용하는 GPT에 대해서 알아보려고 한다.
+
+5.3. GPT
+앞 절에서 공부한 BERT는 Transformer의 인코더 부분을 이용해서 만든 모델이다. GPT는 Transformer의 디코더 부분을 이용해서 만든 모델이며 2018년 6월 11일에 발표됐다. BERT보다 약 4달 일찍 발표된 모델이다. GPT는 Generative Pre-Training의 약자이다. 우리말로 번역하면 생성하는 사전학습이다. GPT에서는 앞에 나온 단어를 이용해서 다음 단어를 맞춰나가는 방식으로 사전학습을 진행한다. 
+
+5.3.1. GPT의 사전학습
+GPT는 주어진 단어를 기반으로 다음에 올 단어를 맞추는 방식으로 사전학습을 진행한다. 전통적인 언어 모델의 정의이다. BERT와 비교해서 가장 큰 차이점은 GPT는 한 방향으로 학습이 진행된다는 점이다. BERT의 경우 입력 데이터에 대해서 MLM을 학습할 때 임의의 위치를 마스킹해서 앞 뒤 토큰의 문맥을 바탕으로 마스킹된 단어를 추론한다. BERT의 B는 양방향(Bidirectional)을 뜻하는데, 여기에서 양방향의 의미가 바로 하나의 토큰을 추론하기 위해서 양쪽 방향으로부터 문맥을 얻어온다는 뜻이다. 이에 반해 GPT는 단방향이다. 주어진 단어를 바탕으로 다음 단어를 예측하는 언어 모델링을 사전학습하기 때문에 뒤에 나오는 단어로부터 정보를 가져와서는 안된다. GPT는 masked self-attention을 이용한다. Transformer에서의 self-attention을 학습하는데 뒷 단어에 해당하는 어탠션을 0으로 마스킹 처리한 것이다. self-attention에서 스코어 값을 음의 무한대로 마스킹 처리하면 softmax를 거치면서 어탠션 값은 0으로 바뀌게 된다.
+
+<그림 시작>
+그림4
+masked self-attention
+robot must obey orders
+robot → robot ?
+robot must → robot must ?
+robot must obey → robot must obey ?
+robot must obey orders → robot must obey orders ?
+<그림 끝>
+
+[그림4]는 GPT의 사전학습을 거치면 입력 데이터가 어떻게 변하는지 설명하고 있다. 입력 데이터 robot must obey orders로 사전학습을 진행할 경우, [그림4]와 같이 마스킹해서 
 
 5.3. RoBERTa
 RoBERTa는 Facebook에서 2019년 7월 26일에 발표한 논문이다. 논문 제목은 "RoBERTa: A Robustly Optimized BERT Pretraining Approach"이다. 이 논문의 핵심은 BERT를 최적으로 학습하는 것이다. 논문에서는 BERT의 성능을 추가적으로 더 향상시킬 수 있는 방법을 소개했다. RoBERTa의 모델 구조는 BERT의 구조와 동일하지만 MLM을 학습할 때 데이터를 처리하는 방법, NSP를 처리하는 방법, 배치 사이즈 조절, 토크나이저 변경 등의 방법을 통해 몇몇 벤치마크 데이터셋 테스크에서 BERT의 성능을 뛰어넘었다.
@@ -946,6 +964,36 @@ ALBERT는 BERT 모델의 성능을 비슷하거나 높은 수준으로 향상시
 chapter5.xlsx
 t1 sheet
 <표 끝>
+
+5.5. ELECTRA
+ELECTRA(Efficiently Learning an Encoder that Classifies Token Replacements Accurately)는 Google Brain과 스탠포드 대학교가 함께 연구해서 2020년 5월 23일에 발표한 언어 모델이다. 일반적으로 언어 모델을 사전학습할때 학습 시간이 오래 걸린다. ELECTRA는 학습의 효율을 개선함으로서 사전학습 시간을 현저하게 줄였다. RoBERT, ALBERT, BERT에서 언어 모델을 학습할 때 MLM을 사용했는데, ELECTRA는 RTD(Replaced Token Detection)이라는 방법을 사용한다. 이번 절에서 ELECTRA에 대해서 자세하게 이해해보자.
+
+5.5.1. 학습구조
+ELECTRA는 GAN(Generative Adversarial Networks)과 유사한 구조를 가지고 있다. GAN에 대해서 간략하게 설명을 하고 넘어가자. GAN은 Generator와 Discriminator로 구성된다. 입력 값을 Generator가 생성(가짜 입력값)하고 Discriminator는 Generator가 준 입력값이 진짜(1)인지 가짜(0)인지 구별하는 학습을 한다. 이렇게 계속학습을 하다보면 Discriminator가 진짜와 가짜를 구별하지 못하게 되고 Generator는 정말 진짜 같은 데이터를 만들어내는 네트워크로 학습된다.
+
+ELECTRA를 학습할 때도 Generator와 Discriminator가 필요하다. ELECTRA 논문에서 사용하고 있는 그림을 보자.
+
+<그림 시작>
+그림7
+https://arxiv.org/pdf/2003.10555.pdf
+Figure2
+<그림 끝>
+
+입력 값 "the chef cooked the meal"을 generator가 "the chef ate the meal"로 바꿨다. 이 때 MLM을 이용해서 바꾼다. Discriminator는 어떤 단어가 바뀐 단어인지 알아내는 학습을 한다(RTD). 학습이 완료된 Discriminator가 ELECTRA 모델이다. 이 때 Generator는 사용하지 않는다. Generator를 직접 사용하지 않기 때문에 Generator의 크기가 그렇게 클 필요가 없다.(그림7의 Generator에 "typically a small MLM")
+
+5.5.2. RTD
+ELECTRA는 학습의 효율을 개선함으로서 사전학습 시간을 현저하게 줄였다. 학습의 효율을 개선한 비밀이 RTD이다. MLM은 전체 입력 토큰의 15%만 랜덤으로 정해서 그 부분에 대해서만 학습을 진행한다. 나머지 85%에 대해서는 학습이 진행되지 않는다. ELECTRA의 저자들은 이 부분이 비효율적이라고 생각한 것이다. 그래서 각 토큰에 대해서 학습을 진행할 수 있는 방법인 RTD를 소개한 것이다. 5.5.1의 그림7에서 알 수 있듯이, Discriminator에서 RTD를 학습하는데 각 토큰에 대해서 그 토큰이 fake인지 real인지 판단한다. 즉 모든 토큰들이 학습 대상이 된다. 하나의 입력 데이터로 더 많은 학습을 할 수 있게 된다.
+
+<그림 시작>
+그림8
+https://arxiv.org/pdf/2003.10555.pdf
+Figure1
+<그림 끝>
+
+[그림8]을 보면 여러 언어 모델들과 ELECTRA 기반의 모델들이 특정 GLUE 스코어에 도달할 때까지의 FLOPs를 그래프로 보여주고 있다. FLOPs는 Floating Point Operations의 약자이다. [그림8]의 단위를 보면 1e-20이다. 무려 1천 경에 해당하는 숫자이다. 가령, BERT-large의 경우 약 2e-20번의 Floating Point 연산을 했다는 것이다. ELECTRA-large와 비교했을 때 거의 같은 FLOPs이지만 도달한 GLUE 스코어는 매우 차이가 많이 난다.
+
+5장에서 BERT의 구조와 학습 방법에 대해서 자세하게 알아봤다. 또한 BERT 이후에는 어떤 모델이 나왔는지(RoBERTa, ALBERT, ELECTRA)에 대해서 알아봤다. 5장에서 알아본 모든 모델들이 기본적으로 Transformer를 기반으로 하고 있다. 2018년 이후의 모든 언어 모델은 기본적으로 Transformer 구조를 내부적으로 가지고 있다. Transformer를 기반으로 RoBERTa는 사이즈를 키우고 불필요한 학습을(NSP) 없애서 성능을 높였고, ALBERT는 모델의 크기를 줄였고, ELECTRA는 모델의 학습 시간을 단축했다. 같은 기반 기술을 가지고 관점을 다르게 해서 서로 다른 언어 모델을 사전학습한 것이다. NLP를 연구할 때 사전학습된 모델을 로딩한 후 파인튜닝해서 Task-specific한 모델을 만드는 트랜드로 변한 것이 BERT 이후에 가장 큰 변화이다.
+
 
 ### Reference
 - 유투브 비디오: https://www.youtube.com/watch?v=q9NS5WpfkrU 
