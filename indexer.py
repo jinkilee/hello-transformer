@@ -24,7 +24,7 @@ def main():
     parser.add_argument('txt_filename', type=str, help='text filename')
     args = parser.parse_args()
 
-    with open(args.txt_filename, 'r') as f:
+    with open(args.txt_filename, 'r', encoding='utf8') as f:
         for oneline in f:
             oneline = oneline.rstrip()
             matched = re.match(pat, oneline)
