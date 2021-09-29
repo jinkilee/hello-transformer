@@ -1,1 +1,35 @@
-asdf
+fewshot/oneshot/zeroshot 개념/코드
+GPT2 데이터셋, FS/OS/ZS 개념 -> not very detail, show an example play:plays|talk:talks|say:?
+------------------------------
+6. 파인튜닝 없는 언어모델: GPT2 그리고 GPT3
+6.1. 학습을 위한 학습, 메타학습
+6.2. 
+
+6. 파인튜닝 없는 언어모델: GPT2 그리고 GPT3
+<블록 시작>
+이제 말을 막 배워가는 윤우에게 엄마 아빠는 조금씩 어려운 말을 알려주고 싶어졌다.
+엄마: 윤우야, 엄마 이름은 XXX야, 아빠 이름은 OOO야, 윤우 이름은 뭐야?
+윤우: 윤우에여
+아빠: 윤우야, 아빠는 xx살이고, 엄마는 xx살이야, 윤우는 몇살이야?
+윤우: 세 살이에여
+<블록 끝>
+
+2018년부터 2020년까지의 거의 모든 언어 모델은 Transformer를 기반의 모델이었다. 이 언어 모델들은 사전학습돼서 사전학습된 모델의 형태로 존재한다. 사전학습된 모델은 파인튜닝 학습을 통해 다양한 형태의 자연어 처리 모델로 학습될 수 있다. 이 때 파인튜닝을 위한 학습데이터가 필요하다. 파인튜닝은 이미 학습된 상태에서 추가적으로 하는 학습이기 때문에 학습데이터가 상대적으로 적어도 된다는 것이 파인튜닝의 장점이다. 하지만 여전히 데이터셋을 준비하는 것은 성가신 일이다. 현업에서 자연어 처리 모델을 만들 때 현업의 특성에 맞는 잘 분포된 데이터를 얻기 힘들다. 
+
+2019년 2월에 OpenAI에서 GPT2를 발표했다. 논문의 제목은 "Language Models are Unsupervised Multitask Learners"이다. 이 논문에서 파인튜닝을 통한 접근법은 잘 일반화된 모델을 만들기 힘들다고 이야기하고 있다. 
+
+<인용 시작>
+Our suspicion is that the prevalence of single task training
+on single domain datasets is a major contributor to the lack
+of generalization observed in current systems.
+... (중략) ...
+
+Multitask learning (Caruana, 1997) is a promising framework for improving general performance
+
+https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf
+<인용 끝>
+
+하나의 도메인으로 이루어진 데이터셋에서 하나의 테스크를 학습하기 때문에 일반화가 잘 안된다고 이야기하고 있고, 그것을 해결하기 위해서 다양한 테스크를(multitask) 학습할 필요가 있다고 한다. GPT2에서는 다양한 도메엔에서의 학습이 zero-shot 세팅을 통해 진행됐다. zero-shot 세팅에 대한 구체적인 구현 방법은 OpenAI에서 공개하지 않았기 때문에 이 장에서 다루지 않으려고 한다. 이번 장에서는 NLP에서의 메타 학습(few-shot/one-shot/zero-shot learning)을 공부해보고 간단하게 코드를 통해서도 알아보려고 한다.
+
+6.1. 학습을 위한 학습, 메타학습
+메타 데이터가 정보에 대한 정보이듯이, 메타 학습은 학습을 하기 위한 학습이다. 
