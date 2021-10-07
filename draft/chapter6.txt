@@ -2,10 +2,10 @@ fewshot/oneshot/zeroshot 개념/코드
 GPT2 데이터셋, FS/OS/ZS 개념 -> not very detail, show an example play:plays|talk:talks|say:?
 ------------------------------
 6. 파인튜닝 없는 언어모델: GPT2 그리고 GPT3
-6.1. 학습을 위한 학습, 메타러닝
-6.2. 메타러닝을 이용한 Amazon 리뷰 감정 분류 학습하기
+6.1. 학습을 위한 학습, 메타 러닝
+6.2. 메타 러닝을 이용한 Amazon 리뷰 감정 분류 학습하기
+6.3. GPT2 그리고 GPT3
 
-6. 파인튜닝 없는 언어모델: GPT2 그리고 GPT3
 <블록 시작>
 이제 말을 막 배워가는 윤우에게 엄마 아빠는 조금씩 어려운 말을 알려주고 싶어졌다.
 엄마: 윤우야, 엄마 이름은 XXX야, 아빠 이름은 OOO야, 윤우 이름은 뭐야?
@@ -29,31 +29,31 @@ Multitask learning (Caruana, 1997) is a promising framework for improving genera
 https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf
 <인용 끝>
 
-하나의 도메인으로 이루어진 데이터셋에서 하나의 테스크를 학습하기 때문에 일반화가 잘 안된다고 이야기하고 있고, 그것을 해결하기 위해서 다양한 테스크를(multitask) 학습할 필요가 있다고 한다. GPT2에서는 다양한 도메엔에서의 학습이 zero-shot 세팅을 통해 진행됐다. zero-shot 세팅에 대한 구체적인 구현 방법은 OpenAI에서 공개하지 않았기 때문에 이 장에서 다루지 않으려고 한다. 이번 장에서는 NLP에서의 메타러닝(meta learning)을 공부해보고 간단하게 코드를 통해서도 알아보려고 한다.
+하나의 도메인으로 이루어진 데이터셋에서 하나의 테스크를 학습하기 때문에 일반화가 잘 안된다고 이야기하고 있고, 그것을 해결하기 위해서 다양한 테스크를(multitask) 학습할 필요가 있다고 한다. GPT2에서는 다양한 도메엔에서의 학습이 zero-shot 세팅을 통해 진행됐다. zero-shot 세팅에 대한 구체적인 구현 방법은 OpenAI에서 공개하지 않았기 때문에 이 장에서 다루지 않으려고 한다. 이번 장에서는 NLP에서의 메타 러닝(meta learning)을 공부해보고 간단하게 코드를 통해서도 알아보려고 한다.
 
-6.1. 학습을 위한 학습, 메타러닝
+6.1. 학습을 위한 학습, 메타 러닝
 세상의 모든 데이터를 포함하고 있는 데이터가 있을까? 그런 데이터는 존재하지 않는다. 가령 컴퓨터 비전 분야의 연구에서 가장 많이 사용되고 있는 데이터셋으로 IMAGENET 데이터셋이 있다. 이 IMAGENET 데이터셋은 약 1400만개의 데이터셋을 1000개의 클래스로 분류하고 있는 데이터셋이다. 그렇다면 이 데이터셋이 전세계의 모든 이미지를 분류할 수 있을 만큼 다양할까? 그렇지 않다. 예를 들어보자. 사용자가 올리는 이미지를 AI 모델로 자동으로 분류하는 모델로 서비스를 하고 있는 중고거래 사이트가 있다고 해보자. 이 사이트는 2000년도부터 운영돼 왔는데 2010년이 되면서 스마트폰이라는 물건이 생기면서 사람들이 서로의 스마트폰을 중고거래 사이트를 통해서 거래하기 시작했다고 하자. 이 중고거래 사이트가 처음 운영되기 시작한 2000년도에 학습된 모델은 스마트폰이라는 물건을 한번도 학습한 적이 없었을 것이고, 따라서 스마트폰을 Phone이라는 카테고리로 분류할 수 없을 것이다. 그렇다면 스마트폰 이미지만 따로 모아서 스마트폰을 분류할 수 있는 모델을 새로 만들어서 새로 서비스하면 된다. 그런데 스마트폰 이미지를 모아서 일일이 레이블링하는 과정은 매우 지루한 일이다. 더욱이 스마트폰과 같이 기존에는 없었던 형태의 물건은 언제든지 나올 수 있는데, 그때마다 데이터셋을 새로 모아서 레이블링을 한다면 매우 비효율적일 것이다.
-이 문제를 해결할 수 있는 방법이 바로 메타러닝이다. 일반적인 기계학습에서의 학습과 메타러닝을 이미지를 통해 간단하게 설명해보면 [그림1]과 같다.
+이 문제를 해결할 수 있는 방법이 바로 메타 러닝이다. 일반적인 기계학습에서의 학습과 메타 러닝을 이미지를 통해 간단하게 설명해보면 [그림1]과 같다.
 
 <그림 시작>
 그림1
-메타러닝 VS 기계학습
+메타 러닝 VS 기계학습
 <그림 끝>
 
-[그림1]에서 전통적인 기계학습의 학습과 평가 데이터셋을 보면 같은 클래스의 데이터로 구성돼 있다. 학습에서도 전화기/컵 데이터셋을 사용하고, 평가에서도 전화기/컵 데이터셋을 사용한다. 메타러닝에서는 학습할 때마다 테스트할 때마다 데이터셋을 구성하는 클래스가 다르다. 메타러닝을 학습할 때 전화기/컵 데이터셋과 공/막대기 데이터셋과 같이 서로 다른 구성의 학습 데이터셋을 사용한다. 테스트할 때 역시 쥐/늑대와 같이 전혀 다른 클래스의 데이터를 이용해서 학습한다. 메타러닝은 학습하는 법을 학습하는 것이라고 소개된다. [그림1]에서와 같이 전화기/컵, 공/막대기와 같이 서로 다른 구성의 학습 데이터를 이용해서 구분할 줄 알도록 모델을 학습할 경우, 전혀 새로운 데이터셋인 자전거/의자와 같은 데이터가 입력으로 들어와도 그 둘을 구분해낼 수 있게 된다.
+[그림1]에서 전통적인 기계학습의 학습과 평가 데이터셋을 보면 같은 클래스의 데이터로 구성돼 있다. 학습에서도 전화기/컵 데이터셋을 사용하고, 평가에서도 전화기/컵 데이터셋을 사용한다. 메타 러닝에서는 학습할 때마다 테스트할 때마다 데이터셋을 구성하는 클래스가 다르다. 메타 러닝을 학습할 때 전화기/컵 데이터셋과 공/막대기 데이터셋과 같이 서로 다른 구성의 학습 데이터셋을 사용한다. 테스트할 때 역시 쥐/늑대와 같이 전혀 다른 클래스의 데이터를 이용해서 학습한다. 메타 러닝은 학습하는 법을 학습하는 것이라고 소개된다. [그림1]에서와 같이 전화기/컵, 공/막대기와 같이 서로 다른 구성의 학습 데이터를 이용해서 구분할 줄 알도록 모델을 학습할 경우, 전혀 새로운 데이터셋인 자전거/의자와 같은 데이터가 입력으로 들어와도 그 둘을 구분해낼 수 있게 된다.
 
-이 절에서 사용한 중고거래 사이트 예시로 돌아가보자. 모델을 처음 만들었을 때 메타러닝을 고려해서 만들었다면 2010년도에 스마트폰이 나온 후에 추가적인 학습을 하지 않아도 된다. 간단하게 스마트폰 사진 몇 장과 스마트폰이 아닌 다른 클래스의 사진 몇 장을 모델에 입력으로 넣어주면 스마트폰인지 아닌지 구분할 수 있게 된다. [그림2]를 보자.
+이 절에서 사용한 중고거래 사이트 예시로 돌아가보자. 모델을 처음 만들었을 때 메타 러닝을 고려해서 만들었다면 2010년도에 스마트폰이 나온 후에 추가적인 학습을 하지 않아도 된다. 간단하게 스마트폰 사진 몇 장과 스마트폰이 아닌 다른 클래스의 사진 몇 장을 모델에 입력으로 넣어주면 스마트폰인지 아닌지 구분할 수 있게 된다. [그림2]를 보자.
 
 <그림 시작>
 그림2
 <그림 끝>
 
-스마트폰에 대한 학습이 전혀 진행되지 않았어도 [그림2]와 같이 스마트폰을 분류할 수 있다. [그림2]의 모델은 메타러닝 기법을 이용해서 학습된 모델이기 때문에 서로 다른 클래스로 구성된 이미지셋을 입력으로 넣었을 경우 같은 분류의 클래스끼리 묶어줄 수 있다. 서로 다른 클래스의 이미지를 구분할 수 있는 능력을 학습한 모델인 셈이다. 그래서 메타러닝을 학습하는 방법을 학습하는 것이라고 정의하기도 한다.
+스마트폰에 대한 학습이 전혀 진행되지 않았어도 [그림2]와 같이 스마트폰을 분류할 수 있다. [그림2]의 모델은 메타 러닝 기법을 이용해서 학습된 모델이기 때문에 서로 다른 클래스로 구성된 이미지셋을 입력으로 넣었을 경우 같은 분류의 클래스끼리 묶어줄 수 있다. 서로 다른 클래스의 이미지를 구분할 수 있는 능력을 학습한 모델인 셈이다. 그래서 메타 러닝을 학습하는 방법을 학습하는 것이라고 정의하기도 한다.
 
-메타러닝은 쉽지 않다. 특히 자연어처리 영역에 있어서 메타러닝은 GPT2나 GPT3를 제외하고는 크게 주목받은 연구는 없었다. 이번 절에서는 메타러닝 개념을 우리의 생활에 친숙한 예제를 통해서 알아봤다. 다음 절에서는 코드를 통해서 메타러닝을 공부해보자.
+메타 러닝은 쉽지 않다. 특히 자연어처리 영역에 있어서 메타 러닝은 GPT2나 GPT3를 제외하고는 크게 주목받은 연구는 없었다. 이번 절에서는 메타 러닝 개념을 우리의 생활에 친숙한 예제를 통해서 알아봤다. 다음 절에서는 코드를 통해서 메타 러닝을 공부해보자.
 
-6.2. 메타러닝을 이용한 Amazon 리뷰 감정 분류 학습하기
-이번 절에서는 메타러닝을 이용해서 Amazon 리뷰 데이터셋에 대한 감정 분류 모델을 학습해보려고 한다. Amazon 리뷰 데이터셋은 Amazon에서 판매하는 물품을 종류별로 구분한 뒤 각 종류별로 긍정을 나타내는 후기 또는 부정을 나타내는 후기가 모아져있다. 이 데이터셋은 22개의 물품 리스트에 대한 데이터를 가지고 있다.
+6.2. 메타 러닝을 이용한 Amazon 리뷰 감정 분류 학습하기
+이번 절에서는 메타 러닝을 이용해서 Amazon 리뷰 데이터셋에 대한 감정 분류 모델을 학습해보려고 한다. Amazon 리뷰 데이터셋은 Amazon에서 판매하는 물품을 종류별로 구분한 뒤 각 종류별로 긍정을 나타내는 후기 또는 부정을 나타내는 후기가 모아져있다. 이 데이터셋은 22개의 물품 리스트에 대한 데이터를 가지고 있다.
 
 <블록 시작>
 apparel, automotive,baby,beauty,camera_photo,cell_phones_service,computer_video_games,health_personal_care,
@@ -84,7 +84,7 @@ used supra locks which i like lot , i found master lock key safe tried it out . 
 bessey k-body clamps superior multi-board cabinet door glue-ups keeping pieces flat . wish i could purchased k-body clamps instead all pipe clamps i own        1
 <블록 끝>
 
-이 데이터셋을 이용해서 메타러닝 모델을 학습해보자. 우선 이 데이터셋에서 다루고 있는 물품을 학습/검증/테스트용으로 나눌 것이다. 레포지토리의 chapter6/train.list에 있는 물품들에 대해서는 메타러닝 모델을 학습할 때 사용할 것이고 chapter6/dev.list에 있는 물품 데이터셋들을 이용해서 학습 중에 검증을 할 것이다. 학습이 완료된 후에는 chapter6/test.list에 있는 물품 데이터셋을 이용해서 테스트를 할 것이다. 각 파일의 내용은 [블록3]을 참고하라.
+이 데이터셋을 이용해서 메타 러닝 모델을 학습해보자. 우선 이 데이터셋에서 다루고 있는 물품을 학습/검증/테스트용으로 나눌 것이다. 레포지토리의 chapter6/train.list에 있는 물품들에 대해서는 메타 러닝 모델을 학습할 때 사용할 것이고 chapter6/dev.list에 있는 물품 데이터셋들을 이용해서 학습 중에 검증을 할 것이다. 학습이 완료된 후에는 chapter6/test.list에 있는 물품 데이터셋을 이용해서 테스트를 할 것이다. 각 파일의 내용은 [블록3]을 참고하라.
 
 <블록 시작>
 블록3
@@ -118,21 +118,23 @@ electronics
 kitchen_housewares
 <블록 끝>
 
-메타러닝을 학습하기 위해서 N-way, K-shot 방식을 사용하려고 한다. N-way의 N은 클래스의 개수이다. Amazon 리뷰 데이터셋에서는 positive/negative 두 개의 클래스를 구분하기 때문에 N은 2이다. K-shot의 K는 서포트 데이터셋의 개수이다. 6.1절에서 메타러닝은 학습하는 것을 학습하는 기법이라고 소개했는데 이것을 가능하게 하는 방법 중 하나가 서포트 데이터셋을 활용하는 것이다. 메타러닝에서 하나의 배치 데이터셋은 서포트 데이터셋과 쿼리 데이터셋으로 나뉘어 있다. 메타러닝 모델은 쿼리 데이터와 서포트 데이터의 관계를 학습한다. [그림3]을 보면 하나의 배치 데이터셋이 64개로 이루어져 있다. 앞에 10개는 positive/negative 데이터셋을 각각 5개씩 가지고 있고, 뒤에 54개가 쿼리 데이터셋으로 positive/negative 데이터가 각각 27개씩 있다. 이번 절에서 사용하는 메타러닝 모델은 각 배치에 대하여 서포트 데이터와 쿼리 데이터를 각각 인코딩한 후, 인코딩된 서포트 데이터셋과 인코딩된 쿼리 데이터를 이용해서 쿼리 데이터의 정답을 맞추는 방법으로 학습된다. 
+메타 러닝을 학습하기 위해서 N-way, K-shot 방식을 사용하려고 한다. N-way의 N은 클래스의 개수이다. Amazon 리뷰 데이터셋에서는 positive/negative 두 개의 클래스를 구분하기 때문에 N은 2이다. K-shot의 K는 서포트 데이터셋의 개수이다. 6.1절에서 메타 러닝은 학습하는 것을 학습하는 기법이라고 소개했는데 이것을 가능하게 하는 방법 중 하나가 서포트 데이터셋을 활용하는 것이다. 메타 러닝에서 하나의 배치 데이터셋은 서포트 데이터셋과 쿼리 데이터셋으로 나뉘어 있다. 메타 러닝 모델은 쿼리 데이터와 서포트 데이터의 관계를 학습한다. [그림3]을 보면 하나의 배치 데이터셋이 64개로 이루어져 있다. 앞에 10개는 positive/negative 데이터셋을 각각 5개씩 가지고 있고, 뒤에 54개가 쿼리 데이터셋으로 positive/negative 데이터가 각각 27개씩 있다. 이번 절에서 사용하는 메타 러닝 모델은 각 배치에 대하여 서포트 데이터와 쿼리 데이터를 각각 인코딩한 후, 인코딩된 서포트 데이터셋과 인코딩된 쿼리 데이터를 이용해서 쿼리 데이터의 정답을 맞추는 방법으로 학습된다. 
 
 <그림 시작>
 그림3
 <그림 끝>
 
-[그림3]과 같이 학습된 모델을 이용해서 [그림4]와 같이 테스트를 진행할 수 있다. [그림3]과 [그림4]의 차이점은 모델의 그라디언트 업데이트의 유무이다. [그림3]에서는 메타러닝 모델의 학습을 진행하기 때문에 그라디언트 업데이트가 진행되지만, [그림4]에서는 학습이 완료된 후 테스트를 하는 과정이기 때문에 그라디언트 업데이트가 진행되지 않는다. 다만 서포트 데이터셋의 정보를 이용해서 쿼리 데이터셋의 정답을 맞추는 전체적인 흐름만 같다. 
+[그림3]과 같이 학습된 모델을 이용해서 [그림4]와 같이 테스트를 진행할 수 있다. [그림3]과 [그림4]의 차이점은 모델의 그라디언트 업데이트의 유무이다. [그림3]에서는 메타 러닝 모델의 학습을 진행하기 때문에 그라디언트 업데이트가 진행되지만, [그림4]에서는 학습이 완료된 후 테스트를 하는 과정이기 때문에 그라디언트 업데이트가 진행되지 않는다. 다만 서포트 데이터셋의 정보를 이용해서 쿼리 데이터셋의 정답을 맞추는 전체적인 흐름만 같다. 
 
 <그림 시작>
 그림4
 <그림 끝>
 
-이렇게 학습된 메타러닝 모델은 새로운 물품에 대한 리뷰 데이터셋에도 쓰일 수 있다. 다만 K-shot만큼의 데이터가 필요하다. 메타러닝으로 학습돼 있지 않다면 새로운 물품에 대한 학습/검증/테스트 데이터셋을 최소 몇 만건 정도 수집해야 하며 수집 후에도 모델을 새로 학습해서 시스템에 새로 적용해야 한다. 따라서 메타러닝 방식이 훨씬 효율적이라고 할 수 있다.
+이렇게 학습된 메타 러닝 모델은 새로운 물품에 대한 리뷰 데이터셋에도 쓰일 수 있다. 다만 K-shot만큼의 데이터가 필요하다. 메타 러닝으로 학습돼 있지 않다면 새로운 물품에 대한 학습/검증/테스트 데이터셋을 최소 몇 만건 정도 수집해야 하며 수집 후에도 모델을 새로 학습해서 시스템에 새로 적용해야 한다. 따라서 메타 러닝 방식이 훨씬 효율적이라고 할 수 있다.
 
-이제는 실제로 Amazon 리뷰 데이터셋을 메타러닝하는 모델을 구현해보자. chapter6/few-shot-classification.ipynb을 참고하자.
+이제는 실제로 Amazon 리뷰 데이터셋을 메타 러닝하는 모델을 구현해보자. chapter6/few-shot-classification.ipynb을 참고하면된다. 
+
+## 각주1 6.2.1절의 코드는 https://github.com/zhongyuchen/few-shot-text-classification를 참고했다.
 
 6.2.1. 데이터셋/데이터로더 만들기
 우선 데이터셋과 데이터로더를 만들어보자.
@@ -227,7 +229,7 @@ class AmazonDataLoader():
             self.pos_support_len = {k:len(self.dataset.support_dataset[k]['pos']['text']) for k in self.dataset.support_dataset}
 <코드 끝>
 
-메타러닝의 학습이나 테스트 과정에서 데이터를 배치 단위로 만드는 코드는 [코드4]를 참고하라. [코드4]는 학습을 위한 배치를 생성하는 코드이다.
+메타 러닝의 학습이나 테스트 과정에서 데이터를 배치 단위로 만드는 코드는 [코드4]를 참고하라. [코드4]는 학습을 위한 배치를 생성하는 코드이다.
 
 <코드 시작>
 코드4
@@ -306,7 +308,7 @@ torch.Size([64, 530]) tensor(0.5000)
 torch.Size([64, 602]) tensor(0.5000)
 <코드 끝>
 
-Amazon 리뷰 데이터셋의 데이터셋과 데이터로더를 만들었다. 이제 메타러닝을 위한 모델 클래스를 구현해보자.
+Amazon 리뷰 데이터셋의 데이터셋과 데이터로더를 만들었다. 이제 메타 러닝을 위한 모델 클래스를 구현해보자.
 
 <코드 시작>
 코드6
@@ -341,7 +343,7 @@ model = FewShotInduction(C=2,
 model = model.cuda()
 <코드 끝>
 
-메타러닝 모델은 [코드7]과 같이 정의할 수 있다. support 데이터로 사용할 개수를 5개로 정의해서 넣어주는데, 이 파라미터를 통해서 Encoder 클래스가 서포트 데이터는 몇 개 사용하는지를 알 수 있다.
+메타 러닝 모델은 [코드7]과 같이 정의할 수 있다. support 데이터로 사용할 개수를 5개로 정의해서 넣어주는데, 이 파라미터를 통해서 Encoder 클래스가 서포트 데이터는 몇 개 사용하는지를 알 수 있다.
 
 학습을 시작하기 전에 [코드8]에서 Criterion 클래스를 보자.
 
@@ -368,7 +370,7 @@ class Criterion(_Loss):
 
 [코드8]을 보면 self.amount라는 변수가 있다. 이 변수를 이용해서 target을 슬라이싱한다. target을 슬라이싱하는 이유는 loss를 구할 때 쿼리 데이터만 사용하기 위해서이다.
 
-메타러닝 모델 학습을 위한 모든 과정을 코드와 함께 설명했다. [코드8]은 앞서 설명한 내용을 바탕으로 실제로 메타러닝 모델을 학습하는 부분이다.
+메타 러닝 모델 학습을 위한 모든 과정을 코드와 함께 설명했다. [코드8]은 앞서 설명한 내용을 바탕으로 실제로 메타 러닝 모델을 학습하는 부분이다.
 
 <코드 시작>
 코드8
@@ -384,12 +386,68 @@ for episode in tbar:
             best_acc = acc
     tbar.set_postfix(loss=loss)
 
-## tqdm 학습 output 출력부분 추가할 것
+  1%|          | 101/9999 [00:24<1:39:28,  1.66it/s, loss=tensor(0.4911, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.5374
+  2%|▏         | 201/9999 [00:49<1:41:05,  1.62it/s, loss=tensor(0.5000, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.5421
+  5%|▌         | 500/9999 [02:02<2:03:14,  1.28it/s, loss=tensor(0.4907, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.5428
+ 32%|███▏      | 3200/9999 [12:54<1:27:25,  1.30it/s, loss=tensor(0.5259, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.5548
+ 36%|███▌      | 3601/9999 [14:31<1:03:33,  1.68it/s, loss=tensor(0.3047, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6022
+ 37%|███▋      | 3701/9999 [14:56<1:05:37,  1.60it/s, loss=tensor(0.4654, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6230
+ 39%|███▉      | 3900/9999 [15:44<1:18:19,  1.30it/s, loss=tensor(0.4810, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6518
+ 40%|████      | 4000/9999 [16:07<1:18:58,  1.27it/s, loss=tensor(0.2676, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6539
+ 41%|████      | 4100/9999 [16:32<1:18:33,  1.25it/s, loss=tensor(0.2664, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6652
+ 42%|████▏     | 4200/9999 [16:56<1:16:40,  1.26it/s, loss=tensor(0.2961, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6730
+ 43%|████▎     | 4300/9999 [17:20<1:14:57,  1.27it/s, loss=tensor(0.1779, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6873
+ 45%|████▌     | 4500/9999 [18:09<1:10:59,  1.29it/s, loss=tensor(0.1996, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.6883
+ 50%|█████     | 5001/9999 [20:11<50:16,  1.66it/s, loss=tensor(0.1750, device='cuda:0', grad_fn=<MeanBackward0>)]  
+Better acc! Saving model! -> 0.6964
+ 51%|█████     | 5100/9999 [20:35<1:05:25,  1.25it/s, loss=tensor(0.3406, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7037
+ 59%|█████▉    | 5900/9999 [23:48<53:08,  1.29it/s, loss=tensor(0.0876, device='cuda:0', grad_fn=<MeanBackward0>)]  
+Better acc! Saving model! -> 0.7123
+ 60%|██████    | 6000/9999 [24:13<51:30,  1.29it/s, loss=tensor(0.1551, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7133
+ 62%|██████▏   | 6200/9999 [25:01<50:09,  1.26it/s, loss=tensor(0.2443, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7195
+ 65%|██████▌   | 6501/9999 [26:14<34:55,  1.67it/s, loss=tensor(0.1500, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7287
+ 67%|██████▋   | 6700/9999 [27:02<41:29,  1.33it/s, loss=tensor(0.1373, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7345
+ 76%|███████▌  | 7600/9999 [30:41<32:03,  1.25it/s, loss=tensor(0.2500, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7393
+ 82%|████████▏ | 8200/9999 [33:06<23:03,  1.30it/s, loss=tensor(0.0173, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7446
+ 84%|████████▍ | 8400/9999 [33:55<21:26,  1.24it/s, loss=tensor(0.2435, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7486
+ 90%|█████████ | 9000/9999 [36:20<13:24,  1.24it/s, loss=tensor(0.0522, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7496
+ 92%|█████████▏| 9200/9999 [37:09<10:15,  1.30it/s, loss=tensor(0.0444, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7497
+ 93%|█████████▎| 9301/9999 [37:33<07:19,  1.59it/s, loss=tensor(0.2773, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7528
+ 94%|█████████▍| 9400/9999 [37:57<07:49,  1.28it/s, loss=tensor(0.0272, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7531
+ 98%|█████████▊| 9800/9999 [39:33<02:45,  1.20it/s, loss=tensor(0.2823, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7546
+ 99%|█████████▉| 9900/9999 [39:57<01:16,  1.30it/s, loss=tensor(0.2743, device='cuda:0', grad_fn=<MeanBackward0>)]
+Better acc! Saving model! -> 0.7551
+100%|██████████| 9999/9999 [40:19<00:00,  4.13it/s, loss=tensor(0.2489, device='cuda:0', grad_fn=<MeanBackward0>)]
 <코드 끝>
 
-[코드8]에 메타러닝의 학습을 시작하는 코드를 구현했다. 학습 결과를 보면 검증할 때 사용되는 데이터셋은 학습할 때 사용되는 데이터가 아님에도 불구하고 정확도가 향상되는 것을 볼 수 있다.
+[코드8]에 메타 러닝의 학습을 시작하는 코드를 구현했다. 학습 결과를 보면 검증할 때 사용되는 데이터셋은 학습할 때 사용되는 데이터가 아님에도 불구하고 정확도가 향상되는 것을 볼 수 있다.
 
-마지막으로 [코드9]에서는 학습된 메타러닝 모델을 이용해서 테스트셋에 대한 정확도를 구하는 것을 구현했다.
+마지막으로 [코드9]에서는 학습된 메타 러닝 모델을 이용해서 테스트셋에 대한 정확도를 구하는 것을 구현했다.
 
 <코드 시작>
 코드9
@@ -412,12 +470,12 @@ def test():
     return acc
 
 >>> test()
-## 결과 추가
+Test Acc: 0.6549707651138306
 <코드 끝>
 
 [코드9]를 보면 0과 1을 구분하는 이진분류에서 0.7 정도의 정확도를 보여주고 있다. 테스트 데이터셋은 books, dvd, electronics, kitchen_housewares 등에 대한 데이터셋이다. 이는 학습과정에서는 한번도 사용된 적 없는 데이터이기 때문에 임의로 맞추는 확률인 0.5가 나올것 같지만, 서포트 데이터셋을 통해서 쿼리 데이터셋을 예측하는 구조를 가지고 있기 때문에 0.7정도의 결과를 보이고 있다.
 
-마지막으로 [코드8]에서 학습한 메타러닝 모델이 제대로 학습된 것인지를 확인하기 위해 서포트 셋을 사용하지 않고(support=0) 학습해보자. 
+마지막으로 [코드8]에서 학습한 메타 러닝 모델이 제대로 학습된 것인지를 확인하기 위해 서포트 셋을 사용하지 않고(support=0) 학습해보자. 
 
 <코드 시작>
 코드10
@@ -436,70 +494,49 @@ Better acc! Saving model! -> 0.5995
 Test Acc: 0.5084260702133179
 <코드 끝>
 
-support=0으로 세팅 후 메타러닝 모델 학습을 진행하면 [코드10]과 같이 정확도가 0.5정도로 나오는 것을 확인했다. 따라서 서포트 데이터셋을 통해서 쿼리 데이터셋을 예측하는 기법, 즉 메타러닝 기법을 통해 학습을 위한 학습이 가능하다고 말할 수 있다.
+support=0으로 세팅 후 메타 러닝 모델 학습을 진행하면 [코드10]과 같이 정확도가 0.5정도로 나오는 것을 확인했다. 따라서 서포트 데이터셋을 통해서 쿼리 데이터셋을 예측하는 기법, 즉 메타 러닝 기법을 통해서 학습을 위한 학습이 가능하다고 말할 수 있다. support=5로 학습한 모델과 support=0으로 학습한 모델의 confusion matrix를 [표1]을 통해서 확인해보자. 서포트 데이터셋을 사용해서 학습한 모델이 훨씬 좋은 모델임을 알 수 있다.
+
+<표 시작>
+표1
+# support=5
+→ neg/pos
+↓ 0/1
+[1217 1408]
+[ 400 2288]
+
+# support=0
+[   0 3092]
+[   0 3190]
+<표 끝>
 
 
+6.3. GPT2 그리고 GPT3
+6.2절에서 다뤘던 메타 러닝 기법은 퓨샷 러닝(Few-shot learning)이다. 서포트 데이터셋 몇 개를 예제로 제공하고(few shot) 그것을 기반으로 쿼리 데이터셋을 맞추는 형태가 퓨샷 러닝이다. 여기에서 서포트 데이터를 한 개만 주는 형태를 원샷 러닝(one-shot learning)이라고 하고 서포트 데이터를 한 개도 주지 않는 형태를 제로샷 러닝(zero-shot learning)이라고 한다. 제로샷 러닝에서는 서포트 데이터셋이 아닌 태스크에 대한 다른 정보가 제공되며, 그 정보를 통해서 결과값을 출력한다. 
 
+<그림 시작>
+그림5
+<그림 끝>
 
-<코드 시작>
-코드5
-def get_batch_test(self):
-	assert self.dataset.support_dataset, 'support_dataset is empty'
-	
-	category = self.categories[self.idx % len(self.categories)]
-	neg = self.neg[category]
-	pos = self.pos[category]
-	neg_query_start_idx = self.neg_idx[category] % self.neg_len[category]
-	pos_query_start_idx = self.pos_idx[category] % self.pos_len[category]
-	neg_support_start_idx = self.neg_support_idx[category] % self.neg_support_len[category]
-	pos_support_start_idx = self.pos_support_idx[category] % self.pos_support_len[category]
-	
-	# prepare negative/positive support dataset from support_dataset
-	category_suuport_dataset = self.dataset.support_dataset[category]
-	neg_support_text = category_suuport_dataset['neg']['text'][neg_support_start_idx:neg_support_start_idx+self.n_support//2]
-	pos_support_text = category_suuport_dataset['pos']['text'][pos_support_start_idx:pos_support_start_idx+self.n_support//2]
-	neg_support_label = category_suuport_dataset['neg']['label'][neg_support_start_idx:neg_support_start_idx+self.n_support//2]
-	pos_support_label = category_suuport_dataset['pos']['label'][pos_support_start_idx:pos_support_start_idx+self.n_support//2]
-	self.neg_support_idx[category] += (self.n_support//2)
-	self.pos_support_idx[category] += (self.n_support//2)
-	
-	# prepare negative/positive query dataset
-	neg_query_text = neg['text'][neg_query_start_idx:neg_query_start_idx+(self.batch_size//2 - self.n_support//2)]
-	pos_query_text = pos['text'][pos_query_start_idx:pos_query_start_idx+(self.batch_size//2 - self.n_support//2)]
-	neg_query_label = neg['label'][neg_query_start_idx:neg_query_start_idx+(self.batch_size//2 - self.n_support//2)]
-	pos_query_label = pos['label'][pos_query_start_idx:pos_query_start_idx+(self.batch_size//2 - self.n_support//2)]
-	self.neg_idx[category] += (self.batch_size//2 - self.n_support//2)
-	self.pos_idx[category] += (self.batch_size//2 - self.n_support//2)
-	
-	# padding support text dataset
-	if self.n_support:
-		print('n_support!!')
-		neg_support_text = pad_sequence([n for n in neg_support_text], batch_first=True)
-		pos_support_text = pad_sequence([n for n in pos_support_text], batch_first=True)
-		neg_support_text, pos_support_text = pad_text(neg_support_text, pos_support_text)
-	else:
-		neg_support_text = torch.tensor([[]])
-		pos_support_text = torch.tensor([[]])
-		
-	# padding text dataset
-	neg_query_text = pad_sequence([n for n in neg_query_text], batch_first=True)
-	pos_query_text = pad_sequence([p for p in pos_query_text], batch_first=True)
-	neg_query_text, pos_query_text = pad_text(neg_query_text, pos_query_text)
+[그림5]는 퓨샷/원샷/제로샷 러닝을 설명하고 있다. 제로샷 러닝의 개념은 GPT2에서부터 적용되기 시작했다. GPT2 논문에 따르면 어떠한 파라미터나 아미텍쳐의 수정 없이 언어 모델이 제로샷 러닝 세팅에서 동작한다는 것을 보였다고 한다.
 
-	# concatenating support/query text dataset
-	support_text = torch.cat([neg_support_text, pos_support_text], dim=0)
-	query_text = torch.cat([neg_query_text, pos_query_text], dim=0)
-	support_text, query_text = pad_text(support_text, query_text)
+<인용 시작>
+We demonstrate language models can perform down-stream tasks in a zero-shot setting – without any parameter or architecture modification
+<인용 끝>
 
-	# make final data and label
-	if self.n_support:
-		data = torch.cat([support_text, query_text], dim=0)
-	else:
-		data = query_text
-	label = torch.cat([neg_support_label, pos_support_label, neg_query_label, pos_query_label], dim=0)
-	return data, label
-<코드 끝>
+아쉽게도 GPT2의 구체적인 학습 공식이나 코드는 공개되지 않았기 때문에 GPT2를 학습하는 의사 코드를 구현해보기 힘들다. 이번 절에서는 구현 관점이 아닌, 논문을 이해하는 관점으로 접근해서 GPT2를 이해해보자.
 
+6.3.1. GPT2를 학습하기 위한 접근 방법
+GPT2 논문의 Approach 섹션을 보면 일반적인 언어 모델의 공식을 P(output|input)으로 표현했다. 예를 들어서 텍스트 분류 모델을 학습했을 경우 주어진 입력 값에 대해서 positive=1, negative=0를 출력할 확률을 구한다. GPT2에서는 한 발자국 더 나아가서 입력 값에 테스크 정보를 더한다. 즉, P(output|input,task) 형태로 언어 모델 공식을 정했다. 여기에서 태스크는 여러 가지 종류의 자연어 처리 태스크를 의미한다. 예를 들어 텍스트 분류, 기계 번역, 질의 응답 등등이 될 수 있다. 이렇게 테스크의 정보를 입력의 또 다른 조건 값으로 제공하는 것을 태스크 컨디셔닝이라고 소개하고 있고, 태스크를 제공하는 방법은 자유로운 방식으로 가능하다고 설명하고 있다.
 
+<블록 시작>
+블록2
+기계어 번역 태스크: (translate to french, english text, french text)
+질의응답 태스크: (answer the question, document, question, answer)
+<블록 끝>
+
+[블록2]를 보면 기계어 번역 태스크의 경우, 입력 값은 "translate to french"라는 자연어와 번역을 할 언어(english text) 두 개 제공된다. 질의응답 태스크의 경우 "answer the question"이라는 자연어와 document, question 등의 정보가 입력으로 제공되고 그것을 이용해서 answer를 추론하게 된다. 
+
+6.3.2. GPT2의 학습 데이터셋과 멀티태스크
+GPT2를 학습한 데이터셋에 대해서 이해해보자. GPT2는 
 
 
