@@ -16,9 +16,10 @@ GPT2 데이터셋, FS/OS/ZS 개념 -> not very detail, show an example play:play
 
 2018년부터 2020년까지의 거의 모든 언어 모델은 Transformer를 기반의 모델이었다. 이 언어 모델들은 사전학습돼서 사전학습된 모델의 형태로 존재한다. 사전학습된 모델은 파인튜닝 학습을 통해 다양한 형태의 자연어 처리 모델로 학습될 수 있다. 이 때 파인튜닝을 위한 학습데이터가 필요하다. 파인튜닝은 이미 학습된 상태에서 추가적으로 하는 학습이기 때문에 학습데이터가 상대적으로 적어도 된다는 것이 파인튜닝의 장점이다. 하지만 여전히 데이터셋을 준비하는 것은 성가신 일이다. 현업에서 자연어 처리 모델을 만들 때 현업의 특성에 맞는 잘 분포된 데이터를 얻기 힘들다. 
 
-2019년 2월에 OpenAI에서 GPT2를 발표했다. 논문의 제목은 "Language Models are Unsupervised Multitask Learners"이다. 이 논문에서 파인튜닝을 통한 접근법은 잘 일반화된 모델을 만들기 힘들다고 이야기하고 있다. 
+2019년 2월에 OpenAI에서 GPT2를 발표했다. 논문의 제목은 "Language Models are Unsupervised Multitask Learners"이다. 이 논문에서 파인튜닝을 통한 접근법은 잘 일반화된 모델을 만들기 힘들다고 이야기하고 있다.
 
 <인용 시작>
+인용1
 Our suspicion is that the prevalence of single task training
 on single domain datasets is a major contributor to the lack
 of generalization observed in current systems.
@@ -29,7 +30,7 @@ Multitask learning (Caruana, 1997) is a promising framework for improving genera
 https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf
 <인용 끝>
 
-하나의 도메인으로 이루어진 데이터셋에서 하나의 테스크를 학습하기 때문에 일반화가 잘 안된다고 이야기하고 있고, 그것을 해결하기 위해서 다양한 테스크를(multitask) 학습할 필요가 있다고 한다. GPT2에서는 다양한 도메엔에서의 학습이 zero-shot 세팅을 통해 진행됐다. zero-shot 세팅에 대한 구체적인 구현 방법은 OpenAI에서 공개하지 않았기 때문에 이 장에서 다루지 않으려고 한다. 이번 장에서는 NLP에서의 메타 러닝(meta learning)을 공부해보고 간단하게 코드를 통해서도 알아보려고 한다.
+[인용1]에서는 하나의 도메인으로 이루어진 데이터셋에서 하나의 테스크를 학습하기 때문에 일반화가 잘 안된다고 이야기하고 있고, 그것을 해결하기 위해서 다양한 테스크를(multitask) 학습할 필요가 있다고 한다. GPT2에서는 다양한 도메엔에서의 학습이 zero-shot 세팅을 통해 진행됐다. zero-shot 세팅에 대한 구체적인 구현 방법은 OpenAI에서 공개하지 않았기 때문에 이 장에서 다루지 않으려고 한다. 이번 장에서는 NLP에서의 메타 러닝(meta learning)을 공부해보고 간단하게 코드를 통해서도 알아보려고 한다.
 
 6.1. 학습을 위한 학습, 메타 러닝
 세상의 모든 데이터를 포함하고 있는 데이터가 있을까? 그런 데이터는 존재하지 않는다. 가령 컴퓨터 비전 분야의 연구에서 가장 많이 사용되고 있는 데이터셋으로 IMAGENET 데이터셋이 있다. 이 IMAGENET 데이터셋은 약 1400만개의 데이터셋을 1000개의 클래스로 분류하고 있는 데이터셋이다. 그렇다면 이 데이터셋이 전세계의 모든 이미지를 분류할 수 있을 만큼 다양할까? 그렇지 않다. 예를 들어보자. 사용자가 올리는 이미지를 AI 모델로 자동으로 분류하는 모델로 서비스를 하고 있는 중고거래 사이트가 있다고 해보자. 이 사이트는 2000년도부터 운영돼 왔는데 2010년이 되면서 스마트폰이라는 물건이 생기면서 사람들이 서로의 스마트폰을 중고거래 사이트를 통해서 거래하기 시작했다고 하자. 이 중고거래 사이트가 처음 운영되기 시작한 2000년도에 학습된 모델은 스마트폰이라는 물건을 한번도 학습한 적이 없었을 것이고, 따라서 스마트폰을 Phone이라는 카테고리로 분류할 수 없을 것이다. 그렇다면 스마트폰 이미지만 따로 모아서 스마트폰을 분류할 수 있는 모델을 새로 만들어서 새로 서비스하면 된다. 그런데 스마트폰 이미지를 모아서 일일이 레이블링하는 과정은 매우 지루한 일이다. 더욱이 스마트폰과 같이 기존에는 없었던 형태의 물건은 언제든지 나올 수 있는데, 그때마다 데이터셋을 새로 모아서 레이블링을 한다면 매우 비효율적일 것이다.
@@ -517,13 +518,14 @@ support=0으로 세팅 후 메타 러닝 모델 학습을 진행하면 [코드10
 그림5
 <그림 끝>
 
-[그림5]는 퓨샷/원샷/제로샷 러닝을 설명하고 있다. 제로샷 러닝의 개념은 GPT2에서부터 적용되기 시작했다. GPT2 논문에 따르면 어떠한 파라미터나 아미텍쳐의 수정 없이 언어 모델이 제로샷 러닝 세팅에서 동작한다는 것을 보였다고 한다.
+[그림5]는 퓨샷/원샷/제로샷 러닝을 설명하고 있다. 제로샷 러닝의 개념은 GPT2에서부터 적용되기 시작했다. GPT2 논문에 따르면 어떠한 파라미터나 아키텍쳐의 수정 없이 언어 모델이 제로샷 러닝 세팅에서 동작한다는 것을 보였다고 한다.
 
 <인용 시작>
+인용2
 We demonstrate language models can perform down-stream tasks in a zero-shot setting – without any parameter or architecture modification
 <인용 끝>
 
-아쉽게도 GPT2의 구체적인 학습 공식이나 코드는 공개되지 않았기 때문에 GPT2를 학습하는 의사 코드를 구현해보기 힘들다. 이번 절에서는 구현 관점이 아닌, 논문을 이해하는 관점으로 접근해서 GPT2를 이해해보자.
+[인용2]를 보면 제로샷 세팅에서 여러가지 태스크를 수행할 수 있다는 것을 보였다고 한다. 아쉽게도 GPT2의 구체적인 학습 공식이나 코드는 공개되지 않았기 때문에 GPT2를 학습하는 의사 코드를 구현해보기 힘들다. 이번 절에서는 구현 관점이 아닌, 논문을 이해하는 관점으로 접근해서 GPT2를 이해해보자.
 
 6.3.1. GPT2를 학습하기 위한 접근 방법
 GPT2 논문의 Approach 섹션을 보면 일반적인 언어 모델의 공식을 P(output|input)으로 표현했다. 예를 들어서 텍스트 분류 모델을 학습했을 경우 주어진 입력 값에 대해서 positive=1, negative=0를 출력할 확률을 구한다. GPT2에서는 한 발자국 더 나아가서 입력 값에 테스크 정보를 더한다. 즉, P(output|input,task) 형태로 언어 모델 공식을 정했다. 여기에서 태스크는 여러 가지 종류의 자연어 처리 태스크를 의미한다. 예를 들어 텍스트 분류, 기계 번역, 질의 응답 등등이 될 수 있다. 이렇게 테스크의 정보를 입력의 또 다른 조건 값으로 제공하는 것을 태스크 컨디셔닝이라고 소개하고 있고, 태스크를 제공하는 방법은 자유로운 방식으로 가능하다고 설명하고 있다.
@@ -537,6 +539,46 @@ GPT2 논문의 Approach 섹션을 보면 일반적인 언어 모델의 공식을
 [블록2]를 보면 기계어 번역 태스크의 경우, 입력 값은 "translate to french"라는 자연어와 번역을 할 언어(english text) 두 개 제공된다. 질의응답 태스크의 경우 "answer the question"이라는 자연어와 document, question 등의 정보가 입력으로 제공되고 그것을 이용해서 answer를 추론하게 된다. 
 
 6.3.2. GPT2의 학습 데이터셋과 멀티태스크
-GPT2를 학습한 데이터셋에 대해서 이해해보자. GPT2는 
+GPT2를 학습한 데이터셋에 대해서 이해해보자. GPT2는 WebText 데이터셋으로 학습됐다. WebText 데이터셋은 Reddit이라는 소셜 미디어 플랫폼에서 아웃바운드 링크만을 크롤링해서 최소 3 karma 이상의 정보만 사용해서 만든 데이터셋이다. [## 각주 1] GPT2는 Reddit의 최소 3karma 이상의 데이터셋을 약 40GB의 모아서 학습된 모델이다. 
 
+## 각주1
+Reddit의 karma는 정보가 다른 사람에게 얼마나 유용했는지를 나타내는 지표로 해석하면 된다.
+
+GPT2를 사전학습할 때 멀티태스크를 학습할 수 있도록 하기 위해 in-context learning이라는 개념을 사용했다. GPT3 논문의 Introduction에 보면 [인용3]과 같이 언급하고 있다.
+
+<인용 시작>
+인용3
+Recent work [RWC+19]
+attempts to do this via what we call “in-context learning”, using the text input of a pretrained language model as a form
+of task specification: the model is conditioned on a natural language instruction and/or a few demonstrations of the task
+and is then expected to complete further instances of the task simply by predicting what comes next.
+<인용 끝>
+
+[인용3]에서 RWC+19로 참조하고 있는 논문이 GPT2 논문이다. GPT2논문에서 in-context learning이라는 개념을 통해서 태스크 컨디셔닝을 할 수 있게 됐고, 태스크 컨디셔닝은 텍스트 입력을 통해서 주어진다고 한다. 태스크는 사람이 이해할 수 있는 자연어 형태로 주어지며, 모델은 단순히 다음에 올 단어가 무엇인지를 맞추는 방식으로 태스크를 수행하게 된다.
+
+GPT3논문에서 in-context learning 개념을 [그림6]을 통해서 설명하고 있다.
+
+<그림 시작>
+그림6
+GPT3에 있는 in-context learning 그림 -> 실제 자연어 예시로 만들자!!
+https://arxiv.org/pdf/2005.14165.pdf
+
+영어-불어 변환
+영화 리뷰 분류
+<그림 끝>
+
+[그림6]을 보면 하나의 시퀀스마다 in-context learning을 학습하는데, "Translate English to French, where are you going?, où allez-vous?", "Translate to French given English text, I am so hungry now, 
+J'ai tellement faim maintenant"와 같이 입력 데이터(where are you going?), 테스크(Translate English to French) 그리고 정답(où allez-vous?)을 한 셋으로 만들어서 이러한 셋을 여러 개 이어서 언어 모델을 학습한다. 이렇게 학습을 하면 모델은 입력된 데이터가 "태스크→ 입력→정답"의 패턴이라는 것을 학습하게 된다. 약 40GB의 데이터를 최소 1억1천개부터 최대 15억4천개의 파라미터로 구성된 모델로 학습을 시키면 "태스크→입력→정답"의 패턴을 학습할 수 있다고 한다. GPT2의 구체적인 사전학습 과정은 공개되지 않아서 이 책에서는 개념적으로만 설명하려고 한다. 
+
+6.3.3. GPT2 성능평가 결과
+GPT2의 성능을 공개된 8개의 데이터셋을 이용해서 평가했다. 그 결과는 [그림7]과 같다.
+
+<그림 시작>
+그림 7
+GPT-2 achieves state-of-the-art on Winograd Schema, LAMBADA, and other language modeling tasks.
+두 개는 중복이니 빼라!! 8개!! NOT 10개
+https://openai.com/blog/better-language-models/
+<그림 끝>
+
+[그림7]의 결과는 Fine-Tuning 없이 사전학습만 수행한 모델로 평가한 결과이다. 이처럼 특별한 사전학습 없이 특정 태스크를 수행할 수 있게 됐다는 것이 GPT2 모델의 가장 중요한 성과이다.
 
