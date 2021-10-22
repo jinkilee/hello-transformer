@@ -133,7 +133,7 @@ kitchen_housewares
 
 이렇게 학습된 메타 러닝 모델은 새로운 물품에 대한 리뷰 데이터셋에도 쓰일 수 있다. 다만 K-shot만큼의 데이터가 필요하다. 메타 러닝으로 학습돼 있지 않다면 새로운 물품에 대한 학습/검증/테스트 데이터셋을 최소 몇 만건 정도 수집해야 하며 수집 후에도 모델을 새로 학습해서 시스템에 새로 적용해야 한다. 따라서 메타 러닝 방식이 훨씬 효율적이라고 할 수 있다.
 
-이제는 실제로 Amazon 리뷰 데이터셋을 메타 러닝하는 모델을 구현해보자. chapter6/few-shot-classification.ipynb을 참고하면된다. 
+이제는 실제로 Amazon 리뷰 데이터셋을 메타 러닝하는 모델을 구현해보자. chapter6/few-shot-classification.ipynb을 참고하면된다. [## 각주1]
 
 ## 각주1 6.2.1절의 코드는 https://github.com/zhongyuchen/few-shot-text-classification를 참고했다.
 
@@ -539,9 +539,9 @@ GPT2 논문의 Approach 섹션을 보면 일반적인 언어 모델의 공식을
 [블록2]를 보면 기계어 번역 태스크의 경우, 입력 값은 "translate to french"라는 자연어와 번역을 할 언어(english text) 두 개 제공된다. 질의응답 태스크의 경우 "answer the question"이라는 자연어와 document, question 등의 정보가 입력으로 제공되고 그것을 이용해서 answer를 추론하게 된다. 
 
 6.3.2. GPT2의 학습 데이터셋과 멀티태스크
-GPT2를 학습한 데이터셋에 대해서 이해해보자. GPT2는 WebText 데이터셋으로 학습됐다. WebText 데이터셋은 Reddit이라는 소셜 미디어 플랫폼에서 아웃바운드 링크만을 크롤링해서 최소 3 karma 이상의 정보만 사용해서 만든 데이터셋이다. [## 각주 1] GPT2는 Reddit의 최소 3karma 이상의 데이터셋을 약 40GB의 모아서 학습된 모델이다. 
+GPT2를 학습한 데이터셋에 대해서 이해해보자. GPT2는 WebText 데이터셋으로 학습됐다. WebText 데이터셋은 Reddit이라는 소셜 미디어 플랫폼에서 아웃바운드 링크만을 크롤링해서 최소 3 karma 이상의 정보만 사용해서 만든 데이터셋이다. [## 각주2] GPT2는 Reddit의 최소 3karma 이상의 데이터셋을 약 40GB의 모아서 학습된 모델이다. 
 
-## 각주1
+## 각주2
 Reddit의 karma는 정보가 다른 사람에게 얼마나 유용했는지를 나타내는 지표로 해석하면 된다.
 
 GPT2를 사전학습할 때 멀티태스크를 학습할 수 있도록 하기 위해 in-context learning이라는 개념을 사용했다. GPT3 논문의 Introduction에 보면 [인용3]과 같이 언급하고 있다.
@@ -580,5 +580,118 @@ GPT-2 achieves state-of-the-art on Winograd Schema, LAMBADA, and other language 
 https://openai.com/blog/better-language-models/
 <그림 끝>
 
-[그림7]의 결과는 Fine-Tuning 없이 사전학습만 수행한 모델로 평가한 결과이다. 이처럼 특별한 사전학습 없이 특정 태스크를 수행할 수 있게 됐다는 것이 GPT2 모델의 가장 중요한 성과이다.
+[그림7]의 결과는 Fine-Tuning 없이 사전학습만 수행한 모델로 평가한 결과이다. 이처럼 특별한 사전학습 없이 특정 태스크를 수행할 수 있게 됐다는 것이 GPT2 모델의 가장 중요한 성과이다. 다음 절에서는 실제 소스코드를 이용해서 GPT2를 통해서 문장 생성하는 예제를 공부해보자.
 
+6.3.4. GP2를 통한 문장 생성
+GPT2의 사전학습은 이전 토큰들을 통해 다음 토큰을 맞추는 언어 모델링이다. 이번 절에서는 트랜스포머의 GPT2를 이용해서 문장을 생성해보려고 한다. 
+
+<블록 시작>
+블록3
+Whether the Ministry of Gender Equality & Family should remain in existence again surfaced as a hot button issue Friday 
+# http://www.koreaherald.com/view.php?ud=20211022000603
+<블록 끝>
+
+[블록3]의 문장은 코리아 헤럴드 기사의 일부이다. GPT2를 통해서 그 다음 문장들을 생성해보자.
+
+<코드 시작>
+코드11
+MODEL_CLASSES = {
+    'gpt2': (GPT2LMHeadModel, GPT2Tokenizer),
+}
+
+model_type = 'gpt2'
+model_name_or_path = 'gpt2'
+model_class, tokenizer_class = MODEL_CLASSES[model_type]
+
+tokenizer = tokenizer_class.from_pretrained(model_name_or_path)
+model = model_class.from_pretrained(model_name_or_path)
+model.to(device)
+model.eval()
+<코드 끝>
+
+[코드11]은 GPT2 모델을 로딩하는 코드이다. 전체 코드는 이 책의 레포지토리에서 chapter6/gpt2-generation-example.ipynb를 참고하면 된다.
+
+<코드 시작>
+코드12
+prompt = f"Whether the Ministry of Gender Equality & Family should remain in existence again surfaced as a hot button issue Friday "
+text = generate(model, tokenizer, prompt)
+
+>>> prompt + text
+'Whether the Ministry of Gender Equality & Family should remain in existence again surfaced as a hot button issue Friday ・Due to ongoing problems at the Ministry in the area of the institution under which the Paternity Service'
+
+## ・Due to ongoing problems 부터 끝까지는 굵은 글씨로 부탁드립니다.
+<코드 끝>
+
+로딩된 모델을 바로 이용해서 [코드12]와 같이 문장을 생성해보자. [블록3]에 있는 텍스트를 프롬프트(prompt)라는 변수에 저장했다. GPT2에서 프롬프트는 GPT2에게 주어진 입력 문장을 의미한다. GPT2는 다음 단어를 생성하도록 사전학습됐기 떄문에 프롬프트 이후에 알맞는 단어들을 생성하게 된다. [코드12]에서 사용한 generate함수는 chapter6/generation.py를 참고하면 된다. 다음 절에서는 이번 절의 소스코드를 재사용하여 GPT2의 퓨샷 러닝 성능을 확인해보자.
+
+6.3.5. GPT2를 이용한 퓨샷 러닝
+사전학습된 GPT2를 이용해서 퓨샷 러닝을 해보자. 파인튜닝 없이 사전학습된 GPT2를 로딩한 후 퓨샷 세팅으로 간단한 실행을 해보자. 이 절의 소스코드는 레포지토리의 chapter6/gpt2-verb-example.ipynb를 참고하면 된다. 이 절에서는 예제 소스코드를 통해서 GPT2가 패턴을 이해하고 있다는 것을 확인해볼 것이다. 사용할 프롬프트는 [블록4]과 같다.
+
+<블록 시작>
+블록4
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . click =
+<블록 끝>
+
+[블록4]에서의 태스크는 영어 단어의 원형과 과거형의 나열이다. [블록4]를 자세히 보면 원형과 과거형을 =으로 연결했고, "원형 = 과거형"셋을 .을 통해 여러개 이은 형태를 하고 있다. 그리고 마지막은 "click ="로 끝났다. 이는 GPT2에게 다음과 같이 물어보는 것과 같다. "이봐 GPT2!! play의 과거형이 played고 ... tell의 과거형은 told야. 그러면 click의 과거형은 뭐니?". GPT2는 기본적으로 주어진 프롬프트 이후의 문장을 생성하도록 학습돼 있다. 제대로된 결과를 얻는다면 clicked가 생성돼야 한다. [블록4]와 같이 패턴이 포함된 프롬프트를 입력해도 원하는 결과를 얻을 수 있게 하는 것이 GPT2의 핵심이다.
+
+코델로딩은 [코드11]과 같이 하면 되고 문장을 생성하는데 사용하는 generate 함수 역시 chapter6/generation.py를 사용하면 된다.
+
+이제 입력 값을 준비해보자. [코드12]를 통해 five_verbs.txt를 읽어서 텍스트 리스트 형태로 입력 값을 준비해보자.
+
+<코드 시작>
+코드12
+verbs = []
+with open('five_verbs.txt', 'r') as f:
+    for line in f:
+        verbs.append(line.lower().replace('\n',''))
+
+>>> verbs
+['click', 'work', 'walk', 'run', 'jump']
+<코드 끝>
+
+그 다음은 [코드12]에서 읽은 file_verbs.txt의 각 단어를 프롬프트의 마지막 끝에 입력해서 generate 함수에 넣어주면 된다. 이번 절에서는 10샷으로 설정했기 때문에 "원형 = 과거형"으로 이루어진 10개의 문장이 서포트셋으로 사용된다. 서포트셋과 최종적으로 사용할 프롬프트는 [블록5]를 통해 확인해보자.
+
+<블록 시작>
+블록5
+# 10개의 서포트셋
+play = played		# 1 shot
+sing = sang			# 2 shot
+view = viewed		# 3 shot
+act = acted			# 4 shot
+say = said			# 5 shot
+type = typed		# 6 shot
+note = noted		# 7 shot
+see = saw			# 8 shot
+clean = cleaned		# 9 shot
+tell = told			# 10 shot
+
+# 최종적으로 사용할 프롬프트 → 각 프롬프트에 대해서 generate 함수를 실행해서 clicked, worked 등의 결과를 얻을 수 있다.
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . click =
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . work =
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . walk =
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . run =
+play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . jump =
+<블록 끝>
+
+마지막으로 [코드13]을 통해서 [블록5]에서 준비한 5개의 프롬프트에 대한 결과를 확인해보자.
+<코드 시작>
+코드13
+plurals = []
+for verb in verbs:
+    prompt = f"play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . {verb} ="
+    plural = generate(model, tokenizer, prompt)
+    plural = plural.split(".")[0]
+    plurals.append(plural)
+
+>>> for v, p in zip(verbs, plurals):
+>>>     print(f'{v} -> {p}')
+click ->  clicked
+work ->  worked
+walk ->  walked
+run ->  run
+jump ->  jump
+<코드 끝>
+
+마지막 jump를 제외하면 단어의 원형과 과거형이 잘 매칭된 것을 확인할 수 있다.
+
+6장에서는 GPT2에 대해서 알아봤다. GPT2와 GPT3는 다음 단어를 맞추는 방식으로 학습된 언어 모델이다. 5장에서 알아본 BERT 또는 그 외의 모델과의 가장 큰 차이점은 퓨샷 러닝 기법의 적용이다. GPT2나 GPT3에서는 파인튜닝 없이 사전학습된 모델만으로 여러가지 태스크를 실행할 수 있다는 것을 알았고, 많은 경우 SOTA를 달성하기도 했다. 6장의 마지막 절에서는 트랜스포머의 GPT2를 사용해서 문장 생성하는 것을 알아봤고, 프롬프트 내에 패턴이 있을 경우 그 패턴에 맞는 정답을 맞춰낼 수 있다는 것도 알아봤다.
