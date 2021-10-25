@@ -1,11 +1,3 @@
-fewshot/oneshot/zeroshot 개념/코드
-GPT2 데이터셋, FS/OS/ZS 개념 -> not very detail, show an example play:plays|talk:talks|say:?
-------------------------------
-6. 파인튜닝 없는 언어모델: GPT2 그리고 GPT3
-6.1. 학습을 위한 학습, 메타 러닝
-6.2. 메타 러닝을 이용한 Amazon 리뷰 감정 분류 학습하기
-6.3. GPT2 그리고 GPT3
-
 <블록 시작>
 이제 말을 막 배워가는 윤우에게 엄마 아빠는 조금씩 어려운 말을 알려주고 싶어졌다.
 엄마: 윤우야, 엄마 이름은 XXX야, 아빠 이름은 OOO야, 윤우 이름은 뭐야?
