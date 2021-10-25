@@ -1,728 +1,592 @@
-2. 집중해보자! 어텐션
+3. 안녕, 트랜스포머
 <블록 시작>
-윤우아빠는 다음 달에 미국으로 가족 여행을 떠나기로 했다. 
-윤우는 신나게 들떠 있는데 영어를 할 줄 모르는 윤우아빠는 심각하기만 하다. 
-그날 저녁부터 여행을 가기 위한 영어 공부를 시작하려는데
-우리 말이랑 단어의 순서도 다르고 한번도 본적도 없는 알파벳들이 혼란스럽기만 하다.
+외국에 처음 나가본 윤우는 사람들이 다른 언어로 말하고 있는 것을 처음 보고 깜짝 놀랐다.
+윤우: 아빠, 여기 사람들이 뭐라고 하는거에요?
+아빠: .... 아빠도 모르겠어...
+<블록 끝>
+NLP에서 가장 활발하게 연구되고 있는 분야 중 하나가 Neural Machine Translation이다. 기계 번역이라고 한다. 하나의 언어에서 같은 뜻을 가진 다른 언어로 바꾸는 태스크이다. 즉 번역기이다.
+
+2017년 6월에 Attention is all you need라는 논문을 Google에서 발표했다. 이 논문에서 트랜스포머라는 용어가 처음 사용돼었다. 이 논문의 초록을 읽어보면 아래와 같은 몇가지 포인트를 잡을 수 있다.
+<블록 시작>
+The dominant sequence transduction models are based on complex recurrent or
+convolutional neural networks that include an encoder and a decoder. The best
+performing models also connect the encoder and decoder through an attention
+mechanism. We propose a new simple network architecture, the Transformer,
+based solely on attention mechanisms, dispensing with recurrence and convolutions
+entirely. Experiments on two machine translation tasks show these models to
+be superior in quality while being more parallelizable and requiring significantly
+less time to train. Our model achieves 28.4 BLEU on the WMT 2014 Englishto-German translation task, improving over the existing best results, including
+ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task,
+our model establishes a new single-model state-of-the-art BLEU score of 41.8 after
+training for 3.5 days on eight GPUs, a small fraction of the training costs of the
+best models from the literature. We show that the Transformer generalizes well to
+other tasks by applying it successfully to English constituency parsing both with
+large and limited training data.
+link: https://arxiv.org/pdf/1706.03762.pdf
+
+아래의 부분은 굵은 글씨로
+- The dominant sequence transduction models are based on complex recurrent or convolutional neural networks
+- We propose a new simple network architecture, the Transformer
+- state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs
+
+인용1
 <블록 끝>
 
-한번도 배운 적 없는 언어를 배우는 것은 어렵다. 사람이 새로운 언어를 배우려면 단어도 외워야 하고, 문법도 공부해야 하고, 책도 많이 읽어야 한다. 언어 능력은 하루 아침에 습득할 수 없다. 시간이 오래 걸린다. 하지만 한번 배워두면 머리 속에 오래 남고 그 언어로 된 만화책을 읽든 소설을 읽든 뉴스를 보든 상관없이 활용할 수 있다. 즉 우리는 어렸을 떄부터 많은 단어를 듣고 쓰고 읽고 말하면서 언어 능력을 취득했고, 그 능력은 언어가 필요한 곳이라면 어떤 곳에도 응용해서 쓸 수 있다. 이렇게 필요한 곳이라면 어떤 곳에도 응용을 할 수 있는 이유는 사람은 언어의 문맥을 이해하고 있기 때문이다.
+[인용1]은 논문 Attention is all you need의 초록이다. 굵은 글씨로된 부분을 보면, 지금까지 대부분의 번역기들은 복잡한 구조의 RNN이나 CNN 구조였는데 이 논문에서는 간단한 구조의 네트워크인 트랜스포머를 제안했고 이는 8개의 GPU에서 3.5일 만에 학습되며 WMT 2014 English-to-French 번역 데이터셋에 대해서 BLEU 스쿠어 41.8이라는 SOTA를 기록했다는 것이다. 트랜스포머는 이후 많은 언어 모델에서 인용되고 있다.
+## 주석1: SOTA: 인공지능에서 많은 공식 데이터셋이 있다. 각 데이터셋마다 1등 점수를 state-of-the-art 즉, "예술의 경지"라고 한다.
+## BLEU: Appendix 참고
 
-자연어 처리도 컴퓨터로 하여금 언어를 이해하게 하여 사람이 자연어를 처리하는 것과 같이 처리할 수 있도록 구현하는 것이다. 컴퓨터가 언어를 이해할 수 있게 만들기 위해 필요한 것이 언어 모델이고, 2장에서 N-Gram 언어 모델, Word2Vec 언어 모델, 딥러닝 기반의 언어 모델 세 가지를 살펴봤다. N-Gram 언어 모델은 단순히 단어를 확률적으로 나타냈을 뿐이다. 문맥을 이해하고 있지 않는 언어 모델이다. Word2Vec 같은 경우 단어의 관계를 이해하고 있다. King과 Queen의 관계가 Man과 Woman의 관계와 비슷하다는 것을 이해할 수 있는 언어 모델이다. 그렇지만 아직도 전체적인 언어의 문맥을 이해하는데는 부족하다. 딥러닝의 RNN 구조의 언어 모델은 언어의 문맥을 이해할 수 있는 구조를 가지고 있다. RNN 구조의 언어 모델은 하나의 문장을 은닉 벡터로 표현할 수 있다.
+트랜스포머는 RNN이나 CNN을 사용하지 않는다. 자연어의 데이터는 시퀀스이기 때문에 LSTM이나 GRU 등의 순서를 기억하며 학습할 수 있는 모델을 당연하게 사용해왔다. 그러나 이 논문의 저자들은 그 과정이 복잡하다고 판단했고, 그것을 Self-Attention을 통해서 해결했다. Self-Attention울 도입하다보니 GPU를 통해 병렬로 학습할 수 있는 연산이 더 많아졌다. 이 장에서는 트랜스포머가 어떤 구조인지, 왜 좋은 성능을 냈는지, 그리고 구현된 코드까지 공부해보려고 한다.
 
-2.1. 하나의 벡터로 모든 정보를 담는 RNN
-RNN 구조의 언어 모델부터는 문맥을 이해할 수 있는 능력을 가진 언어 모델이다. 그런데 RNN의 특성 상 크게 두 가지 문제점이 있다. 하나는 장기 의존성(Long-Term Dependency) 문제이다. RNN은 기본적으로 출력을 그 다음의 입력으로 넣는 Auto-Regressive한 특성을 가지고 있기 때문에 그 과정이 반복되면 될수록 앞에서 입력됐던 단어에 대한 기억은 점점 희미해지게 된다. 또 다른 문제는 하나의 은닉 벡터가 모든 정보를 담는다는 것이다. RNN의 Auto-Regressive한 특성 때문에 은닉 벡터는 모든 단어를 하나의 은닉 벡터에 표현하려고 한다.
-[RNN의 Auto-Regressive한 특징]
+3.1. 트랜스포머의 구조
+이 절에서는 트랜스포머의 구조를 먼저 알아보려고 한다. 트랜스포머의 구조는 크게 인코더와 디코더 부분으로 나뉜다. 인코더는 입력 문장을 은닉 벡터로 표현하는 과정이고 디코더는 은닉 벡터로 표현된 입력 문장을 출력 문장, 즉 번역된 다른 언어의 문장으로 바꾸는 과정이다. 앞 장에서 공부했던 Seq2Seq 모델과 같은 구조이다. 하지만 앞장의 Seq2Seq 모델은 인코더와 디코더에서 RNN 계열의 구조를 사용했고, 트랜스포머에서는 RNN을 사용하지 않고 Self-Attention 구조를 사용한다. Attention 구조에 대해서는 앞 장에서 공부했었다. Self-Attention에 대해서는 앞 장의 내용을 더 확장하여 이번 장에서 다루려고 한다. 트랜스포머에서는 각각 인코더와 디코더가 어떻게 구성되는지 알아보자.
 
-5평짜리 방에서 사는 것을 상상해보자. 혼자 산다고 가정하면 그래도 어느 정도 괜찮을 것이다. 그런데 친구 5명이서 그 방에서 산다면 어떨까? 잠을 잘 때도 서로 엉겨붙어서 자야 할 것이다. RNN은 입력 문장의 총 길이에 상관없이 그 입력을 고정된 길이의 벡터로 인코딩한다. 입력문장이 길어지면 길어질수록 많은 정보를 벡터에 넣어야 하기 때문에 인코딩이 힘들어질 수 밖에 없다. 실제로 [그림1]과 같이 문장의 길이가 길어질수록 LSTM의 성능이 떨어진다는 연구결과가 있다.
+3.1.1. 인코더
+트랜스포머의 인코더는 하나의 동일한 블록 구조를 만들어서 그것을 N=6번 반복하는 구조를 하고 있다. 입력 문장을 블록에 넣어서 나온 결과를 다시 또 다른 블록에 넣는 것을 6번 반복해서 트랜스포머의 인코더가 만들어진다. 그 하나의 블록이 어떤 구조를 하고 있는지 알면 트랜스포머 인코더의 구조는 다 공부한 것이다. 트랜스포머의 인코더를 이루는 블록을 자세히 공부해보자.
+
+트랜스포머 인코더의 한 블록은 [그림1]과 같은 구조이다.
 <그림 시작>
-Chapter3/img1
-[그림1: 시퀀스 길이에 따른 BLEU 스코어 변화]
-BLEU 스코어: 번역 시스템을 평가하는데 사용하는 평가 방법으로 높을수록 좋은 성능을 갖는다.
-https://arxiv.org/pdf/1409.1259.pdf 참고
+그림1
 <그림 끝>
 
-조금 더 구체적인 예를 들어보자. RNN으로 번역 시스템을(NMT) 만든다고 가정해보자. NMT는 기본적으로 입력 문장을(Sequence) 번역문(Sequence)으로 바꿔주는 Sequence-To-Sequence(Seq2Seq) 구조를 갖게 된다. Seq2Seq는 인코더와 디코더 구조로 이루어져 있다. 인코더는 입력 문장의 각 단어를 하나하나 RNN으로 인코딩한다. 디코더는 인코더의 결과를(encoded) 활용하여 번역문을 구성하는 단어를 하나 하나 만드는 것이다.
-<그림 시작>
-Chapter3/img2
-[그림2: Seq2Seq 구조]
-<그림 끝>
-
-Seq2Seq 구조의 모델이 훌륭한 번역기로 학습되려면 [그림2]의 encoded가 입력문장의 모든 단어를 표현하고 있어야 한다. 짧은 문장에서는 가능할지 모르겠지만 문장이 길수록 힘들어질 것이란 것을 직관적으로 이해할 수 있다.
-
-2.2. 왜 어텐션(Attention)하지 않지?
-앞 절에서 RNN은 입력 데이터를 하나의 벡터로 표현하는 구조를 가지고 있고, 이러한 특성 때문에 입력 데이터가 길어질 경우 입력을 하나의 벡터로 표현하기가 힘들어진다는 것을 설명했다. 그렇다면 어떻게 이 문제를 해결할 수 있을까? 필요한 부분만 집중해서(Attention) 보면 된다. 번역기에서 입력 문장을 번역문으로 바꿀 때 각 입력 단어를 해석할 때 집중해야 되는 부분이 정해져 있다. 아래의 빈 칸 채우기 문제를 봐보자.
-
-ENG: My name is Dooli.
-KOR: 내 이름은 둘리__.
-
-빈 칸에 들어갈 정답은 "입니다", "이다" 등이 적절하다. 저 빈 칸을 채우기 위해서 "My name" "Dooli" 등에 집중할 이유가 있을까? 물론 부분적으로 있지만, 가장 집중해야 되는 부분은 "is"이다. RNN에서 집중을 해야하는 특정 부분에만 집중하도록 weight을 주는 것이 바로 어텐션 메커니즘이다. [그림2]에 어텐션 네트워크를 추가하면 [그림3]과 같은 구조가 된다.
-<그림 시작>
-Chapter3/img3
-[그림3: Attention이 추가된 Seq2Seq 구조]
-<그림 끝>
-
-디코더에서 번역 단어를 하나 하나 출력할 때마다 어텐션 가중치를 추가해주는데, 이 어텐션 가중치는 인코더의 output 정보를 통해서 계산된다. [그림2]와 [그림3]을 비교해보자. [그림2]에서 디코더를 연산할 때 인코더의 히든스테이트 값만 들어간다. 하지만 [그림3]에서는 디코더에 인코더의 히든스테이트 값에 인코더의 아웃풋 값이 추가된다. 인코더의 아웃풋은 T개의 값으로 이루어져 있는데, 그 T개의 아웃풋이 가중치로 계산되어 디코더의 입력으로 사용된다. 어텐션 네트워크에 대한 자세한 구조는 다음 절에서 자세하게 설명할 예정이다.
-
-2.3. 어떻게 어텐션(Attention)하지?
-이전의 절에서 어텐션을 왜 해야하는지에 대한 직관적인 이해를 해봤다. Seq2Seq 구조는 인코더와 디코더의 구조로 이루어져 있는데, 시퀀스의 길이가 길어질수록 인코더에서 시퀀스를 효과적으로 표현할 수 없기 때문에 무언가 플러스 알파가 필요한 것이다. 그것이 어텐션이며, 그 어텐션은 인코더의 값을 참고해서 가중치를 만든 후 디코더의 값을 만들어가는 것이다.
-
-이번 절에서는 어텐션에 대한 구체적인 이야기를 해보려고 한다. 어텐션을 공부할 때 이해해야 하는 쿼리, 키, 벨류(Query, Key, Value)가 무엇인지 그리고 그것을 이용해서 어떻게 어탠션을 구현할 수 있는지 알아보자.
-
-2.3.1. 묻고 참고하고 답하기
-<박스 시작>
-영어 울렁증이 심한 윤우아빠가 길을 걸어가고 있는데, 갑자기 파란 눈의 외국인이 말을 걸었다.
-
-외국인: I want to go to the N-Tower. Where can I take a bus?
-윤우아빠: 음.... 엔타워 버스 스테이션... 인프론트오브 맬도날드... 쓰리투제로 버스...
-<박스 끝>
-
-영어 울렁증이 심한 윤우아빠에게 언제라도 있을 수 있는 일이다. 외국인이 유창한 영어로 물어봐도 윤우아빠 귀에는 몇 단어 들리지 않았을 것이다.
-<그림 시작>
-chapter3/img4
-[그림4: 윤우아빠 머리속 단어들 - 쿼리]
-<그림 끝>
-
-윤우아빠는 이 몇 단어를 조합해서 머리 속에 있는 몇 개 없는 영어 단어와 매칭해서 외국인이 뭘 원하는지 이해하려고 쩔쩔매고 있었을 것이다.
-<그림 시작>
-chapter3/img5
-[그림5: 단어 키-밸류]
-<그림 끝>
-
-이렇게 저렇게 조합하여 윤우아빠는 드디어 외국인이 원하는 그림을 머리속으로 그려낸다.
-<그림 시작>
-chapter3/img6
-[그림6: 컨택스트 그림]
-<그림 끝>
-
-이것이 쿼리, 키, 밸류의 기본적인 개념이다. 쿼리는 외국인이 말한 문장에서 들은 몇 개의 단어들(N-Tower, go, bus, where)이다. 그리고 윤우아빠가 외우고 있는 영어-한국어 단어가 각각 키, 밸류이다. 문법을 모르는 윤우아빠는 자기가 들은 몇 개의 단어만을 조합해서 상황을 판단해야 하는데, 최대한 자기가 이미 알고 있는 것과 유사한 조합으로 상황을 이해하려고 노력하게 된다.
-<그림 시작>
-chapter3/img7
-[그림7: 확률그림]
-<그림 끝>
-
-[그림7]을 보면 리스닝한 영어 단어마다 연상되는 영어 단어를 확률적으로 매칭했고, 윤우아빠는 그 모든 결과를 조합해서 드디어 그 상황(컨택스트)를 이해했다.
-
-익숙한 생활 속 예시로 쿼리, 키, 밸류를 설명했으니 코드와 함꼐 이해해보자. 코드를 설명하면서 수식도 간단하게 살펴보려고 한다.
-
-2.3.2. 어텐션 이해하기
-앞 절에서 익숙한 생활 속 예시로 어텐션을 이해해봤다. 그런데 이 책에서는 AI를 기숙적인 관점에서 공부하고 있기 때문에 조금 더 구체적인 이해를 해야한다. 어텐션을 한마디로 표현하면 내가 찾고자 하는 것을(쿼리) 내가 아는 지식(키,값)을 이용해서 찾아내는 것이다. 쿼리, 키, 값이 어텐션에서 어떻게 계산되는지 알아보자.
-
-어텐션을 구하는 과정은 쿼리와 키의 유사도를 구하는 과정이 핵심이다. 쿼리와 키의 유사도를 구한 후 그 유사도에 Softmax 등을 취해서 합이 1인 비율로 바꿔주는 것이다. [그림7]에서 예시로 사용된 확률 값이 사실은 Softmax를 이용해서 만들어진 값이라고 이해하면 된다. 
-
-<수식 시작>
-수식1
-유사도(쿼리, 키) = qk
-weight = softmax(qk)
-context = weight * 값
-<수식 끝>
-
-[수식1]에서 쿼리는 디코더의 입력이다. 키는 인코더 RNN의 아웃풋을 사용하고, 값의 경우는 키와 같은 값을 사용한다. 유사도를 이용해서 qk를 만들고 softmax 함수를 이용해서 weight을 만든다. 여기까지가 어텐션을 만드는 과정이다. 이렇게 만든 weight을 값에 곱해주는 과정이 어텐션을 적용하는 과정이 되고 그 결과를 context라고 한다. 유사도를 구하는데 사용하는 함수는 [표1]을 참고하라.
-<표 시작>
-Chapter3/table1
-어탠션 alignment 함수 종류
-<표 끝>
-
-이 책에서는 [표1]에서 행렬을 곱하는 방법을 유사도 측정 함수로 정하고 이야기해보자. 왜 유사도를 측정하기 위해서 행렬의 곱셈을 이용하는 것일까? 행렬 곱셈을 하는 방법이 곧 행렬의 내적을 구하는 방법이고 행렬의 내적은 cosine을 이용해서 표현할 수 있기 때문이다. [수식2]을 보면 두 개의 벡터 a와 b가 있을 때 그 벡터의 사잇각을 구하는 방법이 결국 행렬의 곱으로 이루어진다는 것을 알 수 있다. 쿼리와 키도 결국에는 벡터이다. 쿼리와 키의 유사도를 구한다는 것은 결국 두 벡터의 유사도를 구하는 것과 같고, 유사도를 구하는 방법은 [표1]과 같이 여러가지 방법이 있는데 이 책에서는 행렬의 곱셈을 이용한 방법으로 유사도를 구하려고 한다. 
-<수식 시작>
-수식2
-a_vec * b_vec = |a_vec| |b_vec| cosine
-a_vec * b_vec = 원소끼리 곱하기 → i.e. 행렬곱
-위 두 식을 서로 같게 두고 전개해서
-cosine = 행렬곱 / (|a_vec| |b_vec|)
-<수식 끝>
-
-행렬의 곱셈을 이용해서 유사도를 구한 후 그 유사도를 값에 곱해주면 된다.
-## 쿼리,키,값을 형광팬 하이라이트했으면 합니다.
-
-결국 어텐션을 구하는 과정은 쿼리와 키간의 유사도를 구하는 과정과 그 유사도를 값에 곱해주는 과정으로 이루어지는 셈이다. 
-
-이 절에서 어텐션을 조금 더 기술적으로 알아봤다. 어텐션은 쿼리와 키의 유사도를 구한 후 그 유사도를 Softmax해서 합이 1인 형태의 가중치로 변형해서 만든다. 유사도를 구하는 방법은 [표1]과 같다. 이렇게 만든 가중치가 어텐션의 weight인데 이것을 다시 값에 곱해서 context vector를 만든다.
-
-아직은 구체적이지 않다고 느껴질 수 있을 것이다. 이를 더욱 구체적으로 이해하기 위해 다음 절에서 어텐션을 코드로 구현해보자.
-
-2.3.3. 어탠션 구현하기
-어탠션을 구현해보자. 실제 번역기 등을 만들어볼 수도 있지만 여기에서는 간단하게 알파벳을 거꾸로 뒤집는 Seq2Seq 모델을 만들어보려고 한다. 아래의 소스코드는 Pytorch의 공식 문서에 있는 소스코드를 참고했다. https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html`
-
-<박스 시작>
-ex-1) thb → bht
-ex-2) pqovqh → hqvoqp
-ex-3) vnwqjkm → mkjqwnv
-<박스 끝>
-
-갑자기 문자열을 뒤집는 모델을 만드는 이유는 어텐션을 설명하기에 조금 쉽다고 생각했기 때문이다. t를 입력으로 받았을 때 아웃풋으로 가장 집중해야 되는 부분이 b이다. h를 입력으로 받았을 때는 h이고 b를 입력으로 받았을 때는 t에 가장 집중해야 한다. 이제 구현을해보자. 전체 소스코드는 이 책의 레포지토리 chapter3/attention 폴더에 있다.
-## 레포지토리에 대한 소스코드 위치는 모든 원고 작업 마무리 후에 정리하겠습니다.
-
-우선 랜덤 알파벳 스트링을 생성하는 함수를 [코드1]과 같이 만들어보자.
+Multi-head attention 블록과 feed-forward network로 이뤄진다. 먼저 Multi-head attention을 코드로 구현하면 [코드1]과 같다.
 <코드 시작>
 코드1
-def generate_random_alphabet_index():
-    random_length = np.random.randint(10, MAX_LENGTH-2)    # -2 because of <s> and </s>
-    random_alphabet_index = np.random.randint(0, 26, random_length) + 3
-    return random_alphabet_index.tolist(), random_length
+class MultiHeadAttention(nn.Module):
+    '''
+    MultiHeadAttention with Scaled Dot-Product Attention, default to num_heads=8
+    '''
+    def __init__(self, hidden_size, num_heads=8):
+        super().__init__()
+        assert hidden_size % num_heads == 0
+        self.num_heads = num_heads
+        self.attention_head_size = hidden_size // num_heads
+        self.query = nn.Linear(hidden_size, hidden_size)
+        self.key = nn.Linear(hidden_size, hidden_size)
+        self.value = nn.Linear(hidden_size, hidden_size)
+        self.softmax = nn.Softmax(dim=-1)
+        self.dropout = nn.Dropout(p=dropout_rate)
+        
+    def forward(self, q, k, v, mask=None):
+        '''
+        q: Query tensor of shape [batch_size, maxlen, hidden_size]
+        k: Key tensor of shape [batch_size, maxlen, hidden_size]
+        v: Value tensor of shape [batch_size, maxlen, hidden_size]
+        mask: mask tensor of shape [batch_size, 1, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        '''
+        n_batch = q.size()[0]
+        split_shape = (n_batch, -1, self.num_heads, self.attention_head_size)
+        
+        if mask is not None:
+            mask = mask.unsqueeze(1)
+            
+        # split x for multi-head attention calculation
+        query = self.query(q).view(*split_shape).transpose(1,2)
+        key = self.key(k).view(*split_shape).transpose(1,2)
+        value = self.value(v).view(*split_shape).transpose(1,2)        
+        
+        # calculate scores
+        scores = torch.matmul(query, key.transpose(-2,-1)) / math.sqrt(self.attention_head_size)
+        
+        # apply mask if mask is not None
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        attention_prob = self.softmax(scores)
+        
+        # make context
+        context = torch.matmul(attention_prob, value)
+        context = self.dropout(context)
+                
+        # concat multi-head context
+        merged_shape = (n_batch, -1, self.num_heads*self.attention_head_size)
+        context = context.transpose(1,2).contiguous().view(*merged_shape)
+        
+        return context
 <코드 끝>
 
-위의 함수를 실행하면 아래와 같이 랜덤한 길이의 알파벳 인덱스 리스트와 그 길이를 얻을 수 있다. 
-<코드 시작>
->>> from dataset import generate_random_alphabet_index
->>> generate_random_alphabet_index()
-([21, 6, 26, 23, 28, 15, 18, 4, 21, 15, 19, 19], 12)
->>> generate_random_alphabet_index()
-([13, 22, 19, 4, 10, 19, 25, 27, 6, 23, 25, 14, 18], 13)
-<코드 끝>
+[코드1]에서 어텐션을 구할때 Scaled Dot-Product Attention을 사용한다. 
+<수식 시작>
+Scaled Dot-Product Attention 공식
+수식1
+<수식 끝>
+Scaled Dot-Product Attention은 3장에서 다뤘던 어텐션과 비교해서 1/dk가 softmax 전에 추가된 형태를 띈다. 이는 행렬 연산의 결과 값이 너무 커지게 될 경우, 그 값을 softmax할 떄 gradient가 수렴해버리는 현상을 막기 위함이다.
 
-보통 AI 모델에 입력을 넣을 때는 데이터의 길이가 고정이어야 한다. 여기에서는 최대 길이를 15로 정의하자. 그러면 최대 길이 15 이내에 대해서 </s>와 <pad> 등을 추가해줘야 한다. 이러한 작업을 AlphabetToyDataset 클래스를 통해서 해보자. [코드2]는 AlphabetToyDataset을 구현한 것이다.
-
+이제 트랜스포머 인코더를 구성하는 두번째 단위 블록인 Point-wise Feedforward Network를 살펴보자.
 <코드 시작>
 코드2
-from torch.utils.data import Dataset
-
-# 데이터셋 만들기
-class AlphabetToyDataset(Dataset):
-    def __init__(self, n_dataset=1000):
-        bos = 0
-        eos = 1
-        pad = 2
-        self.inputs = []
-        self.labels = []
-        self.length = []
-        for _ in range(n_dataset):
-            # make input example
-            aindex, alen = generate_random_alphabet_index()
-            
-            # index to alphabet
-            #alphabet = list(map(lambda a: i2a[a], aindex))
-            
-            # inversing
-            #inversed_alphabet = list(map(lambda a: inverse_map[a], alphabet))
-            
-            # alphabet to index
-            #iindex = list(map(lambda ia: a2i[ia], inversed_alphabet))
-            iindex = aindex[::-1]
-            
-            # add bos, eos and pad
-            n_pad = MAX_LENGTH - len(aindex) - 1
-            aindex = aindex + [eos] + [pad]*n_pad
-            iindex = iindex + [eos] + [pad]*n_pad
-            
-            # add to examples
-            self.inputs.append(aindex)
-            self.labels.append(iindex)
-            self.length.append(alen)
-            
-    def __len__(self):
-        return len(self.inputs)
-    
-    def __getitem__(self, index):
-        return [
-            torch.tensor(self.inputs[index], dtype=torch.long),
-            torch.tensor(self.labels[index], dtype=torch.long),
-            torch.tensor(self.length[index], dtype=torch.long)
-        ]
+class PositionWiseFeedForwardNetwork(nn.Module):
+    '''
+    Position-Wise Feedforward Network.
+    입력 텐서의 은닉 사이즈 512를 2048로 확장 후 다시 512로 줄임.
+    '''
+    def __init__(self, hidden_size, inner_hidden_size=2048):
+        super().__init__()
+        self.w1 = nn.Linear(hidden_size, inner_hidden_size)
+        self.relu = nn.ReLU()
+        self.w2 = nn.Linear(inner_hidden_size, hidden_size)
+        
+    def forward(self, x):
+        '''
+        x: Input tensor of shape [batch_size, maxlen, hidden_size]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        '''
+        x = self.w1(x)
+        x = self.relu(x)
+        x = self.w2(x)
+        return x
 <코드 끝>
 
-위의 AlphabetToyDataset을 클래스는 generate_random_alphabet_index 함수를 통해서 생성된 랜덤 알파벳 a부터 z까지를 각각 3부터 28까지 치환하여 inputs을 만들고, 그것을 역순으로 배열하여 labels를 만든 것이다. 즉, 랜덤하게 생성된 알파벳을 역순으로 배열하는 간단한 AI 모델을 만들기 위한 데이터셋이다.
+Point-wise Feedforward Network는 구현이 간단하다. (hidden_size x inner_hidden_size) weight을 이용해서 행렬 곱을 해준 후 ReLU를 실행한다. 그리고 다시 (inner_hidden_size x hidden_size) weight으로 행렬을 해서 다시 원래의 사이즈로 되돌린다. 
 
-AlphabetToyDataset을 [코드3]과 같이 사용해서 데이터셋을 만들수 있다.
+트랜스포머의 구현에서 가장 핵심이 되는 단위 블록인 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현했다. 이제 이 두 개의 블록을 적절하게 감싸서 트랜스포머를 만들어나가면 된다. 이 절의 제일 첫 부분에서 언급했던 트랜스포머의 전체적인 구조를 다시 한번 언급해보자. 트랜스포머는 크게 인코더와 디코더로 나뉘어 있고, 인코더는 하나의 동일한 구조를 만들어서 N=6번 반복한다고 했다. [코드3]의 구조를 6번 반복하는 것이다.
+
 <코드 시작>
 코드3
-train_dataset = AlphabetToyDataset(n_dataset=3000)
-valid_dataset = AlphabetToyDataset(n_dataset=300)
+class EncoderLayer(nn.Module):
+    '''
+    EncoderLayer
+    MultiHeadAttention과 PositionWiseFeedForwardNetwork 두 개의 sublayer로 이뤄져 있다.
+    위 두 sublayer를 LayerNorm(x + sublayer(x)) 형태로 연산한다. 
+    즉, Residual Network와 Layer Normalization을 추가적으로 수행한다.
+    '''
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.self_attention = MultiHeadAttention(hidden_size)
+        self.feedforward = PositionWiseFeedForwardNetwork(hidden_size)
+        self.norm = nn.LayerNorm(hidden_size, eps=1e-6)
+        
+    def forward(self, x, mask):
+        '''
+        x: Input tensor of shape [batch_size, maxlen, hidden_size]
+        mask: mask tensor of shape [batch_size, 1, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        '''
+        x = self.norm(x + self.self_attention(x, mask=mask))
+        x = self.norm(x + self.feedforward(x))
+        return x
 <코드 끝>
 
-AlphabetToyDataset으로 train_dataset과 valid_dataset을 만들고, 그것을 DataLoader를 이용해서 AI 모델에 입력할 수 있도록 배치 사이즈도 설정해줄 수 있다. [코드4]를 보자.
+[코드3]을 보면 LayerNorm(x + sublayer(x)) 형태로 두 서브레이어를 연결해준 것을 제외하고는 [코드1]과 [코드2]에서 만들었던 블록을 그대로 사용하고 있다. (batch_size, maxlen) 형태의 최초 입력 벡터를 (batch_size, maxlen, hidden_size) 형태로 변형해주는 임베딩 레이어와 [코드3]의 EncoderLayer를 6번 반복한 것이 트랜스포머의 인코더이다. 임베딩 레이어는 [코드4]와 같이 구현할 수 있다.
 <코드 시작>
 코드4
-import torch
-from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import DataLoader
+class PositionalEncoding(nn.Module):
+    '''
+    PositionalEncoding
+    짝수번째에 대해서는 sin함수, 홀수번째에 대해서는 cosine함수 값을 정하여 x값에 더해준다.
+    '''
+    def __init__(self, hidden_size, dropout, maxlen=5000):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+        
+        # Compute the positional encodings once in log space.
+        pe = torch.zeros(maxlen, hidden_size)
+        position = torch.arange(0, maxlen).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, hidden_size, 2) *
+                             -(math.log(10000.0) / hidden_size))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0)
+        self.register_buffer('pe', pe)
+        
+    def forward(self, x):
+        '''
+        x: Source input tensor of shape [batch_size, maxlen]
+        return: Output tensor of shape [batch_size, maxlen]
+        '''
+        x = x + torch.autograd.Variable(self.pe[:, :x.size(1)], 
+                         requires_grad=False)
+        return self.dropout(x)
+		
+class Embeddings(nn.Module):
+    '''
+    Embeddings
+    보통의 Embeddings에 sqrt(hidden_size)를 더한 값을 리턴한다.
+    '''
+    def __init__(self, vocab_size, hidden_size):
+        super(Embeddings, self).__init__()
+        self.lut = nn.Embedding(vocab_size, hidden_size)
+        self.hidden_size = hidden_size
 
-def collate_fn(batch):
-    inputs = pad_sequence([b[0] for b in batch], batch_first=True)
-    targets = pad_sequence([b[1] for b in batch], batch_first=True)
-    lengths = torch.stack([b[2] for b in batch])
-
-    lengths, indice = torch.sort(lengths, descending=True)
-    inputs = inputs[indice]
-    targets = targets[indice]
-    return inputs, targets, lengths
-
-
-train_dataloader = DataLoader(train_dataset, collate_fn=collate_fn, batch_size=16)
-valid_dataloader = DataLoader(valid_dataset, collate_fn=collate_fn, batch_size=1)
+    def forward(self, x):
+        '''
+        x: Source Input tensor of shape [batch_size, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        '''
+        return self.lut(x) * math.sqrt(self.hidden_size)
 <코드 끝>
 
-[코드5]에서 for문을 통해서 DataLoader가 내뱉어내는 데이터를 검토해보자.
+[코드4]까지 구현한 내용들을 반복해서 [코드5]에서 Encoder를 완성할 수 있다. 그런데 뭔가 허전하다. Sequence를 학습하기 위한 무언가가 없다. Transformer 이전에는 그것을 RNN 계열의 구조가 담당했다. Transformer에는 RNN 계열의 구조가 전혀 없다. 시퀀스를 학습할 수 있게 하기 위해서 PositionalEncoding을 더해준 것이다. 
+<블록 시작>
+인용2
+Since our model contains no recurrence and no convolution, in order for the model to make use of the
+order of the sequence, we must inject some information about the relative or absolute position of the
+tokens in the sequence. To this end, we add "positional encodings" to the input embeddings at the
+bottoms of the encoder and decoder stacks.
+<블록 끝>
+
+[인용2]는 논문 Attention is all you need의 일부이다. 모델로 하여금 시퀀스를 사용할 수 있도록 하기 위해 상대적인 혹은 절대적인 정보를 넣어줘야 한다고 하고 이것을 positional encoding이 하고 있다고 적혀있다. 그 정보를 위해 더해주는 값이 Positional Encoding이고 시퀀스에 더해주는 값은 아래와 같은 공식으로 정해진다.
+
+<수식 시작>
+positional encoding sin cos
+수식2
+<수식 끝>
+
 <코드 시작>
 코드5
-for d in train_dataloader:
-    inputs, targets, lengths = d
-    print(inputs)
-    print(targets)
-    print(lengths)
-    print(inputs.shape, targets.shape, lengths.shape)
-    break
-	
-tensor([[ 6, 24, 18, 24,  6, 16, 20, 27, 20, 18, 24, 19,  1,  2,  2],
-        [25, 14, 18, 19, 23,  7, 13, 28,  3, 24, 25, 21,  1,  2,  2],
-        [ 4,  7, 25, 18, 16, 17, 27, 27, 21, 10,  6, 19,  1,  2,  2],
-        [12,  9, 12, 16,  7, 20, 18, 19, 14, 18, 24,  1,  2,  2,  2],
-        [18, 16, 19, 14,  4, 18,  8,  4,  7, 10,  7,  1,  2,  2,  2],
-        [20,  7, 20, 20,  5,  7, 21, 20, 14, 10, 25,  1,  2,  2,  2],
-        [18, 25, 20,  7,  6, 24, 25, 22, 20, 14, 10,  1,  2,  2,  2],
-        [27,  3, 28, 28,  4, 18, 26, 28, 22, 21, 16,  1,  2,  2,  2],
-        [16, 25, 27, 15, 20, 25, 11, 10, 13, 14, 16,  1,  2,  2,  2],
-        [16, 14, 13,  3,  3, 20,  9, 14, 16,  3,  1,  2,  2,  2,  2],
-        [20, 26, 27, 23, 26, 15, 19, 24,  8, 23,  1,  2,  2,  2,  2],
-        [13, 27, 19, 21, 12, 11,  4, 11,  8, 21,  1,  2,  2,  2,  2],
-        [ 6, 28,  3, 27,  4, 14, 11, 23,  5, 22,  1,  2,  2,  2,  2],
-        [17, 16,  5,  8,  6, 12, 28, 17, 27, 14,  1,  2,  2,  2,  2],
-        [22, 26, 20, 19, 10,  8, 18, 17, 17, 10,  1,  2,  2,  2,  2],
-        [25, 20, 28, 13, 20,  4, 11, 19, 24,  5,  1,  2,  2,  2,  2]])
-tensor([[19, 24, 18, 20, 27, 20, 16,  6, 24, 18, 24,  6,  1,  2,  2],
-        [21, 25, 24,  3, 28, 13,  7, 23, 19, 18, 14, 25,  1,  2,  2],
-        [19,  6, 10, 21, 27, 27, 17, 16, 18, 25,  7,  4,  1,  2,  2],
-        [24, 18, 14, 19, 18, 20,  7, 16, 12,  9, 12,  1,  2,  2,  2],
-        [ 7, 10,  7,  4,  8, 18,  4, 14, 19, 16, 18,  1,  2,  2,  2],
-        [25, 10, 14, 20, 21,  7,  5, 20, 20,  7, 20,  1,  2,  2,  2],
-        [10, 14, 20, 22, 25, 24,  6,  7, 20, 25, 18,  1,  2,  2,  2],
-        [16, 21, 22, 28, 26, 18,  4, 28, 28,  3, 27,  1,  2,  2,  2],
-        [16, 14, 13, 10, 11, 25, 20, 15, 27, 25, 16,  1,  2,  2,  2],
-        [ 3, 16, 14,  9, 20,  3,  3, 13, 14, 16,  1,  2,  2,  2,  2],
-        [23,  8, 24, 19, 15, 26, 23, 27, 26, 20,  1,  2,  2,  2,  2],
-        [21,  8, 11,  4, 11, 12, 21, 19, 27, 13,  1,  2,  2,  2,  2],
-        [22,  5, 23, 11, 14,  4, 27,  3, 28,  6,  1,  2,  2,  2,  2],
-        [14, 27, 17, 28, 12,  6,  8,  5, 16, 17,  1,  2,  2,  2,  2],
-        [10, 17, 17, 18,  8, 10, 19, 20, 26, 22,  1,  2,  2,  2,  2],
-        [ 5, 24, 19, 11,  4, 20, 13, 28, 20, 25,  1,  2,  2,  2,  2]])
-tensor([12, 12, 12, 11, 11, 11, 11, 11, 11, 10, 10, 10, 10, 10, 10, 10])
-torch.Size([16, 15]) torch.Size([16, 15]) torch.Size([16])
+class Encoder(nn.Module):
+    '''
+    Transformer Encoder
+    하나의 Embedding 레이어와 N=6 개의 EncoderLayer로 구성돼 있다.
+    리턴할 때는 LayerNormalization 후 리턴한다.
+    '''
+    def __init__(self, vocab_size, hidden_size, positional_encoding, n=6):
+        super().__init__()
+        #self.embedding = nn.Embedding(vocab_size, hidden_size)
+        self.embedding = nn.Sequential(Embeddings(vocab_size, hidden_size), positional_encoding)
+        self.layers = nn.ModuleList([EncoderLayer(hidden_size) for _ in range(n)])
+        self.norm = nn.LayerNorm(hidden_size)
+        
+    def forward(self, x, mask):
+        '''
+        x: Source input tensor of shape [batch_size, maxlen]
+        mask: Source mask tensor of shape [batch_size, 1, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        
+        Example:
+        >>> pos_encoder = PositionalEncoding(hidden_size, 0.1)
+        >>> encoder = Encoder(vocab_size, hidden_size, pos_encoder)
+        >>> inputs = torch.tensor([
+        >>>     [1, 15, 35, 45, 5, 8, 10, 2, 0, 0, 0, 0, 0, 0, 0],
+        >>>     [1, 4, 7, 66, 34, 33, 13, 4, 8, 2, 0, 0, 0, 0, 0],
+        >>>     [1, 25, 5, 6, 77, 24, 8, 5, 9, 27, 2, 0, 0, 0, 0],
+        >>>     [1, 16, 13, 8, 3, 75, 37, 9, 2, 0, 0, 0, 0, 0, 0],
+        >>> ])
+        >>> inputs.shape
+        torch.Size([4, 15])
+        >>> outputs = encoder(inputs)
+        >>> outputs.shape
+        torch.Size([4, 15, 512])
+        '''
+        x = self.embedding(x)
+        for layer in self.layers:
+            x = layer(x, mask=mask)
+        return self.norm(x)
 <코드 끝>
 
-이 데이터를 이용해서 학습할 모델을 만들어보자. 기본적으로 Seq2Seq 모델을 어텐션과 함께 구현했다. 레포지토리 상에서 /chapter4/research/attention/seq2seq.py에 구현돼 있다.
+[코드5]가 트랜스포머의 인코더 전부이다. 가장 기본 단위 블록이었던 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현한 다음에는 이렇게 간단하게 구현된다. 인코더를 구현해봤으니 이제 디코더 부분도 구현해보자.
 
+3.1.2. 디코더
+[코드1]과 [코드2]에서 구현했던 클래스들을 이용해서 DecoderLayer를 [코드6]과 같이 구현할 수 있다.
 <코드 시작>
 코드6
-class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super(EncoderRNN, self).__init__()
-        self.hidden_size = hidden_size
-
-        self.embedding = nn.Embedding(input_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size, batch_first=True)
-
-    def forward(self, inputs, hidden):
+class DecoderLayer(nn.Module):
+    '''
+    DecoderLayer
+    EncoderLayer와 같은 블록을 이용하지만 MultiHeadAttention이 한번 더 들어간다.
+    그 외 Residual Network나 Layer Normalization을 추가하는 것은 같다.
+    '''
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.self_attention_1 = MultiHeadAttention(hidden_size)
+        self.self_attention_2 = MultiHeadAttention(hidden_size)
+        self.feedforward = PositionWiseFeedForwardNetwork(hidden_size)
+        self.norm = nn.LayerNorm(hidden_size, eps=1e-6)
+        
+    def forward(self, x, m, mask):
         '''
-        Input Parameters
-        - inputs: (B,M)
-        - hidden: (1,B,H)
-        
-        Output returns
-        - output: (B,1,O)
-        - hidden: (B,1,H)
-        - attn_weights: (B,1,M)
-        
-        Logging outputs
-        ** output: torch.Size([16, 1])
-        ** hidden: torch.Size([16, 1])
+        x: Input tensor of shape [batch_size, maxlen, hidden_size]
+        m: Memory tensor of shape [batch_size, maxlen, hidden_size] from the Encoder
+        mask: Mask tensor of shape [batch_size, 1, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
         '''
-        #print('** inputs: {}'.format(inputs.shape))
-        #print('** hidden: {}'.format(hidden.shape))
-        embedded = self.embedding(inputs)    # (B,M,H)
-        #print('** embedded: {}'.format(embedded.shape))
-        output, hidden = self.gru(embedded, hidden)    # (B,M,H), (1,B,H)
-        return output, hidden
-
-    def initHidden(self, batch_size):
-        return torch.zeros(1, batch_size, self.hidden_size, device=device)
-
-# with attention
-class AttnDecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=MAX_LENGTH):
-        super(AttnDecoderRNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.output_size = output_size
-        self.dropout_p = dropout_p
-        self.max_length = max_length
-
-        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
-        self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
-        self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
-        self.dropout = nn.Dropout(self.dropout_p)
-        self.gru = nn.GRU(self.hidden_size, self.hidden_size, batch_first=True)
-        self.out = nn.Linear(self.hidden_size, self.output_size)
-
-    def forward(self, inputs, hidden, encoder_outputs):
-        '''
-        Input Parameters
-        - inputs: (B,1)
-        - hidden: (1,B,H)
-        - encoder_outputs: (B,M,H)
-        
-        Output returns
-        - output: (B,1,O)
-        - hidden: (B,1,H)
-        - attn_weights: (B,1,M)
-        
-        Logging outputs
-        ** inputs: torch.Size([16, 1])
-        ** hidden: torch.Size([1, 16, 256])
-        ** encoder_outputs: torch.Size([16, 15, 256])
-        ** embedded: torch.Size([16, 1, 256])
-        ** attn_weights: torch.Size([16, 1, 15])
-        ** attn_weights: tensor([[[0.1068, 0.0260, 0.0466, 0.0421, 0.0885, 0.0843, 0.0718, 0.0575,
-                  0.0361, 0.0273, 0.0339, 0.1882, 0.0606, 0.0723, 0.0581]],
-
-                [[0.1634, 0.0374, 0.0518, 0.0382, 0.0771, 0.0577, 0.0624, 0.0658,
-                  0.0286, 0.0351, 0.0336, 0.1435, 0.0603, 0.0940, 0.0510]],
-
-                [[0.1191, 0.0284, 0.0447, 0.0361, 0.0816, 0.0879, 0.0675, 0.0523,
-                  0.0293, 0.0273, 0.0535, 0.1981, 0.0588, 0.0728, 0.0427]],
-
-                [[0.1043, 0.0357, 0.0479, 0.0426, 0.1006, 0.0658, 0.0556, 0.0538,
-                  0.0372, 0.0476, 0.0348, 0.1877, 0.0641, 0.0705, 0.0516]],
-
-                [[0.1179, 0.0354, 0.0404, 0.0565, 0.0785, 0.0645, 0.0700, 0.0685,
-                  0.0380, 0.0414, 0.0456, 0.1519, 0.0710, 0.0682, 0.0523]],
-
-                [[0.1363, 0.0500, 0.0404, 0.0383, 0.0748, 0.0674, 0.0733, 0.0520,
-                  0.0288, 0.0306, 0.0466, 0.1517, 0.0769, 0.0932, 0.0395]],
-
-                [[0.1429, 0.0315, 0.0380, 0.0411, 0.0754, 0.0555, 0.0701, 0.0626,
-                  0.0337, 0.0311, 0.0398, 0.1486, 0.0813, 0.0885, 0.0599]],
-
-                [[0.1183, 0.0333, 0.0422, 0.0445, 0.0842, 0.0600, 0.0854, 0.0732,
-                  0.0299, 0.0447, 0.0299, 0.1091, 0.0865, 0.0831, 0.0757]],
-
-                [[0.1145, 0.0353, 0.0372, 0.0386, 0.0867, 0.0568, 0.0840, 0.0514,
-                  0.0393, 0.0285, 0.0397, 0.1800, 0.0759, 0.0755, 0.0565]],
-
-                [[0.1614, 0.0251, 0.0357, 0.0470, 0.0903, 0.0756, 0.0521, 0.0419,
-                  0.0305, 0.0227, 0.0343, 0.1683, 0.0643, 0.0891, 0.0616]],
-
-                [[0.1152, 0.0248, 0.0413, 0.0535, 0.0836, 0.0599, 0.0707, 0.0559,
-                  0.0333, 0.0394, 0.0348, 0.1688, 0.0728, 0.0880, 0.0582]],
-
-                [[0.1475, 0.0310, 0.0462, 0.0446, 0.0865, 0.0484, 0.0775, 0.0775,
-                  0.0378, 0.0357, 0.0360, 0.1070, 0.0689, 0.1070, 0.0485]],
-
-                [[0.1168, 0.0299, 0.0347, 0.0407, 0.0787, 0.0605, 0.0683, 0.0517,
-                  0.0312, 0.0334, 0.0426, 0.1895, 0.0739, 0.0914, 0.0565]],
-
-                [[0.1122, 0.0315, 0.0371, 0.0409, 0.1061, 0.0805, 0.0861, 0.0475,
-                  0.0399, 0.0262, 0.0330, 0.1467, 0.0676, 0.0788, 0.0660]],
-
-                [[0.1491, 0.0363, 0.0410, 0.0398, 0.0919, 0.0586, 0.0605, 0.0647,
-                  0.0378, 0.0277, 0.0356, 0.1396, 0.0699, 0.0981, 0.0495]],
-
-                [[0.1127, 0.0238, 0.0486, 0.0385, 0.0809, 0.0726, 0.0829, 0.0495,
-                  0.0441, 0.0275, 0.0412, 0.1654, 0.0627, 0.0825, 0.0672]]],
-               device='cuda:0', grad_fn=<SoftmaxBackward>)
-        ** attn_weights.sum(): torch.Size([])
-        ** attn_weights.sum(): 16.0000
-        ** attn_applied: torch.Size([16, 1, 256])
-        ** output: torch.Size([16, 1, 512])
-        ** output: torch.Size([16, 1, 256])
-        ** output: torch.Size([16, 1, 256])
-        ** hidden: torch.Size([1, 16, 256])
-        ** gru-output: torch.Size([16, 1, 256])
-        ** gru-hidden: torch.Size([1, 16, 256])
-        ** final-output: torch.Size([16, 1, 29])
-        ** final-hidden: torch.Size([1, 16, 256])
-        ** final-attn_weights: torch.Size([16, 1, 15])
-        '''
-        embedded = self.embedding(inputs)    # (B,1,H)
-        embedded = self.dropout(embedded)
-        
-        # query: embedded
-        # key: hidden
-        # value: encoder_outputs
-        
-        attn_weights = F.softmax(
-            self.attn(
-                torch.cat((embedded, hidden.transpose(0, 1)), -1)    # (B,1,2H)
-            ),    # (B,1,M)
-            dim=-1)    # (B,1,M)
-        #print('** attn_weights: {}'.format(attn_weights.shape))
-        #print('** attn_weights: {}'.format(attn_weights))
-        #print('** attn_weights.sum(): {}'.format(attn_weights.sum().shape))
-        #print('** attn_weights.sum(): {:.4f}'.format(attn_weights.sum()))
-        
-        attn_applied = torch.bmm(attn_weights, encoder_outputs)    # (B,1,H)
-        #print('** attn_applied: {}'.format(attn_applied.shape))
-        #return
-
-        output = torch.cat((embedded, attn_applied), -1)    # (B,1,2H)
-        #print('** output: {}'.format(output.shape))
-        output = self.attn_combine(output)    # (B,1,H)
-        #print('** output: {}'.format(output.shape))    # (B,1,H)
-        
-        output = F.relu(output)
-        #print('** output: {}'.format(output.shape))    # (B,1,H)
-        #print('** hidden: {}'.format(hidden.shape))    # (B,1,H)
-        output, hidden = self.gru(output, hidden)    # (B,1,H) (1,B,H)
-        #print('** gru-output: {}'.format(output.shape))
-        #print('** gru-hidden: {}'.format(hidden.shape))
-
-        output = F.log_softmax(self.out(output), dim=-1)
-        #print('** final-output: {}'.format(output.shape))
-        #print('** final-hidden: {}'.format(hidden.shape))
-        #print('** final-attn_weights: {}'.format(attn_weights.shape))
-        return output, hidden, attn_weights
-
-    def initHidden(self, batch_size):
-        return torch.zeros(1, batch_size, self.hidden_size, device=device)
+        x = self.norm(x + self.self_attention_1(x, x, x, mask))
+        x = self.norm(x + self.self_attention_2(x, m, m, mask))
+        x = self.norm(x + self.feedforward(x))
+        return x
 <코드 끝>
 
-모델링 부분은 조금 더 자세하게 설명해보려고 한다. 이 모델은 알파벳 시퀀스를 역순으로 배열하는 Seq2Seq 모델임을 상기하며 아래의 그림을 보라.
-<그림 시작>
-chapter3/img8
-[그림8: 알파벳 시퀀스 어텐션 매커니즘 - 인코더]
-<그림 끝>
-
-[그림8]는 [3 4 5]가 `inputs`으로 들어갈 때 인코더에서 일어나는 연산 과정을 그림으로 나타낸 것이다. 인코더 부분은 간단하다. 우선 `inputs`를 임베딩하여 `embedded`가 됐다. (##각주1 임베딩한 값을 3.0 4.0 5.0 등으로 체웠는데, 이는 이해를 쉽게 하기 위해 친숙한 숫자로 표현한 것이다. 실제로는 랜덤한 값으로 임베딩된다.) `embedded`는 `hidden`과 함께 GRU에 입력된다. GRU는 `output`과 `hidden`을 리턴한다. 여기에서 `hidden`은 [3 4 5]라는 시퀀스를 하나의 벡터로 나타낸 것이다. 여기에서 `hidden`만으로는 `inputs` 시퀀스를 모두 표현하기 힘들기 때문에 디코더에서 `output`을 이용해서 어탠션을 적용한다.
-<그림 시작>
-chapter3/img9
-[그림9: 알파벳 시퀀스 어텐션 매커니즘 - 디코더:어텐션]
-<그림 끝>
-
-인코더에서 [3 4 5]를 `inputs`으로 넣었을 때 기대하는 디코더의 `output`은 [5 4 3]이다. 디코더에서 어텐션이 적용되는 방법이 [그림9]에 표현돼 있다. Seq2Seq 모델의 디코더는 [5 4 3]의 값을 하나씩 타임스탭마다 넣어준다. [5] 하나가 [그림9]의 `inputs`이다. `inputs`을 임베딩하여 `embedded`를 만들고 그것을 인코더의 `hidden`과 이어붙인다. 그렇게 이은 벡터를 `attn`을 통해서 행렬곱을 해준다. (##각주2 행렬곱의 의미는 선형대수학에서의 projection이다. 즉 다른 차원의 점으로 이동시키는 것이다.) 여기에 softmax를 취하면 `attn_weight`을 얻을 수 있다. `attn_weights`은 softmax를 취한 값이기 때문에 총 합이 1이고 길이는 `MAX_LENGTH`이다. 이 값을 인코더의 `encoder_outputs`에 곱해주면 인코더 `inputs` [3 4 5]에 가중치를 부여하는 셈이고 그것이 `attn_applied`이다. `attn_applied`와 `embedded`를 이어붙여보자. 이 두 값을 이어 붙인다는 것은 인코더의 입력 값과 디코더의 입력 값을 이어 붙인 셈이다. 이 값을 `attn_combine`을 이용해 행렬 곱을 해서 relu 연산을 한 다음에 GRU 셀에 입력으로 넣는다. 핵심은 인코더와 디코더의 입력 값을 합쳐서 GRU에 넣는다는 것이고 인코더의 입력은 어텐션 가중치가 적용된 값이다.
-
-이제 모델링하는 부분을 요약해보자. 우선 인코더를 만든다. 인코더의 입력인 `inputs`은 (batch_size,max_length) 형태의 벡터이다. 인코더의 출력은 `outputs`과 `hidden`인데, `outputs`은 (batch_size,max_length,hidden_size)이며 `hidden`은 (batch_size,1,hidden_size)이다.
-<그림 시작>
-chapter3/img10
-[그림10: 인코더 요약]
-<그림 끝>
-
-그 다음에 디코더를 만드는데 디코더는 인코더처럼 하나의 시퀀스를 통채로 처리하지 않고 하나 하나(auto-regressive) 시퀀스 길이만큼 반복하여 처리한다. 디코더가 입력으로 받아들이는 `inputs`은 (batch_size, 1)과 앞서 계산했던 인코더의 출력인 `outputs`와 `hidden`이다. 이 과정을 디코더의 시퀀스 길이만큼 반복하게 된다. 정리하면 [그림11]와 같다.
-<그림 시작>
-chapter3/img11
-[그림11: 디코더 요약]
-<그림 끝>
-
-인코더와 디코더의 입력과 출력을 하나로 정리하면 [그림12]와 같다.
-<그림 시작>
-chapter3/img13
-[그림12: 인코더/디코더 요약]
-<그림 끝>
-
-<팁 시작>
-팁: 모델링을 하기 전에 전체적인 입력과 출력의 형태를 정리한 후에 코딩을 하면 훨씬 간단하고 정리된 코드를 작성할 수 있다.
-<팁 끝>
-
-### 모델링 학습하기
-`trainIters`함수를 이용해서 Seq2Seq 모델을 학습할 수 있다. `trainIters`내에는 `train`함수를 사용하고 있고 SGD 옵티마이져와 NLLLoss를 이용한다. [코드7]을 보자.
+Encoder와 마찬가지로 Decoder 역시 DecoderLayer를 6개 반복하는 과정을 통해 만든다. 한가지 다른 점은 MultiHeadAttention 블록을 두번 사용한다는 것이다. 두번째 사용한 MultiHeadAttention 블록이 forward 함수에서 어떻게 사용되는지 보면 차이점을 알 수 있다. Encoder의 MultkHeadAttention에서는 query, key, value에 같은 값이 들어가지만, Decoder의 두번째 MultiHeadAttention에서는 key와 value에 다른 값이 들어간다. 이 값은 Encoder의 아웃풋이다. Decoder 전체 구현체를 보려면 [코드7]을 살펴보자.
 <코드 시작>
 코드7
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH, with_attention=True):
-    batch_size = input_tensor.size(0)
-    encoder_hidden = encoder.initHidden(batch_size)
-
-    encoder_optimizer.zero_grad()
-    decoder_optimizer.zero_grad()
-
-    input_length = input_tensor.size(1)
-    target_length = target_tensor.size(1)
+class Decoder(nn.Module):
+    '''
+    Transformer Decoder
+    하나의 Embedding 레이어와 N=6 개의 DecoderLayer로 구성돼 있다.
+    리턴할 때는 LayerNormalization 후 리턴한다.
     
-    encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
-    loss = 0
-
-    encoder_outputs, encoder_hidden = encoder(input_tensor, encoder_hidden)
-    
-    decoder_input = torch.tensor([bos]*batch_size, device=device)
-    decoder_input = decoder_input.unsqueeze(-1)    # (B,1)
-
-    decoder_hidden = encoder_hidden
-
-    use_teacher_forcing = True if np.random.random() < teacher_forcing_ratio else False
-    
-    for di in range(target_length):
-        decoder_output, decoder_hidden, decoder_attention = decoder(
-            decoder_input,    # (B,1)
-            decoder_hidden,   # (1,B,H)
-            encoder_outputs   # (B,M,H)
-        )
-        decoder_output = decoder_output.squeeze(1)
+    '''
+    def __init__(self, vocab_size, hidden_size, positional_encoding, n=6):
+        super().__init__()
+        self.embedding = nn.Sequential(Embeddings(vocab_size, hidden_size), positional_encoding)
+        self.layers = nn.ModuleList([DecoderLayer(hidden_size) for _ in range(n)])
+        self.norm = nn.LayerNorm(hidden_size)
         
-        loss += criterion(decoder_output, target_tensor[:,di])
-        
-        if use_teacher_forcing:
-            decoder_input = target_tensor[:,di].unsqueeze(-1)    # (B,1)
-        else:
-            topv, topi = decoder_output.topk(1)
-            decoder_input = topi    # (B,1)
-
-    loss.backward()
-
-    encoder_optimizer.step()
-    decoder_optimizer.step()
-
-    return loss.item() / target_length
-	
-	
-def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, learning_rate=0.01, with_attention=True):
-    start = time.time()
-    plot_losses = []
-    print_loss_total = 0  # print_every 마다 초기화
-    plot_loss_total = 0  # plot_every 마다 초기화
-
-    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
-    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
-    criterion = nn.NLLLoss()
-
-    for iter, batch in enumerate(train_dataloader):
-        input_tensor, target_tensor, length_tensor = batch
-        input_tensor = input_tensor.to(device)
-        target_tensor = target_tensor.to(device)
-        length_tensor = length_tensor.to(device)
-        
-        loss = train(input_tensor, target_tensor, encoder,
-                     decoder, encoder_optimizer, decoder_optimizer, criterion, with_attention=with_attention)
-        print_loss_total += loss
-        plot_loss_total += loss
-
-        if (iter+1) % print_every == 0:
-            print_loss_avg = print_loss_total / print_every
-            print_loss_total = 0
-            print('%s (%d %d%%) %.4f' % (timeSince(start, (iter+1) / n_iters),
-                                         (iter+1), (iter+1) / n_iters * 100, print_loss_avg))
-
-        if (iter+1) % plot_every == 0:
-            plot_loss_avg = plot_loss_total / plot_every
-            plot_losses.append(plot_loss_avg)
-            plot_loss_total = 0
-
-    showPlot(plot_losses)
+    def forward(self, x, m, mask):
+        '''
+        x: Target input tensor of shape [batch_size, maxlen]
+        m: Memory tensor of shape [batch_size, maxlen, hidden_size] from the Encoder
+        mask: Target mask tensor of shape [batch_size, 1, maxlen]
+        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        '''
+        x = self.embedding(x)
+        for layer in self.layers:
+            x = layer(x, m, mask=mask)
+        return self.norm(x)
 <코드 끝>
-위의 코드를 자세하게 설명하지는 않을 것이다. 레포지토리에 있는 코드와 주피터 노트북을 통해서 스스로 학습해보도록 하자. 
 
-[코드8]에서 모델을 선언하고 trainIters 함수로 모델을 학습해보자.
+3.1.3. Transformer
+Encoder와 Decoder를 만들었으니 이제 두 개를 합쳐서 Transformer 클래스를 구현해보자.
 <코드 시작>
 코드8
-hidden_size = 256
-encoder1 = EncoderRNN(26+3, hidden_size).to(device)
-decoder1 = AttnDecoderRNN(hidden_size, 26+3, dropout_p=0.1).to(device)
-
-for _ in range(15):
-    trainIters(encoder1, decoder1, 75000, print_every=30, with_attention=True)
-
-0m 0s (- 38m 29s) (30 0%) 3.0195
-0m 1s (- 37m 7s) (60 0%) 2.8927
-0m 2s (- 36m 36s) (90 0%) 2.7512
-0m 3s (- 36m 23s) (120 0%) 2.6641
-0m 4s (- 36m 14s) (150 0%) 2.4978
-0m 5s (- 36m 7s) (180 0%) 2.3319
-0m 0s (- 35m 46s) (30 0%) 2.0461
-0m 1s (- 35m 45s) (60 0%) 1.9150
-0m 2s (- 35m 45s) (90 0%) 1.7883
-0m 3s (- 35m 44s) (120 0%) 1.6298
-0m 4s (- 35m 45s) (150 0%) 1.6249
-0m 5s (- 35m 45s) (180 0%) 1.5884
-0m 0s (- 35m 50s) (30 0%) 1.4247
-0m 1s (- 35m 52s) (60 0%) 1.3634
-0m 2s (- 36m 24s) (90 0%) 1.3265
-0m 3s (- 36m 18s) (120 0%) 1.2368
+class Transformer(nn.Module):
+    '''
+    Transformer
+    Encoder와 Decoder로 구성된 Transformer 클래스이다.
+    Positional Encoding에 사용되는 weight은 공유하기 때문에 pos_encoder를 Encoder와 Decoder 양쪽에서 모두 사용했다.
+    '''
+    def __init__(self, source_vocab_size, target_vocab_size, hidden_size):
+        super().__init__()
+        pos_encoder = PositionalEncoding(hidden_size, 0.1)
+        self.encoder = Encoder(source_vocab_size, hidden_size, pos_encoder)
+        self.decoder = Decoder(target_vocab_size, hidden_size, pos_encoder)
+        
+    def forward(self, source, target, source_mask, target_mask):
+        '''
+        source: Source input tensor of shape [batch_size, maxlen]
+        target: Target input tensor of shape [batch_size, maxlen]
+        source_mask: Source mask tensor of shape [batch_size, 1, maxlen]
+        target_mask: Target mask tensor of shape [batch_size, 1, maxlen]
+        '''
+        print('** source: {}'.format(source.shape))
+        print('** target: {}'.format(target.shape))
+        print('** source_mask: {}'.format(source_mask.shape))
+        print('** target_mask: {}'.format(target_mask.shape))
+        memory = self.encoder(source, source_mask)
+        print('** encoder output: {}'.format(memory.shape))
+        output = self.decoder(target, memory, target_mask)
+        print('** decoder output: {}'.format(output.shape))
+        return output        
 <코드 끝>
 
-학습을 한 다음에는 학습한 모델을 검증해봐야 한다. [코드9]의 evaluate 함수를 통해서 검증해볼 수 있다.
+[코드1]부터 [코드8]까지의 구현체를 Attention is all you need의 실제 내용과 비교해보면서 공부해보자. 지금까지 구현한 Transformer는 [코드8]과 같이 정의해서 사용할 수 있다.
 <코드 시작>
 코드9
-def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
-    with torch.no_grad():
-        batch_size = input_tensor.size(0)
-        encoder_hidden = encoder.initHidden(batch_size)
-        #print(input_tensor.shape, encoder_hidden.shape)
-        encoder_outputs, encoder_hidden = encoder(input_tensor, encoder_hidden)
-        
-        decoder_input = torch.tensor([bos]*batch_size, device=device)
-        decoder_input = decoder_input.unsqueeze(-1)    # (B,1)
-        decoder_hidden = encoder_hidden
-
-        decoded_words = []
-        decoder_attentions = torch.zeros(max_length, max_length)
-
-        for di in range(max_length):
-            #print('** ', decoder_input.shape, decoder_hidden.shape, encoder_outputs.shape)
-            decoder_output, decoder_hidden, decoder_attention = decoder(
-                decoder_input,    # (B,1)
-                decoder_hidden,   # (1,B,H)
-                encoder_outputs   # (B,M,H)
-            )
-            decoder_output = decoder_output.squeeze(1)
-            decoder_attentions[:, di] = decoder_attention
-            
-            topv, topi = decoder_output.topk(1)
-            decoder_input = topi    # (B,1)
-            if topi.item() == eos:
-                decoded_words.append('</s>')
-                break
-            else:
-                decoded_words.append(i2a[topi.item()])
-
-        return decoded_words, decoder_attentions[:di + 1]
-
-for d in valid_dataloader:
-    input_tensor, target_tensor, length_tensor = d
-    input_string = list(map(lambda i: i2a[i], input_tensor.numpy()[0]))
-    output_string = list(map(lambda i: i2a[i], target_tensor.numpy()[0]))
-    input_string = np.array(input_string)
-    output_string = np.array(output_string)
-    print('input: {}'.format(input_string))
-    print('output: {}'.format(output_string))
-    
-    input_tensor = input_tensor.to(device)
-    target_tensor = target_tensor.to(device)
-    length_tensor = length_tensor.to(device)
-    
-    pred, attn_weight = evaluate(encoder1, decoder1, input_tensor)
-    pred = np.array(pred)
-    print('pred: {}'.format(pred))
-    print('-------------')
-	
-input: ['u' 'r' 'a' 'k' 't' 'r' 'g' 's' 'u' 'i' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-output: ['i' 'u' 's' 'g' 'r' 't' 'k' 'a' 'r' 'u' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-pred: ['i' 'u' 's' 'g' 'r' 't' 'k' 'a' 'r' 'u' '</s>']
--------------
-input: ['v' 'b' 'z' 'p' 'v' 'n' 's' 'k' 'o' 'o' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-output: ['o' 'o' 'k' 's' 'n' 'v' 'p' 'z' 'b' 'v' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-pred: ['o' 'o' 'o' 'k' 's' 'n' 'v' 'p' 'z' 'b' 'v' '</s>']
--------------
-input: ['w' 'g' 'l' 'e' 'm' 'h' 'o' 'q' 'c' 'r' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-output: ['r' 'c' 'q' 'o' 'h' 'm' 'e' 'l' 'g' 'w' '</s>' '<pad>' '<pad>' '<pad>'
- '<pad>']
-pred: ['r' 'c' 'q' 'o' 'h' 'm' 'e' 'l' 'g' 'w' '</s>']
+>>> source_vocab_size = 100
+>>> target_vocab_size = 110
+>>> hidden_size = 512
+>>> 
+>>> model = Transformer(source_vocab_size, target_vocab_size, hidden_size)
+>>> source = torch.tensor([
+>>>     [1, 15, 35, 45, 5, 8, 10, 2, 0, 0, 0, 0, 0, 0, 0],
+>>>     [1, 4, 7, 66, 34, 33, 13, 4, 8, 2, 0, 0, 0, 0, 0],
+>>>     [1, 25, 5, 6, 77, 24, 8, 5, 9, 27, 2, 0, 0, 0, 0],
+>>>     [1, 16, 13, 8, 3, 75, 37, 9, 2, 0, 0, 0, 0, 0, 0],
+>>> ])
+>>> target = torch.tensor([
+>>>     [1, 55, 35, 65, 25, 4, 15, 12, 9, 2, 0, 0, 0, 0, 0],
+>>>     [1, 42, 27, 16, 3, 6, 13, 24, 58, 5, 7, 2, 0, 0, 0],
+>>>     [1, 75, 2, 34, 79, 96, 3, 55, 19, 7, 2, 0, 0, 0, 0],
+>>>     [1, 66, 24, 3, 13, 83, 24, 19, 3, 2, 0, 0, 0, 0, 0],
+>>> ])
+>>> source_mask = (source != pad).unsqueeze(-2)
+>>> target_mask = (target != pad).unsqueeze(-2)
+>>> out = model(source, target, source_mask, target_mask)
+>>> source.shape, target.shape, source_mask.shape, target_mask.shape
+(torch.Size([4, 15]),
+ torch.Size([4, 15]),
+ torch.Size([4, 1, 15]),
+ torch.Size([4, 1, 15]))
+>>> out.shape
+torch.Size([4, 15, 512])
 <코드 끝>
 
-[코드9]의 결과를 보면 input, output, pred를 보여주고 있다. 모델에 input을 넣어서 pred를 생성해냈다. input을 역순으로 잘 생성한 것을 볼 수 있다. [코드9]에서 사용한 evaluate 함수를 잘 보자. 학습할 때와 다르게 teacher forcing이 들어가지 않고 오로지 모델이 한 글자씩 출력한 것을 연결한 것이다. teacher forcing은 모델 학습을 효과적으로 해주기 위함이므로 모델을 검증할 떄는 사용하지 않는다.
+3.2. Why Transformer
+처음 Transformer 구조를 공부했을 때가 떠오른다. 구현된 모델의 구조를 보는데 RNN 계열의 구조가 보이지 않는 것이다. 시퀀스를 다루는데 있어서 당연하게 포함됐던 RNN 계열의 구조가 없었던 것이다. 당시에 개인적으로 꽤나 충격적이었다. 논문을 읽어보면 Self-Attention을 사용한 이유를 크게 세가지를 들고 있다.
+- 레이어 단위별로의 컴퓨팅 연산
+- 병렬처리될 수 있는 컴퓨팅의 연산
+- 먼 거리에 있는 단어들끼리의 의존성을 학습하기 위함.
 
-마지막으로 어텐션을 출력해서 시각화해주는 코드를 작성해보자.
+첫번째는 각 레이어마다의 기본적인 컴퓨팅 연산이 얼마나 들어가는지에 대한 내용이다. 즉 시간복잡도이다. RNN, CNN계열의 시간복잡도와 Self-Attention의 시간복잡도를 비교하면 [표1]과 같다.
+<표 시작>
+표1
+Self-Attention O(n^2*d) O(1)
+RNN O(n*d^2) O(n)
+CNN O(k*n*d^2) O(n)
+Self-Attention(restricted) O(r*n*d) O(n/r)
+<표 끝>
+
+[표1]을 보면 n < d일 경우, Self-Attention이 RNN보다 빠르다는 것을 볼 수 있다. 논문에서는 n이 커질 경우에는 Self-Attention을 할 때 입력의 일부분만을 고려하는 Self-Attention(restricted)를 제안했다. 입력의 일부분을 고려한다는 것은 한 입력의 전체 길이에 해당하는 어텐션을 구하는 것이 아니라 일부 길이(r)에 해당하는 부분에 대해서만 어텐션을 구한다는 것이다. 이럴 경우 시간복잡도가 O(r*n*d)로 줄어들게 된다. 대신에 Self-Attention(restricted)를 사용할 경우 단점은 Maximum path length를 찾는 시간복잡도가 O(1)에서 O(n/r)로 늘어나게 된다.
+
+3.3. 트랜스포머 학습 결과
+이 절에서는 트랜스포머가 학습된 결과와 성능에 대해서 이야기해보려고 한다. 트랜스포머의 성능을 평가하기 위해 PPL과 BLEU라는 두 가지 평가 지표를 사용한다. 이 절에서 사용한 결과는 논문에 나온 결과이며, 이 책의 소스코드로 실행한 결과가 아니다. 
+
+3.3.1. Perplexity(PPL)
+우선 PPL에 대해서 알아보자. Perplexity의 약자로 언어 모델의 성능을 나타내는데 사용한다. Perplexity를 영어사전에서 찾아보면 무언가를 이해할 수 없어서 느끼는 당혹감이라고 나와있다. 유사한 단어로 confusion이 있다. 즉 PPL은 얼마나 혼동스러운가를 나타내는 지표로 보면 된다. 따라서 낮을수록 더 좋은 값을 갖게 된다. PPL을 구하는 공식은 [수식3]과 같다.
+<수식 시작>
+수식3
+PPL 구하는 공식
+<수식 끝>
+
+수식이 복잡해보이지만 해석해보면 한 시퀀스에 대한 확률 값을 구한 후, 그 값에 -(1/n) 제곱을 해준 결과이다. 예를 들어보자. 주사위를 10번 던지는 경우에 대한 PPL은 아래와 같이 구할 수 있다.
+<블록 시작>
+1/6 10번 던지는 PPL 구하는 공식
+<블록 끝>
+
+PPL을 조금 더 쉽게 설명하면, PPL 값만큼의 경우의 수로 다음 단어를 예측하려고 하는 것으로 이해할 수 있다. 각각의 확률이 1/6인 경우에 대해서 PPL이 6이 나왔다. 즉, 6개 중에 한 개를 다음 입력값으로 고민하고 있다고 해석할 수 있다. 여기에서는 언어 모델의 PPL에 대해서 이야기를 하고 있으니 언어 모델의 PPL도 비교해보도록 하자.
+<표 시작>
+표2
+트랜스포머 이전의 PPL들 https://research.fb.com/building-an-efficient-neural-language-model-over-a-billion-words/
+
+ngram PPL : https://web.stanford.edu/~jurafsky/slp3/3.pdf
+
+트랜스포머의 PPL: https://arxiv.org/pdf/1706.03762.pdf Table3
+<표 끝>
+
+[표2]의 PPL은 서로 같은 비교대상으로 구한 PPL은 아니다. 그렇지만 값의 범위 값을 비교해보면 좋을 것 같다. N-gram 모델에서는 PPL이 100단위이다. Unigram의 경우 970까지 나온다. 다음 단어를 예측하는데 후보 단어가 970개나 있다는 뜻이다. 그러면 자연스럽게 다음 단어를 예측하는 확률이 떨어질 것이며 이는 모델이 자연어를 이해하는 성능에 영향을 미칠 것이다. 반면에 AI 기반의 모델은 PPL이 훨씬 낮다. 특히 트랜스포머의 경우 10 이하의 PPL을 보여주고 있다. [표2]가 동일한 조건에서 구한 PPL이 아니라는 점을 다시 한번 강조한다. [표2]를 통해서 언어 모델에 비해서 AI/트랜스포머 언어 모델이 자연어를 이해하는 지표의 수치가 훨씬 높다는 것을 보이해했다면 충분하다.
+
+N-gram 기반의 언어 모델에서는 N-gram 확률을 직접 곱해서 PPL을 구할 수 있다. 그러나 단어와 단어간의 확률을 명시적으로 구할 수 없는 인공지능 모델의 경우 어떻게 엔트로피를 구할 수 있을까? 인공지능 모델의 학습에 많이 사용하는 loss인 Cross Entropy loss를 이용해서 PPL을 구한다. 이 내용은 이 절의 성격과 거리가 있기 때문에 [부록1]에 따로 자세하게 정리해뒀다.
+## [부록1] PPL = Cross Entropy Loss??
+
+3.3.2. BLEU 스코어
+논문 Attention is all you need에서는 트랜스포머를 이용해서 번역기를 만들었다. 번역 성능을 측정하는 지표로 BLEU가 있다. BLEU 스코어는 Bilingual Evaluation Understudy Score의 약자이다. 사람이 번역한 결과와 기계가 번역한 결과가 얼마나 서로 유사한지를 비교하는 지표이다. 이번 절에서는 BLEU 스코어의 계산법에 대해서 간단하게 언급한 후 트랜스포머의 BLEU 스코어도 언급해보려고 한다.
+
+문장 번역은 사실 정확한 정답이 없다. 하나의 문장을 다른 문장으로 번역했을때 서로 다른 문장이지만 같다고 볼 수 있는 여러가지 경우의 수가 있기 때문이다. 따라서 BLEU 스코어에서는 정답 문장을 여러개 둘 수 있게 디자인돼 있다. "나는 너를 항상 사랑해."라는 문장을 번역기 A, B, C가 각각 영작했다고 해보자.
+<블록 시작>
+번역할 문장: 알지? 나는 너를 항상 매우 사랑해.
+candidateA: know that I always love you that much.
+candidateB: You love I always.
+candidateC: I I I I I.
+정답1: You know, I always love you so much.
+정답2: Know right? I always love you a lot.
+<블록 끝>
+
+굳이 BLEU 스코어를 계산하지 않아도 candidateA가 가장 좋은 문장이라는 것은 쉽게 알 수 있다. candidateB는 문법이 엉망이다. candidateC는 그냥 엉망이다. 여기에서는 제대로 BLEU 스코어를 구하는 방법을 알아보고 있으니 위의 candidate을 정답1과 정답2를 이용해서 평가해보자. 정답1과 정답2에서 나온 모든 단어를 열거해보면 다음과 같다.
+<블록 시작>
+know right I always love you so much a lot
+<쁠록 끝>
+
+각각의 unigram count를 위 단어들에 대해서 각각 구한 후 candidateA, candidateB, candidateC의 단어 수로 나눠보자.
+<블록 시작>
+candidateA: (know(1) + I(1) + always(1) + love(1) + you(1) + much(1)) / 8
+candidateB: (I(1) + always(1) + love(1) + you(1)) / 4
+candidateC: (I(5)) / 5
+<쁠록 끝>
+
+여기에서 무언가 이상함을 느껴야 한다. 스코어를 구하고 있으니 스코어는 높어야 좋은 것인데 candidateB(4/4)와 candidateC(5/5)가 candidateA(6/8)보다 더 높다. 왜 그럴까? candidateB의 경우 순서를 고려하지 않았기 때문이고 candidateC의 경우에는 정답1, 정답2에는 한번 밖에 나오지 않았던 단어 I가 5번이나 나왔기 때문이다. candidateB의 경우 N-gram을 통해서 해결할 수 있고, candidateC의 경우 정답 문장에서 발현한 단어의 개수를 참고하는 조금 다른 카운팅 기법을 이용해서 해결할 수 있다. 단어의 실제 카운트 수와 비교해서 더 적은 카운트를 사용하는 것이다. 가령 정답1, 정답2에서 나온 you의 카운트 중 더 큰 수(2)와 candidateA에서 출현한 you의 개수(1)을 비교해서 더 적은 값(1)을 택하는 것이다. 이 방법을 modified unigram precision이라고 한다. unigram 대신에 N-gram을 사용하면 modified N-gram precision이 된다. modified unigram precision을 이용해서 candidate A~C를 다시 계산하면 아래와 같은 결과를 얻을 수 있다.
+
+<블록 시작>
+candidate A~C까지의 modified unigram precision
+0.3779644730092272 # know that I always love you that much.
+0.3423503955179092 # You love I always.
+0.3423503955179092 # I I I I I.
+<블록 끝>
+
+candidateB의 경우 순서가 엉망이다. 이 순서를 고려하도록 N=1~4로 두고 modified N-gram precision을 수행해보자.
+<블록 시작>
+# You love I always.
+modified 1-gram precision: 4/4
+modified 2-gram precision: 1/3
+modified 3-gram precision: 0/2
+modified 4-gram precision: 0/1
+<쁠록 끝>
+
+위 결과는 [코드10]을 실행해서 얻은 결과이다. [코드10]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
 <코드 시작>
 코드10
-def showAttention(input_sentence, output_words, attentions):
-    # colorbar로 그림 설정
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    cax = ax.matshow(attentions.numpy(), cmap='bone')
-    fig.colorbar(cax)
-
-    # 축 설정
-    ax.set_xticklabels([''] + input_sentence.split(' ') +
-                       ['</s>'], rotation=90)
-    ax.set_yticklabels([''] + output_words)
-
-    # 매 틱마다 라벨 보여주기
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-
-    plt.show()
+def word_counter(tokens, n):
+    return Counter(ngrams(tokens, n))
 	
-def evaluateAndShowAttention():
-    input_tensor = make_alphabet_tensor()
-    output_words, attentions = evaluate(
-        encoder1, decoder1, input_tensor)
+def modified_count(candidate, references, n):
+    cand_cnt = word_counter(candidate.split(), n)
+    temp = Counter()
+    for ref in references:
+        tokens = ref.split()
+        ref_cnt = word_counter(tokens, n)
+        for k, v in ref_cnt.items():
+            if k in temp:
+                temp[k] = max(ref_cnt[k], temp[k])
+            else:
+                temp[k] = ref_cnt[k]
     
-    input_sentence = input_tensor[0].tolist()
-    input_sentence = list(map(lambda x: i2a[x], input_sentence))
-    print('original input =', input_sentence)
-    input_length = input_sentence.index('<pad>')
-    input_sentence = ' '.join(input_sentence[:input_length])
-    print('input  =', input_sentence)
-    print('output =', ' '.join(output_words))
-    showAttention(input_sentence, output_words, attentions)
+    return Counter({tok:min(temp[tok], cand_cnt[tok]) for tok in cand_cnt})
 	
-evaluateAndShowAttention()
+def modified_ngram_precision(candidate, references, n):
+    min_cnt = modified_count(candidate, references, n)
+    total_cnt = word_counter(candidate.split(), n)
+    
+    min_cnt_sum = sum(min_cnt.values())
+    total_cnt_sum = sum(total_cnt.values())
+    #print('modified {}-gram precision: {}/{}'.format(n, min_cnt_sum, total_cnt_sum))
+    return min_cnt_sum / total_cnt_sum
+	
+
+	
+>>> candidate = 'You love I always'
+>>> references = [
+>>>     'You know, I always love you so much',
+>>>     'Know right? I always love you a lot',
+>>> ]
+>>> for i in range(4):
+>>>     modified_ngram_precision(candidate, references, i+1)
 <코드 끝>
 
-[코드10]을 실행시키면 [그림13]와 같은 결과를 얻는다.
+[코드10]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
 
-<그림 시작>
-chapter3/img14
-그림13 역방향 어텐션 그림
-<그림 끝>
+최종적으로 BLEU 스코어는 [코드11]과 같이 구할 수 있다.
+<코드 시작>
+코드11
+def brevity_penalty(candidate, references):
+    cand_len = len(candidate.split())
+    diff = np.inf
+    for ref in references:
+        tokens = ref.split()
+        if diff > abs(len(tokens) - cand_len):
+            ref_len = len(tokens)
+            diff = abs(len(tokens) - cand_len)
+            
+    if cand_len > ref_len:
+        return 1
+    elif cand_len == 0:
+        return 0
+    else:
+        return np.exp(1 - ref_len/cand_len)
+		
+def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
+    bp = brevity_penalty(candidate, references)
+    precisions = [modified_ngram_precision(candidate, references, n=i+1) for i in range(len(weights))] 
+    
+    score = 0
+    for w, p in zip(weights, precisions):
+        if p == 0:
+            continue
+        score += (w * np.log(p))
+    
+    return bp * np.exp(score)
+	
+>>> bleu_score(candidate, references)
+0.3423503955179092
+<코드 끝>
 
-[그림12]은 [코드10]을 실행시켰을 때 계산되는 어텐션을 시각화한 결과이다. 가로가 input 방향이고 세로가 output 방향이다. input의 제일 첫 문자인 k를 생성할 때 output의 제일 뒷 문자인 </s> 부분에 가장 높은 어텐션 값을 갖는 것을 알 수 있다.
+[코드11]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+<수식 시작>
+수식5
+brevity penalty 공식
+<수식 끝>
+
+BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드11]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
+<표 시작>
+표3
+
+<표 끝>
+트랜스포머의 BLEU 스코어는 EN-FR(영어 → 프랑스어)와 EN-DE(엉어 → 독일어) 모델에서 모두 SOTA를 기록했다. 
+<표 시작>
+표3
+논문에 BLEU SOTA 표
+Transformer (big) 28.4 41.8
+<표 끝>
+
+이번 장에서 트랜스포머가 나오게 된 배경과 트랜스포머의 구조를 알아봤고, 트랜스포머의 학습과 검증 과정에 사용됐던 지표인 PPL과 BLEU에 대해서 알아봤다. Attention is all you need에 나오는 최초의 트랜스포머는 2018년 이후의 급격한 NLP 발전의 모티브로 작용하여 2019년 2020년 다른 논문에서도 많이 인용됐다. 트랜스포머가 Self-Attention을 이용해서 필요한 부분에 대해서만 가중치를 높게 주고 그것을 기반으로 번역문을 생성하여 번역 품질이 급격하게 상승했지만, 그래도 번역기일 뿐이다. 다른 종류의 NLP 테스크를 하기 위해서는 새로운 데이터를 이용해서 학습을 해야하며 이는 많은 양의 데이터와 오랜 시간의 학습 시간을 필요로 한다. 이런 문제를 2018년 10월에 발표된 BERT를 통해 해결 가능하다. 다음 장에서는 BERT에 대해서 알아볼 예정이다. 
+
+
+https://heiwais25.github.io/nlp/2019/10/13/Language-model-3/
