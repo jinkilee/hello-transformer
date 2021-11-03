@@ -212,45 +212,31 @@ she,sells: 4
 sells,sea-shells: 2
 sea-shells,by: 2
 by,the: 2
-the,sea-shore: 2
-sea-shore,</s>: 1
-</s>,<s>: 3
+the,<unk>: 2
+<unk>,</s>: 3
+</s>,<s>: 2
 <s>,the: 1
-the,shells: 1
-shells,she: 1
+<unk>,she: 3
 sells,<unk>: 1
 <unk>,<unk>: 2
 <unk>,i'm: 2
-i'm,sure: 2
-sure,</s>: 1
+i'm,<unk>: 2
 <s>,<unk>: 1
-<unk>,she: 1
-sea-shore,<unk>: 1
-sure,she: 1
+the,sea-shore: 1
+sea-shore,<unk>: 2
 sells,sea-shore: 1
-sea-shore,shells: 1
-shells,</s>: 1
-<s>,</s>: 1
 <코드 끝>
 
 [코드6]의 `text`를 bigram으로 vocab을 만들고 그것을 표로 나타내면 아래와 같다.
+
 <표 시작>
 표1
 표2
 표3
-language_model.py에서 draw_table1()
-language_model.py에서 draw_table2()
-language_model.py에서 draw_table3()
-<표 끝>
-the
-[표1]에서 the는 총 3번 나왔다. the에 대한 bigram 카운트를 보면 by,the가 2번, <s>,the가 1번 나와서 총 3번 나왔다. 그 외의 단어 she, sells 등등의 단어 다음에는 the가 나온 적이 없다. 그럼어도 불구하고 [표3]와 같이 적어도 한번은 나왔다고 카운트 해주는 것이다. 그 다음에 [수식4]를 이용해서 각 bigram 카운트에 대한 확률을 구하면 [표4]과 같다.
-
-<표 시작>
-표4
-language_model.py에서 draw_table4()
+chapter1.xlsx 참고
 <표 끝>
 
-계산법을 더 자세하게 설명해보자. 가령 P(she,sells|sells)의 확률은 0.1111이다. 이는 (4+1)/(4+41)이며 she,sells의 빈도가 분자의 4이고 sells의 빈도가 분모의 4이고 총 단어의 수는 41이기 때문이다.
+[표1]에서 the는 총 3번 나왔다. the에 대한 bigram 카운트를 [표2]에서 보면 by,the가 2번, <s>,the가 1번 나와서 총 3번 나왔다. 그 외의 단어 she, sells 등등의 단어 다음에는 the가 나온 적이 없다. 그럼어도 불구하고 [표3]와 같이 적어도 한번은 나왔다고 카운트 해주는 것이다. 그 다음에 [수식4]를 이용해서 각 bigram 카운트에 대한 확률을 구할 수 있다. 가령 P(she,sells|sells)의 확률은 0.3571이다. 이는 (4+1)/(4+10)이며 분자의 4는 she,sells의 빈도이고 분모의 4는 sells의 빈도이다. 그리고 분모에 더해주는 10은 총 고유 단어의 수이다.
 
 Laplace smoothing은 1을 더해주는 방식의 smoothing 기법이기 때문에 Add-one smoothing이라고도 부른다. 여기에서 1을 더하는 대신 어떤 수 k를 더한다고 한다면 Add-k smoothing이 된다. Add-k smoothing의 공식은 아래와 같다.
 
