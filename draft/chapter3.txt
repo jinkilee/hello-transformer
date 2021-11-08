@@ -1,13 +1,16 @@
 3. 안녕, 트랜스포머
+
 <블록 시작>
 외국에 처음 나가본 윤우는 사람들이 다른 언어로 말하고 있는 것을 처음 보고 깜짝 놀랐다.
 윤우: 아빠, 여기 사람들이 뭐라고 하는거에요?
 아빠: .... 아빠도 모르겠어...
 <블록 끝>
+
 NLP에서 가장 활발하게 연구되고 있는 분야 중 하나가 Neural Machine Translation이다. 기계 번역이라고 한다. 하나의 언어에서 같은 뜻을 가진 다른 언어로 바꾸는 태스크이다. 즉 번역기이다.
 
-2017년 6월에 Attention is all you need라는 논문을 Google에서 발표했다. 이 논문에서 트랜스포머라는 용어가 처음 사용돼었다. 이 논문의 초록을 읽어보면 아래와 같은 몇가지 포인트를 잡을 수 있다.
-<블록 시작>
+2017년 6월에 Attention is all you need라는 논문을 Google에서 발표했다. 이 논문에서 트랜스포머라는 용어가 처음 사용돼었다. 이 논문의 초록을 읽어보면 [인용1]과 같은 몇가지 포인트를 잡을 수 있다.
+
+<인용 시작>
 The dominant sequence transduction models are based on complex recurrent or
 convolutional neural networks that include an encoder and a decoder. The best
 performing models also connect the encoder and decoder through an attention
@@ -28,28 +31,30 @@ link: https://arxiv.org/pdf/1706.03762.pdf
 - The dominant sequence transduction models are based on complex recurrent or convolutional neural networks
 - We propose a new simple network architecture, the Transformer
 - state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs
-
 인용1
-<블록 끝>
+<인용 끝>
 
-[인용1]은 논문 Attention is all you need의 초록이다. 굵은 글씨로된 부분을 보면, 지금까지 대부분의 번역기들은 복잡한 구조의 RNN이나 CNN 구조였는데 이 논문에서는 간단한 구조의 네트워크인 트랜스포머를 제안했고 이는 8개의 GPU에서 3.5일 만에 학습되며 WMT 2014 English-to-French 번역 데이터셋에 대해서 BLEU 스쿠어 41.8이라는 SOTA를 기록했다는 것이다. 트랜스포머는 이후 많은 언어 모델에서 인용되고 있다.
+[인용1]은 논문 Attention is all you need의 초록이다. 굵은 글씨로된 부분을 보면, 지금까지 대부분의 번역기들은 복잡한 구조의 RNN이나 CNN 구조였는데 이 논문에서는 간단한 구조의 네트워크인 트랜스포머를 제안했고 이는 8개의 GPU에서 3.5일 만에 학습되며 WMT 2014 English-to-French 번역 데이터셋에 대해서 BLEU 스코어 41.8이라는 SOTA를 기록했다는 것이다. 트랜스포머는 이후 많은 언어 모델에서 인용되고 있다.
 ## 주석1: SOTA: 인공지능에서 많은 공식 데이터셋이 있다. 각 데이터셋마다 1등 점수를 state-of-the-art 즉, "예술의 경지"라고 한다.
-## BLEU: Appendix 참고
+## BLEU 스코어: Appendix 참고
 
-트랜스포머는 RNN이나 CNN을 사용하지 않는다. 자연어의 데이터는 시퀀스이기 때문에 LSTM이나 GRU 등의 순서를 기억하며 학습할 수 있는 모델을 당연하게 사용해왔다. 그러나 이 논문의 저자들은 그 과정이 복잡하다고 판단했고, 그것을 Self-Attention을 통해서 해결했다. Self-Attention울 도입하다보니 GPU를 통해 병렬로 학습할 수 있는 연산이 더 많아졌다. 이 장에서는 트랜스포머가 어떤 구조인지, 왜 좋은 성능을 냈는지, 그리고 구현된 코드까지 공부해보려고 한다.
+트랜스포머는 RNN이나 CNN을 사용하지 않는다. 자연어의 데이터는 시퀀스이기 때문에 LSTM이나 GRU 등의 순서를 기억하며 학습할 수 있는 모델을 당연하게 사용해왔다. 그러나 이 논문의 저자들은 그 과정이 복잡하다고 판단했고, 그것을 Self-Attention을 통해서 해결했다. Self-Attention울 도입하다보니 GPU를 통해 병렬로 학습할 수 있는 연산이 더 많아졌다. 이 장에서는 트랜스포머가 어떤 구조인지, 왜 좋은 성능을 내는지 알아보고 트랜스포머를 구현한 소스코드도 살펴보려고 한다.
 
 3.1. 트랜스포머의 구조
-이 절에서는 트랜스포머의 구조를 먼저 알아보려고 한다. 트랜스포머의 구조는 크게 인코더와 디코더 부분으로 나뉜다. 인코더는 입력 문장을 은닉 벡터로 표현하는 과정이고 디코더는 은닉 벡터로 표현된 입력 문장을 출력 문장, 즉 번역된 다른 언어의 문장으로 바꾸는 과정이다. 앞 장에서 공부했던 Seq2Seq 모델과 같은 구조이다. 하지만 앞장의 Seq2Seq 모델은 인코더와 디코더에서 RNN 계열의 구조를 사용했고, 트랜스포머에서는 RNN을 사용하지 않고 Self-Attention 구조를 사용한다. Attention 구조에 대해서는 앞 장에서 공부했었다. Self-Attention에 대해서는 앞 장의 내용을 더 확장하여 이번 장에서 다루려고 한다. 트랜스포머에서는 각각 인코더와 디코더가 어떻게 구성되는지 알아보자.
+트랜스포머의 구조는 크게 인코더와 디코더 부분으로 나뉜다. 인코더는 입력 문장을 은닉 벡터로 표현하는 과정이고 디코더는 은닉 벡터로 표현된 입력 문장을 출력 문장으로 바꾸는 과정이다. 2장에서 공부했던 Seq2Seq 모델도 인코더와 디코더 구조로 이루어져 있다. 하지만 2장의 Seq2Seq 모델은 인코더와 디코더에서 RNN 계열의 구조를 사용했고, 트랜스포머에서는 RNN을 사용하지 않고 셀프 어탠션(Self-Attention) 구조를 사용한다. 셀프 어탠션은 2장에서 공부한 어탠션 네트워크의 확장이다. 이번 절에서 트랜스포의 인코더와 디코더 구조를 자세하게 알아보자.
 
 3.1.1. 인코더
-트랜스포머의 인코더는 하나의 동일한 블록 구조를 만들어서 그것을 N=6번 반복하는 구조를 하고 있다. 입력 문장을 블록에 넣어서 나온 결과를 다시 또 다른 블록에 넣는 것을 6번 반복해서 트랜스포머의 인코더가 만들어진다. 그 하나의 블록이 어떤 구조를 하고 있는지 알면 트랜스포머 인코더의 구조는 다 공부한 것이다. 트랜스포머의 인코더를 이루는 블록을 자세히 공부해보자.
+트랜스포머의 인코더는 인코더 레이어라고 하는 블록 구조를 만들어서 그것을 N=6번 반복하는 구조를 하고 있다. 입력 문장을 인코더 레이어에 넣어서 나온 결과를 다시 또 다른 인코더 레이어 블록에 넣는 것을 6번 반복해서 트랜스포머의 인코더가 만들어진다. 그 하나의 블록이 어떤 구조를 하고 있는지 알면 트랜스포머 인코더의 구조는 다 공부한 것이다. 트랜스포머의 인코더를 이루는 블록을 자세히 공부해보자.
 
-트랜스포머 인코더의 한 블록은 [그림1]과 같은 구조이다.
+트랜스포머의 인코더 레이어는 [그림1]과 같은 구조이다.
+
 <그림 시작>
 그림1
 <그림 끝>
 
-Multi-head attention 블록과 feed-forward network로 이뤄진다. 먼저 Multi-head attention을 코드로 구현하면 [코드1]과 같다.
+멀티헤드 어탠션(MultiHeadAttention)블록과 포인트와이즈 피드포워드 네트워크(PositionWiseFeedForwardNetwork)블록으로 이뤄진다. 먼저 멀티헤드 어탠션을 코드로 구현하면 [코드1]과 같다.
+## 각주1 이 장에서 트랜스포머의 구현을 설명하는데 사용한 사용한 소스코드는 하버드 NLP의 소스코드를 참고했다. https://nlp.seas.harvard.edu/2018/04/03/attention.html
+
 <코드 시작>
 코드1
 class MultiHeadAttention(nn.Module):
@@ -105,16 +110,29 @@ class MultiHeadAttention(nn.Module):
         return context
 <코드 끝>
 
-[코드1]에서 어텐션을 구할때 Scaled Dot-Product Attention을 사용한다. 
+왜 멀티헤드 어탠션일까? [코드1]을 보면 attention_head_size를 구할 때 hidden_size에서 num_heads로 나눠주는 부분을 init()함수에서 확인할 수 있다. attention_head_size는 forward 함수에서 쿼리/키/값을 쪼개기(split) 위해 사용됐다. 결국 쿼리/키/값을 하나의 어탠션으로 계산하지 않고, attention_head_size 만큼의 크기로 나눠서 attention_head_size 만큼의 어탠션을 만들기 때문에 멀티헤드 어탠션이다. [코드1]에서 어텐션을 구할때 Scaled Dot-Product 어탠션을 사용한다. 
+
 <수식 시작>
 Scaled Dot-Product Attention 공식
 수식1
 <수식 끝>
-Scaled Dot-Product Attention은 3장에서 다뤘던 어텐션과 비교해서 1/dk가 softmax 전에 추가된 형태를 띈다. 이는 행렬 연산의 결과 값이 너무 커지게 될 경우, 그 값을 softmax할 떄 gradient가 수렴해버리는 현상을 막기 위함이다.
 
-이제 트랜스포머 인코더를 구성하는 두번째 단위 블록인 Point-wise Feedforward Network를 살펴보자.
+[수식1]을 보자. Scaled Dot-Product 어탠션은 쿼리와 키 값의 평균과 분산이 각각 0과 1이며 서로 독립임을 가정한다. 쿼리와 키의 벡터 사이즈가 dk라고 하면 쿼리와 키의 행렬 곱의 평균과 분산은 0과 dk이다. 행렬 곱을 했을 때 분산 값이 증가하는 속도가 매우 크기 떄문에 그것을 조금 완화시키기 위해 root(dk)만큼 스케일다운(scale-down) 하는 것이다. [코드2]를 통해서 간단하게 행렬 곱을 했을 때 분산의 값이 크게 증가한다는 것을 알 수 있다. 이렇게 분산이 커진 값을 softmax 했을 때 기울기는 0에 수렵하게 되기 때문에 그것을 방지하기 위해 Scaled Dot-Product 어탠션을 사용한 것이다.
+
 <코드 시작>
 코드2
+np.var(a) 요 코드 추가
+import numpy
+a = np.random.normal(size=(64, 16))
+b = np.random.normal(size=(64, 16))
+c = np.dot(a, b.T)
+>>> a.shape, b.shape, c.shape
+<코드 끝>
+
+이제 트랜스포머 인코더를 구성하는 두번째 단위 블록인 Point-wise Feedforward Network를 살펴보자.
+
+<코드 시작>
+코드3
 class PositionWiseFeedForwardNetwork(nn.Module):
     '''
     Position-Wise Feedforward Network.
@@ -139,10 +157,10 @@ class PositionWiseFeedForwardNetwork(nn.Module):
 
 Point-wise Feedforward Network는 구현이 간단하다. (hidden_size x inner_hidden_size) weight을 이용해서 행렬 곱을 해준 후 ReLU를 실행한다. 그리고 다시 (inner_hidden_size x hidden_size) weight으로 행렬을 해서 다시 원래의 사이즈로 되돌린다. 
 
-트랜스포머의 구현에서 가장 핵심이 되는 단위 블록인 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현했다. 이제 이 두 개의 블록을 적절하게 감싸서 트랜스포머를 만들어나가면 된다. 이 절의 제일 첫 부분에서 언급했던 트랜스포머의 전체적인 구조를 다시 한번 언급해보자. 트랜스포머는 크게 인코더와 디코더로 나뉘어 있고, 인코더는 하나의 동일한 구조를 만들어서 N=6번 반복한다고 했다. [코드3]의 구조를 6번 반복하는 것이다.
+트랜스포머의 구현에서 가장 핵심이 되는 단위 블록인 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현했다. 이제 이 두 개의 블록을 적절하게 감싸서 트랜스포머를 만들어나가면 된다. 이 절의 제일 첫 부분에서 언급했던 트랜스포머의 전체적인 구조를 다시 한번 언급해보자. 트랜스포머는 크게 인코더와 디코더로 나뉘어 있고, 인코더는 하나의 동일한 구조를 만들어서 N=6번 반복한다고 했다. [코드4]의 구조를 6번 반복하는 것이다.
 
 <코드 시작>
-코드3
+코드4
 class EncoderLayer(nn.Module):
     '''
     EncoderLayer
@@ -167,9 +185,10 @@ class EncoderLayer(nn.Module):
         return x
 <코드 끝>
 
-[코드3]을 보면 LayerNorm(x + sublayer(x)) 형태로 두 서브레이어를 연결해준 것을 제외하고는 [코드1]과 [코드2]에서 만들었던 블록을 그대로 사용하고 있다. (batch_size, maxlen) 형태의 최초 입력 벡터를 (batch_size, maxlen, hidden_size) 형태로 변형해주는 임베딩 레이어와 [코드3]의 EncoderLayer를 6번 반복한 것이 트랜스포머의 인코더이다. 임베딩 레이어는 [코드4]와 같이 구현할 수 있다.
+[코드4]을 보면 LayerNorm(x + sublayer(x)) 형태로 두 서브레이어를 연결해준 것을 제외하고는 [코드1]과 [코드3]에서 만들었던 블록을 그대로 사용하고 있다. (batch_size, maxlen) 형태의 최초 입력 벡터를 (batch_size, maxlen, hidden_size) 형태로 변형해주는 임베딩 레이어와 [코드4]의 EncoderLayer를 6번 반복한 것이 트랜스포머의 인코더이다. 임베딩 레이어는 [코드5]와 같이 구현할 수 있다.
+
 <코드 시작>
-코드4
+코드5
 class PositionalEncoding(nn.Module):
     '''
     PositionalEncoding
@@ -216,7 +235,8 @@ class Embeddings(nn.Module):
         return self.lut(x) * math.sqrt(self.hidden_size)
 <코드 끝>
 
-[코드4]까지 구현한 내용들을 반복해서 [코드5]에서 Encoder를 완성할 수 있다. 그런데 뭔가 허전하다. Sequence를 학습하기 위한 무언가가 없다. Transformer 이전에는 그것을 RNN 계열의 구조가 담당했다. Transformer에는 RNN 계열의 구조가 전혀 없다. 시퀀스를 학습할 수 있게 하기 위해서 PositionalEncoding을 더해준 것이다. 
+[코드5]까지 구현한 내용들을 반복해서 [코드6]에서 Encoder를 완성할 수 있다. 그런데 뭔가 허전하다. Sequence를 학습하기 위한 무언가가 없다. Transformer 이전에는 그것을 RNN 계열의 구조가 담당했다. Transformer에는 RNN 계열의 구조가 전혀 없다. 시퀀스를 학습할 수 있게 하기 위해서 PositionalEncoding을 더해준 것이다. 
+
 <블록 시작>
 인용2
 Since our model contains no recurrence and no convolution, in order for the model to make use of the
@@ -233,7 +253,7 @@ positional encoding sin cos
 <수식 끝>
 
 <코드 시작>
-코드5
+코드6
 class Encoder(nn.Module):
     '''
     Transformer Encoder
@@ -274,12 +294,13 @@ class Encoder(nn.Module):
         return self.norm(x)
 <코드 끝>
 
-[코드5]가 트랜스포머의 인코더 전부이다. 가장 기본 단위 블록이었던 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현한 다음에는 이렇게 간단하게 구현된다. 인코더를 구현해봤으니 이제 디코더 부분도 구현해보자.
+[코드6]가 트랜스포머의 인코더 전부이다. 가장 기본 단위 블록이었던 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현한 다음에는 이렇게 간단하게 구현된다. 인코더를 구현해봤으니 이제 디코더 부분도 구현해보자.
 
 3.1.2. 디코더
-[코드1]과 [코드2]에서 구현했던 클래스들을 이용해서 DecoderLayer를 [코드6]과 같이 구현할 수 있다.
+[코드1]과 [코드3]에서 구현했던 클래스들을 이용해서 DecoderLayer를 [코드7]과 같이 구현할 수 있다.
+
 <코드 시작>
-코드6
+코드7
 class DecoderLayer(nn.Module):
     '''
     DecoderLayer
@@ -306,9 +327,10 @@ class DecoderLayer(nn.Module):
         return x
 <코드 끝>
 
-Encoder와 마찬가지로 Decoder 역시 DecoderLayer를 6개 반복하는 과정을 통해 만든다. 한가지 다른 점은 MultiHeadAttention 블록을 두번 사용한다는 것이다. 두번째 사용한 MultiHeadAttention 블록이 forward 함수에서 어떻게 사용되는지 보면 차이점을 알 수 있다. Encoder의 MultkHeadAttention에서는 query, key, value에 같은 값이 들어가지만, Decoder의 두번째 MultiHeadAttention에서는 key와 value에 다른 값이 들어간다. 이 값은 Encoder의 아웃풋이다. Decoder 전체 구현체를 보려면 [코드7]을 살펴보자.
+Encoder와 마찬가지로 Decoder 역시 DecoderLayer를 6개 반복하는 과정을 통해 만든다. 한가지 다른 점은 MultiHeadAttention 블록을 두번 사용한다는 것이다. 두번째 사용한 MultiHeadAttention 블록이 forward 함수에서 어떻게 사용되는지 보면 차이점을 알 수 있다. Encoder의 MultkHeadAttention에서는 query, key, value에 같은 값이 들어가지만, Decoder의 두번째 MultiHeadAttention에서는 key와 value에 다른 값이 들어간다. 이 값은 Encoder의 아웃풋이다. Decoder 전체 구현체를 보려면 [코드8]을 살펴보자.
+
 <코드 시작>
-코드7
+코드8
 class Decoder(nn.Module):
     '''
     Transformer Decoder
@@ -337,8 +359,9 @@ class Decoder(nn.Module):
 
 3.1.3. Transformer
 Encoder와 Decoder를 만들었으니 이제 두 개를 합쳐서 Transformer 클래스를 구현해보자.
+
 <코드 시작>
-코드8
+코드9
 class Transformer(nn.Module):
     '''
     Transformer
@@ -369,9 +392,10 @@ class Transformer(nn.Module):
         return output        
 <코드 끝>
 
-[코드1]부터 [코드8]까지의 구현체를 Attention is all you need의 실제 내용과 비교해보면서 공부해보자. 지금까지 구현한 Transformer는 [코드8]과 같이 정의해서 사용할 수 있다.
+[코드1]부터 [코드9]까지의 구현체를 Attention is all you need의 실제 내용과 비교해보면서 공부해보자. 지금까지 구현한 Transformer는 [코드9]과 같이 정의해서 사용할 수 있다.
+
 <코드 시작>
-코드9
+코드10
 >>> source_vocab_size = 100
 >>> target_vocab_size = 110
 >>> hidden_size = 512
@@ -408,6 +432,7 @@ torch.Size([4, 15, 512])
 - 먼 거리에 있는 단어들끼리의 의존성을 학습하기 위함.
 
 첫번째는 각 레이어마다의 기본적인 컴퓨팅 연산이 얼마나 들어가는지에 대한 내용이다. 즉 시간복잡도이다. RNN, CNN계열의 시간복잡도와 Self-Attention의 시간복잡도를 비교하면 [표1]과 같다.
+
 <표 시작>
 표1
 Self-Attention O(n^2*d) O(1)
@@ -423,17 +448,20 @@ Self-Attention(restricted) O(r*n*d) O(n/r)
 
 3.3.1. Perplexity(PPL)
 우선 PPL에 대해서 알아보자. Perplexity의 약자로 언어 모델의 성능을 나타내는데 사용한다. Perplexity를 영어사전에서 찾아보면 무언가를 이해할 수 없어서 느끼는 당혹감이라고 나와있다. 유사한 단어로 confusion이 있다. 즉 PPL은 얼마나 혼동스러운가를 나타내는 지표로 보면 된다. 따라서 낮을수록 더 좋은 값을 갖게 된다. PPL을 구하는 공식은 [수식3]과 같다.
+
 <수식 시작>
 수식3
 PPL 구하는 공식
 <수식 끝>
 
 수식이 복잡해보이지만 해석해보면 한 시퀀스에 대한 확률 값을 구한 후, 그 값에 -(1/n) 제곱을 해준 결과이다. 예를 들어보자. 주사위를 10번 던지는 경우에 대한 PPL은 아래와 같이 구할 수 있다.
+
 <블록 시작>
 1/6 10번 던지는 PPL 구하는 공식
 <블록 끝>
 
 PPL을 조금 더 쉽게 설명하면, PPL 값만큼의 경우의 수로 다음 단어를 예측하려고 하는 것으로 이해할 수 있다. 각각의 확률이 1/6인 경우에 대해서 PPL이 6이 나왔다. 즉, 6개 중에 한 개를 다음 입력값으로 고민하고 있다고 해석할 수 있다. 여기에서는 언어 모델의 PPL에 대해서 이야기를 하고 있으니 언어 모델의 PPL도 비교해보도록 하자.
+
 <표 시작>
 표2
 트랜스포머 이전의 PPL들 https://research.fb.com/building-an-efficient-neural-language-model-over-a-billion-words/
@@ -452,6 +480,7 @@ N-gram 기반의 언어 모델에서는 N-gram 확률을 직접 곱해서 PPL을
 논문 Attention is all you need에서는 트랜스포머를 이용해서 번역기를 만들었다. 번역 성능을 측정하는 지표로 BLEU가 있다. BLEU 스코어는 Bilingual Evaluation Understudy Score의 약자이다. 사람이 번역한 결과와 기계가 번역한 결과가 얼마나 서로 유사한지를 비교하는 지표이다. 이번 절에서는 BLEU 스코어의 계산법에 대해서 간단하게 언급한 후 트랜스포머의 BLEU 스코어도 언급해보려고 한다.
 
 문장 번역은 사실 정확한 정답이 없다. 하나의 문장을 다른 문장으로 번역했을때 서로 다른 문장이지만 같다고 볼 수 있는 여러가지 경우의 수가 있기 때문이다. 따라서 BLEU 스코어에서는 정답 문장을 여러개 둘 수 있게 디자인돼 있다. "나는 너를 항상 사랑해."라는 문장을 번역기 A, B, C가 각각 영작했다고 해보자.
+
 <블록 시작>
 번역할 문장: 알지? 나는 너를 항상 매우 사랑해.
 candidateA: know that I always love you that much.
@@ -462,11 +491,13 @@ candidateC: I I I I I.
 <블록 끝>
 
 굳이 BLEU 스코어를 계산하지 않아도 candidateA가 가장 좋은 문장이라는 것은 쉽게 알 수 있다. candidateB는 문법이 엉망이다. candidateC는 그냥 엉망이다. 여기에서는 제대로 BLEU 스코어를 구하는 방법을 알아보고 있으니 위의 candidate을 정답1과 정답2를 이용해서 평가해보자. 정답1과 정답2에서 나온 모든 단어를 열거해보면 다음과 같다.
+
 <블록 시작>
 know right I always love you so much a lot
 <쁠록 끝>
 
 각각의 unigram count를 위 단어들에 대해서 각각 구한 후 candidateA, candidateB, candidateC의 단어 수로 나눠보자.
+
 <블록 시작>
 candidateA: (know(1) + I(1) + always(1) + love(1) + you(1) + much(1)) / 8
 candidateB: (I(1) + always(1) + love(1) + you(1)) / 4
@@ -483,6 +514,7 @@ candidate A~C까지의 modified unigram precision
 <블록 끝>
 
 candidateB의 경우 순서가 엉망이다. 이 순서를 고려하도록 N=1~4로 두고 modified N-gram precision을 수행해보자.
+
 <블록 시작>
 # You love I always.
 modified 1-gram precision: 4/4
@@ -491,9 +523,10 @@ modified 3-gram precision: 0/2
 modified 4-gram precision: 0/1
 <쁠록 끝>
 
-위 결과는 [코드10]을 실행해서 얻은 결과이다. [코드10]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
+위 결과는 [코드11]을 실행해서 얻은 결과이다. [코드11]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
+
 <코드 시작>
-코드10
+코드11
 def word_counter(tokens, n):
     return Counter(ngrams(tokens, n))
 	
@@ -531,11 +564,12 @@ def modified_ngram_precision(candidate, references, n):
 >>>     modified_ngram_precision(candidate, references, i+1)
 <코드 끝>
 
-[코드10]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
+[코드11]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
 
-최종적으로 BLEU 스코어는 [코드11]과 같이 구할 수 있다.
+최종적으로 BLEU 스코어는 [코드12]과 같이 구할 수 있다.
+
 <코드 시작>
-코드11
+코드12
 def brevity_penalty(candidate, references):
     cand_len = len(candidate.split())
     diff = np.inf
@@ -568,18 +602,21 @@ def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
 0.3423503955179092
 <코드 끝>
 
-[코드11]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+[코드12]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+
 <수식 시작>
 수식5
 brevity penalty 공식
 <수식 끝>
 
-BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드11]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
+BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드12]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
+
 <표 시작>
 표3
-
 <표 끝>
+
 트랜스포머의 BLEU 스코어는 EN-FR(영어 → 프랑스어)와 EN-DE(엉어 → 독일어) 모델에서 모두 SOTA를 기록했다. 
+
 <표 시작>
 표3
 논문에 BLEU SOTA 표
