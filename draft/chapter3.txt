@@ -121,12 +121,18 @@ Scaled Dot-Product Attention 공식
 
 <코드 시작>
 코드2
-np.var(a) 요 코드 추가
-import numpy
-a = np.random.normal(size=(64, 16))
-b = np.random.normal(size=(64, 16))
-c = np.dot(a, b.T)
+>>> import numpy
+>>> a = np.random.normal(size=(64, 16))
+>>> b = np.random.normal(size=(64, 16))
+>>> c = np.dot(a, b.T)
 >>> a.shape, b.shape, c.shape
+((64, 16), (64, 16), (64, 64))
+>>> np.var(b), np.mean(b)
+(0.9857256651570666, -0.02964475268000268)
+>>> np.var(a), np.mean(a)
+(1.0999866806027656, -0.00412186577197611)
+>>> np.var(c), np.mean(c)
+(17.282543991011433, 0.05587742750521446)
 <코드 끝>
 
 이제 트랜스포머 인코더를 구성하는 두번째 단위 블록인 Point-wise Feedforward Network를 살펴보자.
