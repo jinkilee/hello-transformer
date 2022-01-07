@@ -120,7 +120,17 @@ ATTN = 어탠션 결과
 3.2. 트랜스포머 구현하기
 트랜스포머를 간단하게 구현해보자. 이 절에서 구현하는 트랜스포머는 트랜스포머의 모델 구조를 이해하기 위한 샘플이다. 모델 성능에 영향을 주나 입력의 사이즈를 변형시키지 않는 레이어 정규화나 드롭아웃 등의 구현은 생략했고 핵심인 멀티헤드 어탠션 부분을 중점적으로 구현했다.
 
-트랜스포머는 인코더와 디코더 부분으로 나뉘어 있기 때문에 [코드1]과 같이 인코더/디코더 부분을 중점적으로 구현해보자.
+트랜스포머는 인코더와 디코더 부분으로 나뉘어 있기 때문에 [코드1]과 같이 인코더/디코더 부분을 중점적으로 구현해보자. 구현에 앞서 이 절 전체에서 사용할 기호를 먼저 [코드1]과 같이 변수로 정의했다.
+
+<코드 시작>
+코드1
+B = 64		# 배치 사이즈
+M = 10		# 토큰의 최대 길이
+V = 1024	# 토큰의 개수
+N = 8		# 멀티헤드 개수
+H = 512		# 토큰의 임베딩 사이즈
+EXP = 2048	# 확장 사이즈 (FeedForward 클래스 참고)
+<코드 끝>
 
 <코드 시작>
 코드1
@@ -153,10 +163,10 @@ class Transformer(nn.Module):
 
 <코드 끝>
 
-[코드1]의 주석을 보면 트랜스포머의 입력은 src(번역할 문장) -> (64, 10)과 dst(번역된 문장) -> (64, 10)으로 구성된다는 것을 알 수 있다.  각 입력들이 인코더와 디코더에서 어떻게 처리되는지 구현을 통해 알아보자.
+[코드1]의 주석을 보면 트랜스포머의 입력은 src(번역할 문장) -> (B, M)과 dst(번역된 문장) -> (B, M)으로 구성된다는 것을 알 수 있다. 각 입력들이 인코더와 디코더에서 어떻게 처리되는지 구현을 통해 알아보자.
 
 3.2.1. 트랜스포머 인코더
-트랜스포머의 인코더 구현 부분을 보자.  (64, 10) 사이즈를 입력으로 해서 (64, 
+트랜스포머의 인코더 구현 부분을 보자.  (B, M) 사이즈를 입력으로 해서 (B, M, 
 
 [코드5]까지 구현한 내용들을 반복해서 [코드6]에서 Encoder를 완성할 수 있다. 그런데 뭔가 허전하다. Sequence를 학습하기 위한 무언가가 없다. Transformer 이전에는 그것을 RNN 계열의 구조가 담당했다. Transformer에는 RNN 계열의 구조가 전혀 없다. 시퀀스를 학습할 수 있게 하기 위해서 PositionalEncoding을 더해준 것이다. 
 
@@ -551,301 +561,6 @@ Transformer (big) 28.4 41.8
 
 https://heiwais25.github.io/nlp/2019/10/13/Language-model-3/
 
-
-
-
-
-
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[26]:
-
-
-import torch
-from torch import nn
-import math
-import numpy as np
-
-
-# In[50]:
-
-
-n_vocab = 30000
-hidden_size = 512
-n_layers = 6
-expand_size = 2048
-n_head = 8
-
-
-# In[27]:
-
-
-def attention(query, key, value):
-    dk = query.shape[-1]
-    score = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(dk)
-    prob = torch.matmul(score, value)
-    return prob
-
-
-# In[30]:
-
-
-class MultiHeadAttention(nn.Module):
-    def __init__(self, num_head, hidden_size):
-        super(MultiHeadAttention, self).__init__()
-        self.num_head = num_head
-        self.dk = hidden_size // self.num_head
-        
-    def forward(self, query, key, value):
-        '''
-        x = torch.rand((64, 10, 512))
-        m = MultiHeadAttention(8, 512)
-        v = m(x, x, x)
-        v.shape
-        '''
-        n_batch = query.shape[0]
-        query = query.view(n_batch, -1, self.num_head, self.dk)
-        key = key.view(n_batch, -1, self.num_head, self.dk)
-        value = value.view(n_batch, -1, self.num_head, self.dk)
-        
-        x = attention(query, key, value)
-        x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.dk * self.num_head)
-        return x
-
-
-# In[40]:
-
-
-class FeedForward(nn.Module):
-    def __init__(self, hidden_size, expand_size):
-        super(FeedForward, self).__init__()
-        self.linear_1 = nn.Linear(hidden_size, expand_size)
-        self.linear_2 = nn.Linear(expand_size, hidden_size)
-        
-    def forward(self, x):
-        '''
-        x = torch.rand((64, 10, 512))
-        m = FeedForward(512, 2048)
-        v = m(x)
-        v.shape
-        '''
-        x = self.linear_1(x)
-        x = self.linear_2(x)
-        return x
-
-
-# In[39]:
-
-
-x = torch.rand((64, 10, 512))
-m = FeedForward(512, 2048)
-v = m(x)
-v.shape
-
-
-# In[57]:
-
-
-class EncoderLayer(nn.Module):
-    def __init__(self, hidden_size):
-        super(EncoderLayer, self).__init__()
-        self.self_attention = MultiHeadAttention(n_head, hidden_size)
-        self.feedforward = FeedForward(hidden_size, 2048)
-        
-    def forward(self, x):
-        '''
-        x = torch.rand((64, 10, 512))
-        m = EncoderLayer(512)
-        v = m(x)
-        v.shape
-        '''
-        x = self.self_attention(x, x, x)
-        x = self.feedforward(x)
-        return x
-
-
-# In[56]:
-
-
-x = torch.rand((64, 10, 512))
-m = EncoderLayer(512)
-v = m(x)
-v.shape
-
-
-# In[64]:
-
-
-class Embedding(nn.Module):
-    def __init__(self, n_vocab, hidden_size):
-        super(Embedding, self).__init__()
-        self.hidden_size = hidden_size
-        self.embedding = nn.Embedding(n_vocab, hidden_size)
-        
-    def forward(self, x):
-        '''
-        data = np.random.randint(0, 1024, (64, 10))
-        x = torch.from_numpy(data)
-        m = Embedding(n_vocab, hidden_size)
-        v = m(x)
-        v.shape
-        '''
-        return self.embedding(x)
-
-
-# In[63]:
-
-
-data = np.random.randint(0, 1024, (64, 10))
-x = torch.from_numpy(data)
-m = Embedding(n_vocab, hidden_size)
-v = m(x)
-v.shape
-
-
-# In[77]:
-
-
-class Encoder(nn.Module):
-    def __init__(self, n_layers):
-        super(Encoder, self).__init__()
-        self.n_layers = n_layers
-        self.embedding = Embedding(n_vocab, hidden_size)
-        self.layers = [EncoderLayer(hidden_size) for i in range(n_layers)]
-    
-    def forward(self, x):
-        '''
-        data = np.random.randint(0, 1024, (64, 10))
-        x = torch.from_numpy(data)
-        m = Encoder(n_layers)
-        v = m(x)
-        v.shape
-        '''
-        x = self.embedding(x)
-        for layer in self.layers:
-            x = layer(x)
-        return x
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[92]:
-
-
-class DecoderLayer(nn.Module):
-    def __init__(self, n_head, hidden_size):
-        super(DecoderLayer, self).__init__()
-        self.self_attention = MultiHeadAttention(n_head, hidden_size)
-        self.encdec_attention = MultiHeadAttention(n_head, hidden_size)
-        self.feedforward = FeedForward(hidden_size, 2048)
-        
-    def forward(self, x, memory):
-        '''
-        x = torch.rand((64, 10, 512))
-        mem = copy(x)
-        m = DecoderLayer(8, 512)
-        v = m(x, mem)
-        v.shape
-        '''
-        x = self.self_attention(x, memory, memory)
-        return x
-
-
-# In[107]:
-
-
-class Decoder(nn.Module):
-    def __init__(self, n_layers):
-        super(Decoder, self).__init__()
-        self.embedding = Embedding(n_vocab, hidden_size)
-        self.layers = [DecoderLayer(n_head, hidden_size) for i in range(n_layers)]
-        
-    def forward(self, x, memory):
-        '''
-        data = np.random.randint(0, 1024, (64, 10))
-        x = torch.from_numpy(data)
-        mem = torch.rand((64, 10, 512))
-        m = Decoder(n_layers)
-        v = m(x, mem)
-        v.shape
-        '''
-        x = self.embedding(x)
-        for layer in self.layers:
-            x = layer(x, memory)
-        return x
-
-
-# In[117]:
-
-
-class Transformer(nn.Module):
-    def __init__(self):
-        super(Transformer, self).__init__()
-        self.encoder = Encoder(n_layers)
-        self.decoder = Decoder(n_layers)
-        
-    def forward(self, src, dst):
-        '''
-        data = np.random.randint(0, 1024, (64, 10))
-        src = torch.from_numpy(data)
-        data = np.random.randint(0, 1024, (64, 10))
-        dst = torch.from_numpy(data)
-        src.shape, dst.shape
-
-        m = Transformer()
-        v = m(src, dst)
-        v.shape
-        '''
-        src_encoded = self.encoder(src)
-        dst_decoded = self.decoder(dst, src_encoded)
-        
-        return dst_decoded
-
-
-# In[119]:
-
-
-data = np.random.randint(0, 1024, (64, 10))
-src = torch.from_numpy(data)
-data = np.random.randint(0, 1024, (64, 10))
-dst = torch.from_numpy(data)
-src.shape, dst.shape
-
-m = Transformer()
-v = m(src, dst)
-v.shape
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
 
 
 
