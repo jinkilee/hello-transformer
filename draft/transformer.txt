@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[26]:
 
 
-import torch
-from torch import nn
 import math
 import numpy as np
-import torch.nn.functional as F
 from copy import copy
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
+from torch import nn
 
 
 # In[2]:
@@ -298,6 +299,41 @@ src.shape, dst.shape
 
 m = Transformer()
 v = m(src, dst)
+v.shape  # torch.Size([64, 10, 512])
+
+
+# In[44]:
+
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, hidden_size):
+        super(PositionalEncoding, self).__init__()
+        pos_encoding = torch.zeros(M, hidden_size)
+        position = torch.arange(0, M).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, hidden_size, 2) *
+                             -(math.log(10000.0) / hidden_size))
+        pos_encoding[:, 0::2] = torch.sin(position * div_term)
+        pos_encoding[:, 1::2] = torch.cos(position * div_term)
+        self.pos_encoding = pos_encoding.unsqueeze(0)
+        
+    def forward(self, x):
+        '''
+        x = torch.rand((B, M, H))
+        m = PositionalEncoding(H)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = x + Variable(self.pos_encoding[:, :x.size(1)], 
+                         requires_grad=False)
+        return x
+
+
+# In[43]:
+
+
+x = torch.rand((B, M, H))
+m = PositionalEncoding(H)
+v = m(x)
 v.shape  # torch.Size([64, 10, 512])
 
 
