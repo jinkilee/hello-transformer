@@ -138,14 +138,11 @@ EXP = 2048	# 확장 사이즈 (FeedForward 클래스 참고)
 class Transformer(nn.Module):
     def __init__(self):
         super(Transformer, self).__init__()
-        self.encoder = Encoder(n_layers)
-        self.decoder = Decoder(n_layers)
+        self.encoder = Encoder(L)
+        self.decoder = Decoder(L)
         
     def forward(self, src, dst):
         '''
-        B = 64  # 배치 사이즈
-        M = 10  # 토큰의 최대 길이
-        V = 1024    # 토큰의 개수
         data = np.random.randint(0, V, (B, M))
         src = torch.from_numpy(data)
         data = np.random.randint(0, V, (B, M))
@@ -154,7 +151,7 @@ class Transformer(nn.Module):
 
         m = Transformer()
         v = m(src, dst)
-        v.shape
+        v.shape  # torch.Size([64, 10, 512])
         '''
         src_encoded = self.encoder(src)
         dst_decoded = self.decoder(dst, src_encoded)
@@ -163,202 +160,232 @@ class Transformer(nn.Module):
 
 <코드 끝>
 
-[코드1]의 주석을 보면 트랜스포머의 입력은 src(번역할 문장) -> (B, M)과 dst(번역된 문장) -> (B, M)으로 구성된다는 것을 알 수 있다. 각 입력들이 인코더와 디코더에서 어떻게 처리되는지 구현을 통해 알아보자.
+[코드1]의 주석을 보면 트랜스포머의 입력은 src(번역할 문장) -> (B, M)과 dst(번역된 문장) -> (B, M)으로 구성된다는 것을 알 수 있다. 트랜스포머의 출력이 (B, M, H)가 되는데 이 사이즈의 벡터는 로그 소프트맥스 함수 등을 통해서 각 (B, M) 사이즈로 변하게 된다. 각 입력들이 인코더와 디코더에서 어떻게 처리되는지 구현을 통해 알아보자.
 
-3.2.1. 트랜스포머 인코더
-트랜스포머의 인코더 구현 부분을 보자.  (B, M) 사이즈를 입력으로 해서 (B, M, 
-
-[코드5]까지 구현한 내용들을 반복해서 [코드6]에서 Encoder를 완성할 수 있다. 그런데 뭔가 허전하다. Sequence를 학습하기 위한 무언가가 없다. Transformer 이전에는 그것을 RNN 계열의 구조가 담당했다. Transformer에는 RNN 계열의 구조가 전혀 없다. 시퀀스를 학습할 수 있게 하기 위해서 PositionalEncoding을 더해준 것이다. 
-
-<블록 시작>
-인용2
-Since our model contains no recurrence and no convolution, in order for the model to make use of the
-order of the sequence, we must inject some information about the relative or absolute position of the
-tokens in the sequence. To this end, we add "positional encodings" to the input embeddings at the
-bottoms of the encoder and decoder stacks.
-<블록 끝>
-
-[인용2]는 논문 Attention is all you need의 일부이다. 모델로 하여금 시퀀스를 사용할 수 있도록 하기 위해 상대적인 혹은 절대적인 정보를 넣어줘야 한다고 하고 이것을 positional encoding이 하고 있다고 적혀있다. 그 정보를 위해 더해주는 값이 Positional Encoding이고 시퀀스에 더해주는 값은 아래와 같은 공식으로 정해진다.
-
-<수식 시작>
-positional encoding sin cos
-수식2
-<수식 끝>
+3.2.1. 인코더
+인코더 부분의 구현을 살펴보자. 
 
 <코드 시작>
-코드6
+코드2
 class Encoder(nn.Module):
-    '''
-    Transformer Encoder
-    하나의 Embedding 레이어와 N=6 개의 EncoderLayer로 구성돼 있다.
-    리턴할 때는 LayerNormalization 후 리턴한다.
-    '''
-    def __init__(self, vocab_size, hidden_size, positional_encoding, n=6):
-        super().__init__()
-        #self.embedding = nn.Embedding(vocab_size, hidden_size)
-        self.embedding = nn.Sequential(Embeddings(vocab_size, hidden_size), positional_encoding)
-        self.layers = nn.ModuleList([EncoderLayer(hidden_size) for _ in range(n)])
-        self.norm = nn.LayerNorm(hidden_size)
-        
-    def forward(self, x, mask):
+    def __init__(self, n_layers):
+        super(Encoder, self).__init__()
+        self.n_layers = n_layers
+        self.embedding = Embedding(V, H)
+        self.layers = [EncoderLayer(H) for i in range(n_layers)]
+    
+    def forward(self, x):
         '''
-        x: Source input tensor of shape [batch_size, maxlen]
-        mask: Source mask tensor of shape [batch_size, 1, maxlen]
-        return: Output tensor of shape [batch_size, maxlen, hidden_size]
-        
-        Example:
-        >>> pos_encoder = PositionalEncoding(hidden_size, 0.1)
-        >>> encoder = Encoder(vocab_size, hidden_size, pos_encoder)
-        >>> inputs = torch.tensor([
-        >>>     [1, 15, 35, 45, 5, 8, 10, 2, 0, 0, 0, 0, 0, 0, 0],
-        >>>     [1, 4, 7, 66, 34, 33, 13, 4, 8, 2, 0, 0, 0, 0, 0],
-        >>>     [1, 25, 5, 6, 77, 24, 8, 5, 9, 27, 2, 0, 0, 0, 0],
-        >>>     [1, 16, 13, 8, 3, 75, 37, 9, 2, 0, 0, 0, 0, 0, 0],
-        >>> ])
-        >>> inputs.shape
-        torch.Size([4, 15])
-        >>> outputs = encoder(inputs)
-        >>> outputs.shape
-        torch.Size([4, 15, 512])
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        m = Encoder(L)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
         '''
         x = self.embedding(x)
         for layer in self.layers:
-            x = layer(x, mask=mask)
-        return self.norm(x)
-<코드 끝>
-
-[코드6]가 트랜스포머의 인코더 전부이다. 가장 기본 단위 블록이었던 MultiHeadAttention과 PositionWiseFeedForwardNetwork를 구현한 다음에는 이렇게 간단하게 구현된다. 인코더를 구현해봤으니 이제 디코더 부분도 구현해보자.
-
-3.1.2. 디코더
-[코드1]과 [코드3]에서 구현했던 클래스들을 이용해서 DecoderLayer를 [코드7]과 같이 구현할 수 있다.
-
-<코드 시작>
-코드7
-class DecoderLayer(nn.Module):
-    '''
-    DecoderLayer
-    EncoderLayer와 같은 블록을 이용하지만 MultiHeadAttention이 한번 더 들어간다.
-    그 외 Residual Network나 Layer Normalization을 추가하는 것은 같다.
-    '''
-    def __init__(self, hidden_size):
-        super().__init__()
-        self.self_attention_1 = MultiHeadAttention(hidden_size)
-        self.self_attention_2 = MultiHeadAttention(hidden_size)
-        self.feedforward = PositionWiseFeedForwardNetwork(hidden_size)
-        self.norm = nn.LayerNorm(hidden_size, eps=1e-6)
-        
-    def forward(self, x, m, mask):
-        '''
-        x: Input tensor of shape [batch_size, maxlen, hidden_size]
-        m: Memory tensor of shape [batch_size, maxlen, hidden_size] from the Encoder
-        mask: Mask tensor of shape [batch_size, 1, maxlen]
-        return: Output tensor of shape [batch_size, maxlen, hidden_size]
-        '''
-        x = self.norm(x + self.self_attention_1(x, x, x, mask))
-        x = self.norm(x + self.self_attention_2(x, m, m, mask))
-        x = self.norm(x + self.feedforward(x))
+            x = layer(x)
         return x
 <코드 끝>
 
-Encoder와 마찬가지로 Decoder 역시 DecoderLayer를 6개 반복하는 과정을 통해 만든다. 한가지 다른 점은 MultiHeadAttention 블록을 두번 사용한다는 것이다. 두번째 사용한 MultiHeadAttention 블록이 forward 함수에서 어떻게 사용되는지 보면 차이점을 알 수 있다. Encoder의 MultkHeadAttention에서는 query, key, value에 같은 값이 들어가지만, Decoder의 두번째 MultiHeadAttention에서는 key와 value에 다른 값이 들어간다. 이 값은 Encoder의 아웃풋이다. Decoder 전체 구현체를 보려면 [코드8]을 살펴보자.
+[코드2]를 보면 Embedding 레이어에서 H 사이즈만큼으로 임베딩한 후 EncoderLayer를 몇 번 반복해서 돌리는 구조를 띄고 있다. EncoderLayer 내부를 살펴보려면 [코드3]을 참고하라.
 
 <코드 시작>
-코드8
-class Decoder(nn.Module):
-    '''
-    Transformer Decoder
-    하나의 Embedding 레이어와 N=6 개의 DecoderLayer로 구성돼 있다.
-    리턴할 때는 LayerNormalization 후 리턴한다.
-    
-    '''
-    def __init__(self, vocab_size, hidden_size, positional_encoding, n=6):
-        super().__init__()
-        self.embedding = nn.Sequential(Embeddings(vocab_size, hidden_size), positional_encoding)
-        self.layers = nn.ModuleList([DecoderLayer(hidden_size) for _ in range(n)])
-        self.norm = nn.LayerNorm(hidden_size)
+코드3
+class Embedding(nn.Module):
+    def __init__(self, n_vocab, hidden_size):
+        super(Embedding, self).__init__()
+        self.hidden_size = hidden_size
+        self.embedding = nn.Embedding(n_vocab, hidden_size)
         
-    def forward(self, x, m, mask):
+    def forward(self, x):
         '''
-        x: Target input tensor of shape [batch_size, maxlen]
-        m: Memory tensor of shape [batch_size, maxlen, hidden_size] from the Encoder
-        mask: Target mask tensor of shape [batch_size, 1, maxlen]
-        return: Output tensor of shape [batch_size, maxlen, hidden_size]
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        m = Embedding(V, H)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        return self.embedding(x)
+
+class EncoderLayer(nn.Module):
+    def __init__(self, hidden_size):
+        super(EncoderLayer, self).__init__()
+        self.self_attention = MultiHeadAttention(N, hidden_size)
+        self.feedforward = FeedForward(hidden_size, EXP)
+        
+    def forward(self, x):
+        '''
+        x = torch.rand((B, M, H))
+        m = EncoderLayer(H)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.self_attention(x, x, x)
+        x = self.feedforward(x)
+        return x
+<코드 끝>
+
+[코드3]에서는 Embedding과 EncoderLayer를 구현했다. EncoderLayer 부분을 보면 MultiHeadAttention 부분이 있고 이 부분에 대한 자세한 설명은 3.1절에서 자세하게 다뤘다. MultiHeadAttention 레이어에서 멀티해드 개수 만큼의 어탠션 연산이 실행된다. [코드4]를 통해서 어탠션 연산을 수행하는 함수와 MultiHeadAttention 클래스의 내부를 살펴보자.
+
+<코드 시작>
+코드4
+def attention(query, key, value, scale):
+    score = torch.matmul(query, key.transpose(-2, -1)) / scale
+    prob = F.softmax(score, dim=-1)
+    attn = torch.matmul(prob, value)
+    return attn
+
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, num_head, hidden_size):
+        super(MultiHeadAttention, self).__init__()
+        self.num_head = num_head
+        self.dk = hidden_size // self.num_head
+    
+    def forward(self, query, key, value):
+        '''
+        x = torch.rand((B, M, H))
+        m = MultiHeadAttention(N, H)
+        v = m(x, x, x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        n_batch = query.shape[0]
+        query = query.view(n_batch, -1, self.num_head, self.dk).transpose(1, 2)
+        key = key.view(n_batch, -1, self.num_head, self.dk).transpose(1, 2)
+        value = value.view(n_batch, -1, self.num_head, self.dk).transpose(1, 2)
+        
+        x = attention(query, key, value, self.dk)
+        x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.dk * self.num_head)
+        return x		
+<코드 끝>
+
+MultiHeadAttention 클래스의 내부를 보면 query, key, value 값을 만들기 위해 리사이즈(view 함수)와 transpose 함수를 사용한 것을 확인할 수 있다. 이 과정을 통해서 (B, M, H)였던 입력 값이 (B, N, M, dk)로 변형됐고, 이 값과 attention 함수를 이용해서 셀프어탠션을 수행한다. 참고로 query, key, value의 값이 모두 같을 경우 어탠션은 셀프 어탠션을 수행하게 되고 query와 key, value 값이 다르면 일반적인 어탠션을 수행하게 된다.
+
+디코더에서의 구조도 인코더와 비슷하다.
+
+<코드 시작>
+코드5
+class DecoderLayer(nn.Module):
+    def __init__(self, n_head, hidden_size):
+        super(DecoderLayer, self).__init__()
+        self.self_attention = MultiHeadAttention(n_head, hidden_size)
+        self.encdec_attention = MultiHeadAttention(n_head, hidden_size)
+        self.feedforward = FeedForward(hidden_size, 2048)
+        
+    def forward(self, x, memory):
+        '''
+        x = torch.rand((B, M, H))
+        mem = copy(x)
+        m = DecoderLayer(N, H)
+        v = m(x, mem)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.self_attention(x, memory, memory)
+        return x
+		
+class Decoder(nn.Module):
+    def __init__(self, n_layers):
+        super(Decoder, self).__init__()
+        self.embedding = Embedding(V, H)
+        self.layers = [DecoderLayer(N, H) for i in range(n_layers)]
+        
+    def forward(self, x, memory):
+        '''
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        mem = torch.rand((B, M, H))
+        m = Decoder(L)
+        v = m(x, mem)
+        v.shape  # torch.Size([64, 10, 512])
         '''
         x = self.embedding(x)
         for layer in self.layers:
-            x = layer(x, m, mask=mask)
-        return self.norm(x)
+            x = layer(x, memory)
+        return x
 <코드 끝>
 
-3.1.3. Transformer
-Encoder와 Decoder를 만들었으니 이제 두 개를 합쳐서 Transformer 클래스를 구현해보자.
+[코드5]를 보면 디코더의 구조도 DecoderLayer를 몇 번 반복해서 수행하는 형태인 것을 알 수 있다. 다만 DecoderLayer를 보면 MultiHeadAttention 클래스가 두번 정의돼 있는 것을 알 수 있다. 하나는 셀프어탠션을 위함이고 다른 하나는 인코더에서의 값과 어텐션 연산을 하기 위함이다. DecoderLayer의 입력 값 중에서 memory가 인코더로부터 넘어온 인코더의 출력 값이다.
+
+마지막으로 포지셔널 인코딩에 대해서 알아보자. 트랜스포머에서는 RNN과 같은 순환 구조의 구조를 사용하지 않는다. 따라서 토큰 간의 순서 정보를 학습하기 위해서 약간의 추가적인 순서 정보를 넣어준다. 포지셔널 인코딩은 [코드6]과 같이 구현할 수 있다.
 
 <코드 시작>
-코드9
-class Transformer(nn.Module):
-    '''
-    Transformer
-    Encoder와 Decoder로 구성된 Transformer 클래스이다.
-    Positional Encoding에 사용되는 weight은 공유하기 때문에 pos_encoder를 Encoder와 Decoder 양쪽에서 모두 사용했다.
-    '''
-    def __init__(self, source_vocab_size, target_vocab_size, hidden_size):
-        super().__init__()
-        pos_encoder = PositionalEncoding(hidden_size, 0.1)
-        self.encoder = Encoder(source_vocab_size, hidden_size, pos_encoder)
-        self.decoder = Decoder(target_vocab_size, hidden_size, pos_encoder)
+코드6
+class PositionalEncoding(nn.Module):
+    def __init__(self, hidden_size):
+        super(PositionalEncoding, self).__init__()
+        pos_encoding = torch.zeros(M, hidden_size)
+        position = torch.arange(0, M).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, hidden_size, 2) *
+                             -(math.log(10000.0) / hidden_size))
+        pos_encoding[:, 0::2] = torch.sin(position * div_term)
+        pos_encoding[:, 1::2] = torch.cos(position * div_term)
+        self.pos_encoding = pos_encoding.unsqueeze(0)
         
-    def forward(self, source, target, source_mask, target_mask):
+    def forward(self, x):
         '''
-        source: Source input tensor of shape [batch_size, maxlen]
-        target: Target input tensor of shape [batch_size, maxlen]
-        source_mask: Source mask tensor of shape [batch_size, 1, maxlen]
-        target_mask: Target mask tensor of shape [batch_size, 1, maxlen]
+        x = torch.rand((B, M, H))
+        m = PositionalEncoding(H)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
         '''
-        print('** source: {}'.format(source.shape))
-        print('** target: {}'.format(target.shape))
-        print('** source_mask: {}'.format(source_mask.shape))
-        print('** target_mask: {}'.format(target_mask.shape))
-        memory = self.encoder(source, source_mask)
-        print('** encoder output: {}'.format(memory.shape))
-        output = self.decoder(target, memory, target_mask)
-        print('** decoder output: {}'.format(output.shape))
-        return output        
+        x = x + Variable(self.pos_encoding[:, :x.size(1)], 
+                         requires_grad=False)
+        return x
 <코드 끝>
 
-[코드1]부터 [코드9]까지의 구현체를 Attention is all you need의 실제 내용과 비교해보면서 공부해보자. 지금까지 구현한 Transformer는 [코드9]과 같이 정의해서 사용할 수 있다.
+포지셔널 인코딩은 Embedding 레이어를 통해 임베딩된 벡터에 대해서 실행된다. 이 포지셔널 인코딩은 인코더와 디코더의 입력 모두 필요하다. [코드7]은 인코더와 디코더에 포지셔널 인코딩을 추가한 것이다.
 
 <코드 시작>
-코드10
->>> source_vocab_size = 100
->>> target_vocab_size = 110
->>> hidden_size = 512
->>> 
->>> model = Transformer(source_vocab_size, target_vocab_size, hidden_size)
->>> source = torch.tensor([
->>>     [1, 15, 35, 45, 5, 8, 10, 2, 0, 0, 0, 0, 0, 0, 0],
->>>     [1, 4, 7, 66, 34, 33, 13, 4, 8, 2, 0, 0, 0, 0, 0],
->>>     [1, 25, 5, 6, 77, 24, 8, 5, 9, 27, 2, 0, 0, 0, 0],
->>>     [1, 16, 13, 8, 3, 75, 37, 9, 2, 0, 0, 0, 0, 0, 0],
->>> ])
->>> target = torch.tensor([
->>>     [1, 55, 35, 65, 25, 4, 15, 12, 9, 2, 0, 0, 0, 0, 0],
->>>     [1, 42, 27, 16, 3, 6, 13, 24, 58, 5, 7, 2, 0, 0, 0],
->>>     [1, 75, 2, 34, 79, 96, 3, 55, 19, 7, 2, 0, 0, 0, 0],
->>>     [1, 66, 24, 3, 13, 83, 24, 19, 3, 2, 0, 0, 0, 0, 0],
->>> ])
->>> source_mask = (source != pad).unsqueeze(-2)
->>> target_mask = (target != pad).unsqueeze(-2)
->>> out = model(source, target, source_mask, target_mask)
->>> source.shape, target.shape, source_mask.shape, target_mask.shape
-(torch.Size([4, 15]),
- torch.Size([4, 15]),
- torch.Size([4, 1, 15]),
- torch.Size([4, 1, 15]))
->>> out.shape
-torch.Size([4, 15, 512])
+코드7
+class Encoder(nn.Module):
+    def __init__(self, n_layers):
+        super(Encoder, self).__init__()
+        self.n_layers = n_layers
+        self.embedding = Embedding(V, H)
+        self.position = PositionalEncoding(H)
+        self.layers = [EncoderLayer(H) for i in range(n_layers)]
+    
+    def forward(self, x):
+        '''
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        m = Encoder(L)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.embedding(x)
+        x = self.position(x)
+        for layer in self.layers:
+            x = layer(x)
+        return x
+		
+
+class Decoder(nn.Module):
+    def __init__(self, n_layers):
+        super(Decoder, self).__init__()
+        self.embedding = Embedding(V, H)
+        self.position = PositionalEncoding(H)
+        self.layers = [DecoderLayer(N, H) for i in range(n_layers)]
+        
+    def forward(self, x, memory):
+        '''
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        mem = torch.rand((B, M, H))
+        m = Decoder(L)
+        v = m(x, mem)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.embedding(x)
+        x = self.position(x)
+        for layer in self.layers:
+            x = layer(x, memory)
+        return x
 <코드 끝>
 
-3.2. Why Transformer
+
+3.3. Why Transformer
 처음 Transformer 구조를 공부했을 때가 떠오른다. 구현된 모델의 구조를 보는데 RNN 계열의 구조가 보이지 않는 것이다. 시퀀스를 다루는데 있어서 당연하게 포함됐던 RNN 계열의 구조가 없었던 것이다. 당시에 개인적으로 꽤나 충격적이었다. 논문을 읽어보면 Self-Attention을 사용한 이유를 크게 세가지를 들고 있다.
 - 레이어 단위별로의 컴퓨팅 연산
 - 병렬처리될 수 있는 컴퓨팅의 연산
@@ -376,10 +403,10 @@ Self-Attention(restricted) O(r*n*d) O(n/r)
 
 [표1]을 보면 n < d일 경우, Self-Attention이 RNN보다 빠르다는 것을 볼 수 있다. 논문에서는 n이 커질 경우에는 Self-Attention을 할 때 입력의 일부분만을 고려하는 Self-Attention(restricted)를 제안했다. 입력의 일부분을 고려한다는 것은 한 입력의 전체 길이에 해당하는 어탠션을 구하는 것이 아니라 일부 길이(r)에 해당하는 부분에 대해서만 어탠션을 구한다는 것이다. 이럴 경우 시간복잡도가 O(r*n*d)로 줄어들게 된다. 대신에 Self-Attention(restricted)를 사용할 경우 단점은 Maximum path length를 찾는 시간복잡도가 O(1)에서 O(n/r)로 늘어나게 된다.
 
-3.3. 트랜스포머 학습 결과
+3.4. 트랜스포머 학습 결과
 이 절에서는 트랜스포머가 학습된 결과와 성능에 대해서 이야기해보려고 한다. 트랜스포머의 성능을 평가하기 위해 PPL과 BLEU라는 두 가지 평가 지표를 사용한다. 이 절에서 사용한 결과는 논문에 나온 결과이며, 이 책의 소스코드로 실행한 결과가 아니다. 
 
-3.3.1. Perplexity(PPL)
+3.4.1. Perplexity(PPL)
 우선 PPL에 대해서 알아보자. Perplexity의 약자로 언어 모델의 성능을 나타내는데 사용한다. Perplexity를 영어사전에서 찾아보면 무언가를 이해할 수 없어서 느끼는 당혹감이라고 나와있다. 유사한 단어로 confusion이 있다. 즉 PPL은 얼마나 혼동스러운가를 나타내는 지표로 보면 된다. 따라서 낮을수록 더 좋은 값을 갖게 된다. PPL을 구하는 공식은 [수식3]과 같다.
 
 <수식 시작>
@@ -409,7 +436,7 @@ ngram PPL : https://web.stanford.edu/~jurafsky/slp3/3.pdf
 N-gram 기반의 언어 모델에서는 N-gram 확률을 직접 곱해서 PPL을 구할 수 있다. 그러나 단어와 단어간의 확률을 명시적으로 구할 수 없는 인공지능 모델의 경우 어떻게 엔트로피를 구할 수 있을까? 인공지능 모델의 학습에 많이 사용하는 loss인 Cross Entropy loss를 이용해서 PPL을 구한다. 이 내용은 이 절의 성격과 거리가 있기 때문에 [부록1]에 따로 자세하게 정리해뒀다.
 ## [부록1] PPL = Cross Entropy Loss??
 
-3.3.2. BLEU 스코어
+3.4.2. BLEU 스코어
 논문 Attention is all you need에서는 트랜스포머를 이용해서 번역기를 만들었다. 번역 성능을 측정하는 지표로 BLEU가 있다. BLEU 스코어는 Bilingual Evaluation Understudy Score의 약자이다. 사람이 번역한 결과와 기계가 번역한 결과가 얼마나 서로 유사한지를 비교하는 지표이다. 이번 절에서는 BLEU 스코어의 계산법에 대해서 간단하게 언급한 후 트랜스포머의 BLEU 스코어도 언급해보려고 한다.
 
 문장 번역은 사실 정확한 정답이 없다. 하나의 문장을 다른 문장으로 번역했을때 서로 다른 문장이지만 같다고 볼 수 있는 여러가지 경우의 수가 있기 때문이다. 따라서 BLEU 스코어에서는 정답 문장을 여러개 둘 수 있게 디자인돼 있다. "나는 너를 항상 사랑해."라는 문장을 번역기 A, B, C가 각각 영작했다고 해보자.
