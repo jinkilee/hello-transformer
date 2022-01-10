@@ -343,3 +343,82 @@ v.shape  # torch.Size([64, 10, 512])
 
 
 
+# In[45]:
+
+
+class Encoder(nn.Module):
+    def __init__(self, n_layers):
+        super(Encoder, self).__init__()
+        self.n_layers = n_layers
+        self.embedding = Embedding(V, H)
+        self.position = PositionalEncoding(H)
+        self.layers = [EncoderLayer(H) for i in range(n_layers)]
+    
+    def forward(self, x):
+        '''
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        m = Encoder(L)
+        v = m(x)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.embedding(x)
+        x = self.position(x)
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+
+# In[47]:
+
+
+data = np.random.randint(0, V, (B, M))
+x = torch.from_numpy(data)
+m = Encoder(L)
+v = m(x)
+v.shape  # torch.Size([64, 10, 512])
+
+
+# In[48]:
+
+
+class Decoder(nn.Module):
+    def __init__(self, n_layers):
+        super(Decoder, self).__init__()
+        self.embedding = Embedding(V, H)
+        self.position = PositionalEncoding(H)
+        self.layers = [DecoderLayer(N, H) for i in range(n_layers)]
+        
+    def forward(self, x, memory):
+        '''
+        data = np.random.randint(0, V, (B, M))
+        x = torch.from_numpy(data)
+        mem = torch.rand((B, M, H))
+        m = Decoder(L)
+        v = m(x, mem)
+        v.shape  # torch.Size([64, 10, 512])
+        '''
+        x = self.embedding(x)
+        x = self.position(x)
+        for layer in self.layers:
+            x = layer(x, memory)
+        return x
+
+
+# In[49]:
+
+
+data = np.random.randint(0, V, (B, M))
+x = torch.from_numpy(data)
+mem = torch.rand((B, M, H))
+m = Decoder(L)
+v = m(x, mem)
+v.shape  # torch.Size([64, 10, 512])
+
+
+# In[ ]:
+
+
+
+
+
