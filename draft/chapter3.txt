@@ -564,10 +564,10 @@ def bleu_score(candidate, reference_list):
     return bp * np.exp(score)
 <코드 끝>
 
-[코드9]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+[코드9]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식2]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
 
 <수식 시작>
-수식5
+수식2
 brevity penalty 공식
 <수식 끝>
 
@@ -591,7 +591,7 @@ bleu_score(cand, references)
 트랜스포머의 BLEU 스코어는 EN-FR(영어 → 프랑스어)와 EN-DE(엉어 → 독일어) 모델에서 모두 SOTA를 기록했다. 
 
 <표 시작>
-표3
+표4
 논문에 BLEU SOTA 표
 Transformer (big) 28.4 41.8
 <표 끝>
