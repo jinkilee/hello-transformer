@@ -531,9 +531,11 @@ def modified_ngram_precision(candidate, references, n):
 <코드 시작>
 코드9
 def brevity_penalty(candidate, references):
+    candidate = candidate.lower()
     cand_len = len(candidate.split())
     diff = np.inf
     for ref in references:
+        ref = ref.lower()
         tokens = ref.split()
         if diff > abs(len(tokens) - cand_len):
             ref_len = len(tokens)
@@ -546,7 +548,10 @@ def brevity_penalty(candidate, references):
     else:
         return np.exp(1 - ref_len/cand_len)
 		
-def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
+def bleu_score(candidate, reference_list):
+    candidate = candidate.lower()
+    cand_len = len(candidate.split())
+    weights = [1/cand_len] * cand_len
     bp = brevity_penalty(candidate, references)
     precisions = [modified_ngram_precision(candidate, references, n=i+1) for i in range(len(weights))] 
     
@@ -557,9 +562,6 @@ def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
         score += (w * np.log(p))
     
     return bp * np.exp(score)
-	
->>> bleu_score(candidate, references)
-0.3423503955179092
 <코드 끝>
 
 [코드9]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
@@ -573,6 +575,17 @@ BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드9]�
 
 <표 시작>
 표3
+cand = 'know that I always love you that much.'
+bleu_score(cand, references)
+0.6046116297711386
+
+cand = 'you love I always.'
+bleu_score(cand, references)
+0.30934850332660563
+
+cand = 'I I I I I.'
+bleu_score(cand, references)
+0.5488116360940264
 <표 끝>
 
 트랜스포머의 BLEU 스코어는 EN-FR(영어 → 프랑스어)와 EN-DE(엉어 → 독일어) 모델에서 모두 SOTA를 기록했다. 
