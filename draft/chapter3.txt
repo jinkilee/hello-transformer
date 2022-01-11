@@ -483,10 +483,10 @@ modified 3-gram precision: 0/2
 modified 4-gram precision: 0/1
 <쁠록 끝>
 
-위 결과는 [코드11]을 실행해서 얻은 결과이다. [코드11]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
+위 결과는 [코드8]을 실행해서 얻은 결과이다. [코드8]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
 
 <코드 시작>
-코드11
+코드8
 def word_counter(tokens, n):
     return Counter(ngrams(tokens, n))
 	
@@ -524,12 +524,12 @@ def modified_ngram_precision(candidate, references, n):
 >>>     modified_ngram_precision(candidate, references, i+1)
 <코드 끝>
 
-[코드11]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
+[코드8]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
 
-최종적으로 BLEU 스코어는 [코드12]과 같이 구할 수 있다.
+최종적으로 BLEU 스코어는 [코드9]과 같이 구할 수 있다.
 
 <코드 시작>
-코드12
+코드9
 def brevity_penalty(candidate, references):
     cand_len = len(candidate.split())
     diff = np.inf
@@ -562,14 +562,14 @@ def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
 0.3423503955179092
 <코드 끝>
 
-[코드12]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+[코드9]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식4]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
 
 <수식 시작>
 수식5
 brevity penalty 공식
 <수식 끝>
 
-BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드12]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
+BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드9]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
 
 <표 시작>
 표3
@@ -584,12 +584,4 @@ Transformer (big) 28.4 41.8
 <표 끝>
 
 이번 장에서 트랜스포머가 나오게 된 배경과 트랜스포머의 구조를 알아봤고, 트랜스포머의 학습과 검증 과정에 사용됐던 지표인 PPL과 BLEU에 대해서 알아봤다. Attention is all you need에 나오는 최초의 트랜스포머는 2018년 이후의 급격한 NLP 발전의 모티브로 작용하여 2019년 2020년 다른 논문에서도 많이 인용됐다. 트랜스포머가 Self-Attention을 이용해서 필요한 부분에 대해서만 가중치를 높게 주고 그것을 기반으로 번역문을 생성하여 번역 품질이 급격하게 상승했지만, 그래도 번역기일 뿐이다. 다른 종류의 NLP 테스크를 하기 위해서는 새로운 데이터를 이용해서 학습을 해야하며 이는 많은 양의 데이터와 오랜 시간의 학습 시간을 필요로 한다. 이런 문제를 2018년 10월에 발표된 BERT를 통해 해결 가능하다. 다음 장에서는 BERT에 대해서 알아볼 예정이다. 
-
-
-https://heiwais25.github.io/nlp/2019/10/13/Language-model-3/
-
-
-
-
-
 
