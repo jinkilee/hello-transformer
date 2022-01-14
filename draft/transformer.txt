@@ -261,7 +261,7 @@ v = m(x, mem)
 v.shape  # 
 
 
-# In[18]:
+# In[126]:
 
 
 class Transformer(nn.Module):
@@ -280,15 +280,15 @@ class Transformer(nn.Module):
 
         m = Transformer()
         v = m(src, dst)
-        v.shape  # torch.Size([64, 10, 512])
+        v.shape  # torch.Size([64, 10])
         '''
         src_encoded = self.encoder(src)
         dst_decoded = self.decoder(dst, src_encoded)
         
-        return dst_decoded
+        return dst_decoded.argmax(dim=-1)
 
 
-# In[19]:
+# In[127]:
 
 
 data = np.random.randint(0, V, (B, M))
@@ -299,7 +299,7 @@ src.shape, dst.shape
 
 m = Transformer()
 v = m(src, dst)
-v.shape  # torch.Size([64, 10, 512])
+v.shape  # torch.Size([64, 10])
 
 
 # In[44]:
@@ -414,6 +414,163 @@ mem = torch.rand((B, M, H))
 m = Decoder(L)
 v = m(x, mem)
 v.shape  # torch.Size([64, 10, 512])
+
+
+# In[ ]:
+
+
+
+
+
+# In[50]:
+
+
+### BLEU
+
+
+# In[73]:
+
+
+from nltk import ngrams
+from collections import Counter
+
+
+# In[74]:
+
+
+def word_counter(tokens, n):
+    return Counter(ngrams(tokens, n))
+
+
+# In[75]:
+
+
+def modified_count(candidate, references, n):
+    cand_cnt = word_counter(candidate.split(), n)
+    temp = Counter()
+    for ref in references:
+        tokens = ref.split()
+        ref_cnt = word_counter(tokens, n)
+        for k, v in ref_cnt.items():
+            if k in temp:
+                temp[k] = max(ref_cnt[k], temp[k])
+            else:
+                temp[k] = ref_cnt[k]
+    
+    return Counter({tok:min(temp[tok], cand_cnt[tok]) for tok in cand_cnt})
+
+
+# In[76]:
+
+
+def modified_ngram_precision(candidate, references, n):
+    min_cnt = modified_count(candidate, references, n)
+    total_cnt = word_counter(candidate.split(), n)
+    
+    min_cnt_sum = sum(min_cnt.values())
+    total_cnt_sum = sum(total_cnt.values())
+    #print('modified {}-gram precision: {}/{}'.format(n, min_cnt_sum, total_cnt_sum))
+    return min_cnt_sum / total_cnt_sum
+
+
+# In[77]:
+
+
+references = [
+    'You know, I always love you so much',
+    'Know right? I always love you a lot',
+]
+
+
+# In[78]:
+
+
+def brevity_penalty(candidate, references):
+    candidate = candidate.lower()
+    cand_len = len(candidate.split())
+    diff = np.inf
+    for ref in references:
+        ref = ref.lower()
+        tokens = ref.split()
+        if diff > abs(len(tokens) - cand_len):
+            ref_len = len(tokens)
+            diff = abs(len(tokens) - cand_len)
+            
+    if cand_len > ref_len:
+        return 1
+    elif cand_len == 0:
+        return 0
+    else:
+        return np.exp(1 - ref_len/cand_len)
+
+
+# In[102]:
+
+
+def bleu_score(candidate, reference_list):
+    candidate = candidate.lower()
+    cand_len = len(candidate.split())
+    weights = [1/cand_len] * cand_len
+    bp = brevity_penalty(candidate, references)
+    precisions = [modified_ngram_precision(candidate, references, n=i+1) for i in range(len(weights))] 
+    
+    score = 0
+    for w, p in zip(weights, precisions):
+        print(w, p, score)
+        if p == 0:
+            continue
+        score += (w * np.log(p))
+    
+    print(bp)
+    return bp * np.exp(score)
+
+
+# In[103]:
+
+
+cand = 'know that I always love you that much.'
+bleu_score(cand, references)
+
+
+# In[104]:
+
+
+cand = 'you love I always.'
+bleu_score(cand, references)
+
+
+# In[105]:
+
+
+cand = 'I I I I I.'
+bleu_score(cand, references)
+
+
+# In[106]:
+
+
+from nltk.translate.bleu_score import sentence_bleu
+
+
+# In[108]:
+
+
+candidate = 'I I I I I.'.split()
+print('BLEU score -> {}'.format(sentence_bleu(references, candidate )))
+
+
+# In[110]:
+
+
+candidate = 'you love I always.'.split()
+print('BLEU score -> {}'.format(sentence_bleu(references, candidate )))
+
+
+# In[111]:
+
+
+candidate = 'know that I always love you that much.'.split()
+print('BLEU score -> {}'.format(sentence_bleu(references, candidate )))
 
 
 # In[ ]:
