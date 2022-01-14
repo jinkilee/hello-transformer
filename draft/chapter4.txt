@@ -150,6 +150,7 @@ def transpose_for_scores(x):
 
 [코드3]을 실행하면 다음과 같은 결과를 얻을 수 있다.
 <블록 시작>
+블록1
 # [1, 3, 20] -> [1, 3, 4, 5] -> [1, 4, 3, 5]
 >>> x = torch.from_numpy(np.array(
     [[
@@ -192,7 +193,7 @@ tensor([[201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 2
 
 <블록 끝>
 
-위 결과에서 x[0]의 데이터 값 배열이 어떻게 변해서 tx[0]이 됐는지 보자. 단순히 세로로 나눈 다음에 stack처럼 쌓은 것 뿐이다. 
+[블록1]에서 x[0]의 데이터 값 배열이 어떻게 변해서 tx[0]이 됐는지 보자. 단순히 세로로 나눈 다음에 stack처럼 쌓은 것 뿐이다. 
 
 지금까지 설명한 내용이 BERT 모델 구조의 전부이다. 이 구조를 한번에 이해하기는 조금 어려울 수 있다. 조금 더 익숙해지려면 3장과 4.2절을 반복해서 공부하기를 추천한다. 특히 3장을 더 많이 복습하기를 권한다. BERT를 이해하기 위한 이론적인 배경은 모두 3장에서 설명하고 있기 때문이다. HuggingFace와 같은 오픈소스 등을 활용해서 BERT가 어떻게 구현됐는지 이해해보는 것도 좋은 공부 방법이다. 각 레이어에 어떤 값이 들어가서 어떤 연산이 실행되는지 이해해보면 BERT를 조금 더 쉽게 이해할 수 있을 것이다. 
 
@@ -204,17 +205,18 @@ tensor([[201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 2
 BERT가 이전의 모델에 비해 높은 성능을 보일 수 있었던 이유는 BERT의 사전학습이다. 그러면 어떻게 BERT를 사전학습했을까? 직접 학습을 하려면 많은 컴퓨팅 지원을 필요로 한다. 직접 해보기는 힘들어도 원리를 이해해볼 수는 있다. BERT의 사전학습은 언어에 대한 사전학습이다. 따라서 언어를 학습할 때 어떤 식으로 학습하는지를 먼저 생각해보자. Masked Language Model(MLM)과 Next Sentence Prediction(NSP)를 통해 학습을 한다. BERT는 MLM과 NSP의 Loss를 낮추는 방식으로 학습된다. 그러면 MLM과 NSP가 각각 어떤 학습을 하는지 다음 절에서 자세하게 알아보자.
 
 4.2.4. Masked Language Model (MLM)
-MLM은 쉽게 말해서 빈 칸 체우기이다. 토큰화되어 들어오는 BERT의 입력을 임의로 마스킹하고 마스킹된 값들을 맞추는 멀티 레이블 분류 문제이다. 즉 입력 토큰의 일부를 임의로 몇 개 선택해서 레이블을 스스로 만든 후에 그 레이블을 다시 맞추는 분류 문제이다. 실제로 사람이 언어를 학습할 때 문제집에서 빈 칸 체우기 문제를 풀면서 학습을 한다. 그 방법을 컴퓨터에게 적용한 것이라고 생각하면 된다. [블록1]을 보자.
+MLM은 쉽게 말해서 빈 칸 체우기이다. 토큰화되어 들어오는 BERT의 입력을 임의로 마스킹하고 마스킹된 값들을 맞추는 멀티 레이블 분류 문제이다. 즉 입력 토큰의 일부를 임의로 몇 개 선택해서 레이블을 스스로 만든 후에 그 레이블을 다시 맞추는 분류 문제이다. 실제로 사람이 언어를 학습할 때 문제집에서 빈 칸 체우기 문제를 풀면서 학습을 한다. 그 방법을 컴퓨터에게 적용한 것이라고 생각하면 된다. [블록2]를 보자.
 
 <블록 시작>
-블록1
+블록2
 입력 토큰: ['[CLS]', 'there', 'is', 'my', 'school', 'and', 'i', 'love', 'this', 'place', '[SEP]']
 마스킹된 토큰: ['[CLS]', 'there', 'is', '[MASK]', 'school', 'and', 'i', '[MASK]', 'this', '[MASK]', '[SEP]']
 레이블: [-100, -100, -100, 2026, -100, -100, -100, 2293, -100, 2173, -100]
 <블록 끝>
 
 my, love, place가 임의로 선택됐으니 이 토큰들을 마스킹한 후 다시 원래의 토큰인 2026, 2293, 2173으로 맞추는 분류 문제인 것이다. MLM 학습은 이렇게 스스로 레이블을 만들어서 학습하게 되므로 self-supervised learning이라고 한다. MLM을 조금 더 자세하게 알기 위해서 BERT 논문에서 MLM을 설명하는 부분을 살펴보자.
-<블록 시작>
+
+<인용 시작>
 인용1
 link: https://arxiv.org/pdf/1810.04805.pdf
 The training data generator
@@ -225,13 +227,13 @@ the time (2) a random token 10% of the time (3)
 the unchanged i-th token 10% of the time. Then,
 Ti will be used to predict the original token with
 cross entropy loss.
-<블록 끝>
+<인용 끝>
 
 [인용1]을 보면 입력 토큰의 15 퍼센트에 해당하는 토큰을 임의로 정한 후, 선택된 15% 중 80%는 [MASK] 토큰으로 바꾸고 10%는 랜덤 토큰으로 변경하고 나머지 10%는 바꾸지 않는다고 한다. 원래의 정답이 분명하게 있는데 왜 굳이 일부는 바꾸고 일부는 바꾸지 않고 등등의 복잡한 과정을 거치는 것일까? 다시 한번 말하자면, MLM은 빈 칸 체우기 문제이다. 빈 칸 체우기 문제인데 [MASK] 토큰에 대해서만 정답을 맞춘다. 최초에 선택된 15%에 대해서만 예측을 하고 나머지 85%는 무시된다. 만일 [인용1]과 같은 마스킹 전략을 거치지 않는다면 모델은 [MASK]된 것에 대해서만 빈 칸을 맞출 줄 아는 모델로 학습돼 버리고 만다. 그런데 [MASK]는 Fine-Tuning과정에서는 절대 나오지 않는 토큰이고 MLM의 목적은 빈 칸 체우기를 통해 문맥을 학습하는 것이다. 따라서 [MASK]라고 선택된 토큰들 중에서 10%는 랜덤한 단어로 치환하고 또 다른 10%는 원래의 입력 토큰을 그대로 가져가는 전략을 사용하는 것이다. 이렇게 하면 [MASK]로 돼 있지 않는 부분에 대해서도 MLM은 예측을 수행할 수 있게 돼서 언어의 문맥을 학습할 수 있게 된다.
 
-MLM에 대한 예시를 [블록2]를 통해 확인해보자.
+MLM에 대한 예시를 [블록3]를 통해 확인해보자.
 <블록 시작>
-블록2
+블록3
 input ids: [101, 2045, 2003, 2026, 2082, 1998, 1045, 2293, 2023, 2173,  102]
 input token: ['[CLS]', 'there', 'is', 'my', 'school', 'and', 'i', 'love', 'this', 'place', '[SEP]'] 
 마스킹된 token: ['[CLS]', 'there', 'is', '[MASK]', 'school', 'and', 'i', '[MASK]', 'this', '[MASK]', '[SEP]']
@@ -246,11 +248,12 @@ label: [-100, -100, -100, 2026, -100, -100, -100, 2293, -100, 2173, -100]
 ※ place: 2173
 <블록 끝>
 
-위의 예시에서 "input_token"에서 임의로 my, love, place 세 토큰을 골랐다고 하자. 그리고 my는 [MASK]로, love는 go로 place는 그대로 place로 둬서 마스킹 전략을 적용시키자. 원래 대로라면 [인용1]에서 소개한 마스킹 전략과 같이 80%/10%/10%의 비율을 유지해야 하지만 여기에서는 편의상 비율은 무시하도록 하자. [블록2]의 "마스킹 전략 후의 token"을 보라. MLM을 수행해야 하는 토큰은 총 3개이다. 4번째 자리에 있는 [MASK]를 my로 예측해야 하고, 8번째 자리에 있는 go를 love로 예측해야 하고, 10번째 자리에 있는 place는 그대로 place로 예측하면 된다. 예측할 때 처음에 [MASK]로 선택되지 않았던 85%에 해당하는 부분에 대해서는 예측을 수행하지 않는다.
+위의 예시에서 "input_token"에서 임의로 my, love, place 세 토큰을 골랐다고 하자. 그리고 my는 [MASK]로, love는 go로 place는 그대로 place로 둬서 마스킹 전략을 적용시키자. 원래 대로라면 [인용1]에서 소개한 마스킹 전략과 같이 80%/10%/10%의 비율을 유지해야 하지만 여기에서는 편의상 비율은 무시하도록 하자. [블록3]의 "마스킹 전략 후의 token"을 보라. MLM을 수행해야 하는 토큰은 총 3개이다. 4번째 자리에 있는 [MASK]를 my로 예측해야 하고, 8번째 자리에 있는 go를 love로 예측해야 하고, 10번째 자리에 있는 place는 그대로 place로 예측하면 된다. 예측할 때 처음에 [MASK]로 선택되지 않았던 85%에 해당하는 부분에 대해서는 예측을 수행하지 않는다.
 
-복잡하게 느껴질 수 있어서 MLM 과정을 순서대로 정리해봤다.
+복잡하게 느껴질 수 있어서 MLM 과정을 순서대로 [블록4]에 정리해봤다.
+
 <블록 시작>
-블록3
+블록4
 STEP1: 사전 학습된 토크나이저를 이용해서 문장을 토큰화해서 숫자로 바꾼다.
 STEP2: STEP1에서 숫자로 바뀐 토큰들 중 15%를 랜덤으로 선택한다.
 STEP3: label을 만들어둔다. label을 만들 때는 STEP2에서 선택되지 않은 85%는 -100으로 두고 선택된 15%는 그대로 둔다.
@@ -263,19 +266,19 @@ STEP5: STEP3과 STEP4에서 만든 값을 이용해서 MLM loss를 구한다. Lo
 
 4.2.5. Next Sentence Prediction (NSP)
 ## 두번째 시퀀스 예제 포함하고 있는지!!!
-MLM이 빈 칸 체우기를 학습하는 것이라면 NSP는 다음 문장 맞추기를 학습하는 과정이다. 두 문장이 주어졌을 때 그 두 문장이 앞/뒤 문장 관계인지(is_next=1) 그렇지 않으면 그냥 랜덤한 문장인지를(is_next=0) 학습한다. NSP는 두 문장이 is_next인지 아닌지를 판단하는 문제이기 때문에 입력 데이터 자체가 두 문장으로 이루어져 있다. 이 두 문장을 sentence_a와 sentence_b라고 하자. sentence_a와 sentence_b의 앞뒤에는 예약어 토큰을 추가해줘야 한다. 예약어는 [블록4]와 같이 추가해준다.
-
-<블록 시작>
-블록4
-[CLS] sentence_a [SEP] sentence_b [SEP]
-<쁠록 끝>
-
-[블록4]에서 sentence_a의 앞뒤에는 [CLS]와 [SEP]이 추가됐다. sentence_a가 처음 시작이니 그 앞에 [CLS]를 붙여주는 것이고 sentence_a가 끝난 시점에 또 다시 [SEP]을 붙여준 것이다. 그리고 sentence_b를 추가해주고 끝나는 지점에 한번 더 [SEP]을 추가해서 입력 데이터를 만드는 것이다. 이렇게 만들어진 입력 데이터에 대해서 sentence_a와 sentence_b의 관계에 따라 is_next=0 또는 is_next=1이 될 수 있다. is_next는 NSP 학습에 쓰이는 레이블 값이다.
-
-여기에서 다시 4.2.1의 [그림2]에서 설명한 토큰 타입에 대해서 설명해보자. [블록4]를 보면 [CLS], sentence_a, [SEP] 부분이 첫번째 문장에 해당하고 sentence_b, [SEP] 부분이 두번째 문장에 해당한다. 토큰 타입 값을 통해서 첫번째 문장과 두번째 문장을 구별해주면 된다. 따라서 첫번째 문장의 토큰 타입은 0으로 하고, 두번째 문장의 토큰 타입은 1로 한다. 토큰 타입은 BERT의 사전학습 단계인 NSP를 위해 필요하다. 파인튜닝을 할 때는 0으로 체워넣어도 무방하다. 
+MLM이 빈 칸 체우기를 학습하는 것이라면 NSP는 다음 문장 맞추기를 학습하는 과정이다. 두 문장이 주어졌을 때 그 두 문장이 앞/뒤 문장 관계인지(is_next=1) 그렇지 않으면 그냥 랜덤한 문장인지를(is_next=0) 학습한다. NSP는 두 문장이 is_next인지 아닌지를 판단하는 문제이기 때문에 입력 데이터 자체가 두 문장으로 이루어져 있다. 이 두 문장을 sentence_a와 sentence_b라고 하자. sentence_a와 sentence_b의 앞뒤에는 예약어 토큰을 추가해줘야 한다. 예약어는 [블록5]와 같이 추가해준다.
 
 <블록 시작>
 블록5
+[CLS] sentence_a [SEP] sentence_b [SEP]
+<쁠록 끝>
+
+[블록5]에서 sentence_a의 앞뒤에는 [CLS]와 [SEP]이 추가됐다. sentence_a가 처음 시작이니 그 앞에 [CLS]를 붙여주는 것이고 sentence_a가 끝난 시점에 또 다시 [SEP]을 붙여준 것이다. 그리고 sentence_b를 추가해주고 끝나는 지점에 한번 더 [SEP]을 추가해서 입력 데이터를 만드는 것이다. 이렇게 만들어진 입력 데이터에 대해서 sentence_a와 sentence_b의 관계에 따라 is_next=0 또는 is_next=1이 될 수 있다. is_next는 NSP 학습에 쓰이는 레이블 값이다.
+
+여기에서 다시 4.2.1의 [그림2]에서 설명한 토큰 타입에 대해서 설명해보자. [블록5]를 보면 [CLS], sentence_a, [SEP] 부분이 첫번째 문장에 해당하고 sentence_b, [SEP] 부분이 두번째 문장에 해당한다. 토큰 타입 값을 통해서 첫번째 문장과 두번째 문장을 구별해주면 된다. 따라서 첫번째 문장의 토큰 타입은 0으로 하고, 두번째 문장의 토큰 타입은 1로 한다. 토큰 타입은 BERT의 사전학습 단계인 NSP를 위해 필요하다. 파인튜닝을 할 때는 0으로 체워넣어도 무방하다. 
+
+<블록 시작>
+블록6
 # is_next=0
 sentence_a: I love this candy
 sentence_b: I read a good news
@@ -289,7 +292,7 @@ input: ['[CLS]', 'i', 'love', 'this', 'candy', '[SEP]', 'because', 'it', 'is', '
 label: 1
 <블록 끝>
 
-[블록5]는 NSP 데이터의 예시이다.
+[블록6]는 NSP 데이터의 예시이다.
 
 4.2.6. 사전학습을 위한 데이터셋 준비와 Self-supervised learning
 아마 MLM과 NSP를 공부하면서 "도대체 그럼 데이터셋은 저런 어떻게 구했지?"라는 생각이 많이 들었을 것이다. BERT 논문을 보면 사전학습에 사용되는 데이터를 어떻게 준비했는지에 대한 내용이 나와있다. BookCorpus(8억 단어)와 English Wikipedia(25억 단어) 데이터셋을 사용했다고 한다. 중요한 점은 문장 수준의 데이터셋보다는 문서 수준의 데이터셋이 필요하다는 것이다.
@@ -315,6 +318,7 @@ self-supervised learning의 장점은 사람이 일일이 데이터를 레이블
 사전학습을 위해 HuggingFace에서 공개한 BERT 구현체를 사용하려고 한다. HuggingFace는 2016년에 설립된 스타트업이고 언어 모델을 빌드하고 학습하고 실행시킬 수 있는 오픈소스를 제공한다. 이 오픈소스의 이름이 Transformers이다. Transformers를 이용하면 BERT나 BERT 이외의 NLP 모델들을 사전학습부터 Fine-Tuning까지 간단하게 학습할 수 있다. 사전학습을 실행시키기 위해서는 아래와 같이 스크립트를 구동시키면 된다.
 
 <블록 시작>
+블록7
 # 도커 형태로 바꿔서 데이터셋 포함시켜두기 (transformers==4.1.0.dev0)
 $ git clone https://github.com/huggingface/transformers.git
 $ cd transformers
@@ -325,7 +329,7 @@ $ cd examples/legacy
 $ python run_language_modeling.py --model_type=bert --output_dir=outputs --tokenizer_name=bert-base-uncased --mlm --block_size=32 --train_data_file=../../datasets/train.txt --eval_data_file=../../datasets/eval.txt --do_train --no_cuda
 <블록 끝>
 
-위와 같이 run_language_modeling.py를 구동시키면 BERT 사전학습을 실행시킬 수 있다. 위의 학습에서 사용하는 train.txt는 셰익스피어 소설이고 예시를 위한 목적으로 사용됐다. 실제로 BERT를 학습시키기 위해서는 매우 큰 데이터셋이 필요하다. 위와 같이 스크립트를 구동해서 학습 데이터의 형태를 보면 [표1]과 같이 요약할 수 있다.
+[블록7]과 같이 run_language_modeling.py를 구동시키면 BERT 사전학습을 실행시킬 수 있다. 위의 학습에서 사용하는 train.txt는 셰익스피어 소설이고 예시를 위한 목적으로 사용됐다. 실제로 BERT를 학습시키기 위해서는 매우 큰 데이터셋이 필요하다. 위와 같이 스크립트를 구동해서 학습 데이터의 형태를 보면 [표1]과 같이 요약할 수 있다.
 
 <표 시작>
 표1
@@ -337,9 +341,10 @@ BERT 학습 데이터 표로 만든것
 run_language_modeling.py에서는 NSP 학습은 수행하지 않았다. MLM에 비해서 NSP의 학습 효과가 떨어지기 때문에 MLM만 학습한 것이다.
 
 4.2.8. 사전학습 정리하기
-앞에서 여러가지 예제를 통해서 BERT의 사전학습에 대해서 공부했다. 정리를 하는 차원에서 이번 절에서는 BERT의 사전학습을 핵심만 요약해보려고 한다.
+앞에서 여러가지 예제를 통해서 BERT의 사전학습에 대해서 공부했다. 정리를 하는 차원에서 이번 절에서는 BERT의 사전학습을 핵심만 요약해보려고 한다. [블록8]을 보자.
 
 <블록 시작>
+블록8
 1. BERT의 사전학습은 MLM과 NSP를 통해서 수행한다.
 2. MLM은 "빈칸 체우기", NSP는 "다음 문장인지 맞추기"이다.
 3. MLM과 NSP를 위한 데이터셋은 텍스트 데이터만 있으면 self-supervised learning을 통해 스스로 준비된다. A~C과정을 거쳐 BERT의 사전학습에 사용할 데이터를 준비한다.
@@ -462,7 +467,7 @@ class BertPooler(nn.Module):
 
 BertForSequenceClassification 모델을 이용해서 CoLA 데이터셋을 학습시킨 부분이 [코드5]이다. 전체 코드는 "research/cola_classification/classifier.ipynb"에서 살펴보자.
 
-<블록 시작>
+<코드 시작>
 코드5
 model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels = 2).cuda()
 model.train()
@@ -489,7 +494,7 @@ Average Loss = 0.0220): 100%|██████████| 268/268 [00:30<00:0
 Average Loss = 0.0187): 100%|██████████| 268/268 [00:32<00:00,  8.16it/s]
 Average Loss = 0.0135): 100%|██████████| 268/268 [00:30<00:00,  8.75it/s]
 Average Loss = 0.0230): 100%|██████████| 268/268 [00:30<00:00,  8.92it/s]
-<블록 끝>
+<코드 끝>
 
 이 주피터 파일에서 학습 모델을 실행시키는데 필요한 자세한 과정은 생략하려고 한다. 설명이 필요한 부분에 대해서는 주피터 파일에 주석을 남겨놨다.
 
@@ -523,7 +528,7 @@ GLUE 데이터셋에 대한 평가 방법으로 Matthew's Correlation을 사용�
 
 사전학습된 BERT를 사용하지 않고 처음부터 학습하면 어떨까? 사전학습을 하지 않은 BERT로 학습을 할 경우 아래와 같이 Loss가 느리게 떨어지는 것을 확인할 수 있다. 사전학습된 BERT를 사용하지 않고 학습한 모델은 cola_model_no_pretrained.bin으로 저장했다. 모델 로딩할 때 파일명을 변경해서 로딩 후 테스트하면 된다. [코드8]은 사전학습된 BERT를 사용하지 않고 학습한 결과이다.
 
-<블록 시작>
+<코드 시작>
 코드8
 config = BertConfig.from_pretrained('bert-base-uncased')
 model = BertForSequenceClassification(config).cuda()
@@ -551,7 +556,7 @@ Average Loss = 0.2751): 100%|██████████| 268/268 [00:29<00:0
 Average Loss = 0.2675): 100%|██████████| 268/268 [00:29<00:00,  8.95it/s]
 Average Loss = 0.2352): 100%|██████████| 268/268 [00:29<00:00,  9.03it/s]
 Average Loss = 0.2171): 100%|██████████| 268/268 [00:29<00:00,  9.05it/s]
-<볼륵 끝>
+<코드 끝>
 
 cola_model_no_pretrained.bin을 로딩해서 추론을 하면 [코드9]와 같은 결과를 얻을 수 있다. [코드7]에서 얻었던 스코어 0.5721보다 훨씬 낮아진 것을 알 수 있다.
 
@@ -572,7 +577,7 @@ array([[ 31, 131],
 BERT를 이용해서 질의응답 모델을 만들어보자. 앞 절에서는 BERT를 이용해서 분류 모델을 만들었다. 이번 절에서는 질의응답 데이터셋으로 유명한 SQuAD(Stanford Question Answering Dataset) 데이터셋을 이용해서 질의응답 모델을 만들어보자. SQuAD 데이터셋은 1.1버전과 2.0버전이 있는데, 이 책에서는 2.0 버전을 사용하려고 한다. 우선 SQuAD 데이터셋의 예시를 살펴보자.
 
 <블록 시작>
-
+블록9
 "paragraphs": 
 [
 	{
@@ -605,10 +610,12 @@ BERT를 이용해서 질의응답 모델을 만들어보자. 앞 절에서는 BE
 ]
 <블록 끝>
 
-하나의 지문(context)에 대해서 여러 개의 질의응답 쌍(qas)을 갖고 있는 구조이다. qas는 여러 개의 질의응답 쌍이고, 각 쌍은 id, question, answers, is_impossible 등의 키를 가지고 있다. id는 질의응답 쌍에 대한 고유 키이다. question은 평문으로 된 질문이다. 이 질문은 context로부터 만들어진 질문이다. answers는 질문에 대한 응답이고, text와 answer_start로 이루어져 있다. 예를 들어서 In what country is Normandy located? 라는 질문에 대해서 answer는 France(text)이고 이는 context의 159번째 문자(answer_start)이다.
+[블록9]를 보면 하나의 지문(context)에 대해서 여러 개의 질의응답 쌍(qas)을 갖고 있는 구조이다. qas는 여러 개의 질의응답 쌍이고, 각 쌍은 id, question, answers, is_impossible 등의 키를 가지고 있다. id는 질의응답 쌍에 대한 고유 키이다. question은 평문으로 된 질문이다. 이 질문은 context로부터 만들어진 질문이다. answers는 질문에 대한 응답이고, text와 answer_start로 이루어져 있다. 예를 들어서 In what country is Normandy located? 라는 질문에 대해서 answer는 France(text)이고 이는 context의 159번째 문자(answer_start)이다.
 
-SQuAD 데이터셋을 이용해서 질의응답 모델을 만들때 모델의 입출력은 아래와 같다.
+SQuAD 데이터셋을 이용해서 질의응답 모델을 만들때 모델의 입출력은 [블록10]과 같다.
+
 <블록 시작>
+블록10
 # 평문으로 된 question/text
 question = "Who was Jim Henson?"
 text = "Jim Henson was a nice puppet"
@@ -739,9 +746,10 @@ class BertForQuestionAnswering(BertPreTrainedModel):
         )
 <코드 끝>
 
-[코드11]에 정의한 모델을 사용해서 질의응답 모델을 학습할 수 있다. 질의응답 모델의 학습은 research/squad/squad-training.ipynb를 참고하면 된다. 학습을 진행하면 아래와 같이 Loss가 감소하게 된다.
+[코드11]에 정의한 모델을 사용해서 질의응답 모델을 학습할 수 있다. 질의응답 모델의 학습은 research/squad/squad-training.ipynb를 참고하면 된다. 학습을 진행하면 [블록11]과 같이 Loss가 감소하게 된다.
 
 <블록 시작>
+블록11
 Average Loss = 1.1870): 100%|██████████| 8247/8247 [1:24:25<00:00,  1.63it/s]
 Average Loss = 0.6109): 100%|██████████| 8247/8247 [1:24:30<00:00,  1.63it/s]
 Average Loss = 0.2965): 100%|██████████| 8247/8247 [1:24:34<00:00,  1.63it/s]
@@ -856,7 +864,7 @@ needs
 BERT의 임베딩 레이어의 파라미터 크기는 VxE이다. 그런데 BERT에서는 E=H이기 때문에 임베딩 레이어의 파라미터 크기는 VxH와 같다. ALBERT에서는 VxE로 임베딩하고 이렇게 임베딩된 E 차원을 H 사이즈로 다시 변형한다. 이때 E는 H보다 훨씬 작게 설정한다. 논문에서는 이 내용을 수학적으로 설명하고 있다. VxH를 분해(decomposition)해서 VxE와 ExH로 만든다고 설명한다. ALBERT와 BERT의 임베딩 사이즈를 비교해보면 아래와 같다.
 
 <블록 시작>
-블록6
+블록12
 # BERT
 V=30000
 H=768
@@ -869,7 +877,7 @@ H=4096
 ALBERT의 임베딩 레이어 파라미터 개수 = 30000 x 128 + 128 x 4096 = 3,840,000 + 524,288 = 4,364,288
 <블록 끝>
 
-[블록6]을 보면 ALBERT의 임베딩 레이어 파라미터 개수는 BERT에 비해 약 80% 줄었다. [코드13]을 통해 Transformers에서 구현된 ALBERT와 BERT에서 각각의 임베딩 사이즈를 확인해보자.
+[블록12]를 보면 ALBERT의 임베딩 레이어 파라미터 개수는 BERT에 비해 약 80% 줄었다. [코드13]을 통해 Transformers에서 구현된 ALBERT와 BERT에서 각각의 임베딩 사이즈를 확인해보자.
 
 <코드 시작>
 코드13
@@ -888,12 +896,12 @@ print('number of ALBERT Embedding parameters: {}'.format(albert_embedding))
 <코드 끝>
 
 <블록 시작>
-블록7
+블록13
 number of BERT Embedding parameters: 23837184
 number of ALBERT Embedding parameters: 4005120
 <블록 끝>
 
-[블록7]를 보면 BERT의 임베딩 파라미터 개수는 ALBERT의 임베딩 파라미터 개수의 약 16.8%이다.
+[블록13]을 보면 BERT의 임베딩 파라미터 개수는 ALBERT의 임베딩 파라미터 개수의 약 16.8%이다.
 
 4.5.2. Cross-layer parameter sharing
 BERT의 파라미터 개수를 비약적으로 줄인 것은 Cross-layer parameter sharing이다. BERT에서 Self-Attention을 계산해서 H차원의 결과값을 만들어내는 BertLayer 블록을 12번 반복한다. 이때 파라미터를 공유하지 않기 때문에 같은 구조의 블록을 12개 만든다. ALBERT에서는 이 구조의 블록을 한번만 만들되, 사용시에는 결과값을 다시 입력값으로 집어넣는 과정을 12번 반복해서 결과적으로 모델의 사이즈를 1/12로 줄인다. 이 과정에서 처음에 만든 구조를 반복해서 사용하기 때문에 파라미터를 공유하게 되는 것이다. [그림17]은 BERT와 ALBERT에서 인코더 동작 구조를 그림으로 표현한 것이다.
@@ -922,10 +930,10 @@ print('number of BERT Encoder parameters: {}'.format(bert_encoder))
 print('number of ALBERT Encoder parameters: {}'.format(albert_encoder))
 <코드 끝>
 
-[코드15]를 실행하면 [블록8]의 결과를 확인할 수 있다.
+[코드15]를 실행하면 [블록14]의 결과를 확인할 수 있다.
 
 <블록 시작>
-블록8
+블록14
 number of BERT Encoder parameters: 85054464
 number of ALBERT Encoder parameters: 7186944
 <블록 끝>
@@ -939,9 +947,10 @@ BERT 인코더 파라미터의 개수는 ALBERT 인코더 파라미터 개수의
 ALBERT paper Figure 1
 <그림 끝>
 
-[그림18]은 입력 값 x를 AlbertLayer에 넣어서 계속 업데이트시키면 입력 x와 업데이트된 x의 차이가 점차 줄어들게 된다는 것을 보여주는 그림이다. ALBERT 논문에서는 이렇게 입력과 출력의 차이가 줄어드는 지점에 도달하는 것을 평행점(equilibrium point)에 도달한다고 표현하고 있다. 모델의 파라미터를 공유하므로서 평행점에 도달하면 같은 구조의 모델도 더 높은 성능을 보인다고 설명하고 있다.
+[그림18]은 입력 값 x를 AlbertLayer에 넣어서 계속 업데이트시키면 입력 x와 업데이트된 x의 차이가 점차 줄어들게 된다는 것을 보여주는 그림이다. ALBERT 논문에서는 이렇게 입력과 출력의 차이가 줄어드는 지점에 도달하는 것을 평행점(equilibrium point)에 도달한다고 표현하고 있다. 모델의 파라미터를 공유하므로서 평행점에 도달하면 같은 구조의 모델도 더 높은 성능을 보인다고 설명하고 있다. [인용3]을 보자.
 
 <인용 시작>
+인용3
 https://arxiv.org/pdf/1909.11942.pdf
 Similar strategies have been explored by Dehghani et al. (2018) (Universal Transformer, UT) and
 Bai et al. (2019) (Deep Equilibrium Models, DQE) for Transformer networks. Different from our
@@ -954,14 +963,14 @@ research/chapter5/albert_parameter_sharing.ipynb를 보면 [그림18]과 같이 
 ALBERT에서 또 하나 집고 넘어가야 할 부분이 SOP(Sentence Order Prediction)이다. BERT에서의 NSP가 언어 모델을 학습하는데 있어서 유용한지에 대한 의구심이 있어서 NSP를 조금 다른 방식으로 변형한 것이다. SOP는 두 개의 연결된 문장을 사용한다. 그리고 문장의 순서를 바꾸지 않으면 1, 바꾸면 0으로 정의하고 학습한다.
 
 <블록 시작>
-블록9
+블록15
 예제 문단: 아침에 일어났다. 이상하게 배가 아팠다. 그래서 병원에 갔다.
 
 positive example: <CLS> 이상하게 배가 아팠다. <SEP> 그래서 병원에 갔다. <SEP>
 negative example: <CLS> 그래서 병원에 갔다. <SEP> 이상하게 배가 아팠다. <SEP>
 <블록 끝>
 
-ALBERT를 사전학습할 때 SOP를 학습하기 위해서 [블록9]와 같이 <CLS>와 <SEP>을 문장 앞뒤와 중간에 붙여준다.
+ALBERT를 사전학습할 때 SOP를 학습하기 위해서 [블록15]와 같이 <CLS>와 <SEP>을 문장 앞뒤와 중간에 붙여준다.
 
 4.5.4. ALBERT 정리
 ALBERT는 BERT 모델의 성능을 비슷하거나 높은 수준으로 향상시켰고, 동시에 모델의 사이즈는 약 1/10으로 줄였다. 모델의 사이즈를 줄이는 방법은 두 가지인데, 하나는 Factorized embedding parameters이고 다른 하나는 Cross-Layer parameter sharing이다. 또한 사전학습을 진행할 때도 NSP를 SOP로 변형했다.
