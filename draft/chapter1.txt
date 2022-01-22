@@ -402,10 +402,10 @@ f(t) = sigmoid(Wxf·x(t) + Whf·h(t-1) + bf)
 이번 절에서는 GRU를 이용해서 간단한 언어 모델을 구현해보려고 한다. 잘 동작하는 언어 모델을 만드는 것은 매우 어려운 일이다. 따라서 이번 절에서의 예시는 GRU가 입력 데이터를 얼마나 잘 생성하는지를 보여주는 정도로 이해하면 된다.
 
 <그림 시작>
-그림8 (그림3)
+그림7 (그림3)
 <그림 끝>
 
-GRU 언어 모델에 대한 입력과 출력을 정의해보자. [그림8]을 보면 GRU는 [I,love,you]라는 단어를 순서대로 입력으로 취하고 있고, 각 단계마다 출력(O_0, O_1, O_2)을 하고 있다. 그러면 I가 입력으로 들어갔을 때 love가 출력되고, love가 입력으로 들어갔을 때 you가 출력되도록 학습하면 된다. 여기에 BOS(<s>)와 EOS(</s>)를 추가해서 정리하면 [블록5]와 같이 정리할 수 있다.
+GRU 언어 모델에 대한 입력과 출력을 정의해보자. [그림7]을 보면 GRU는 [I,love,you]라는 단어를 순서대로 입력으로 취하고 있고, 각 단계마다 출력(O_0, O_1, O_2)을 하고 있다. 그러면 I가 입력으로 들어갔을 때 love가 출력되고, love가 입력으로 들어갔을 때 you가 출력되도록 학습하면 된다. 여기에 BOS(<s>)와 EOS(</s>)를 추가해서 정리하면 [블록5]와 같이 정리할 수 있다.
 
 <블록 시작>
 블록5
@@ -682,11 +682,11 @@ def train(inputs, labels, model, criterion, optimizer, max_grad_norm=None):
 학습을 할 떄 teacher forcing 기법을 1/2 확률로 사용하게 된다. teacher forcing 기법은 하나의 시퀀스 데이터에 대해서 학습을 진행할 때 그 시퀀스 데이터에 해당하는 레이블을 하나 하나 가르쳐주는 방식이다. teacher forcing 기법으로 학습할 때는 다음 iteration에서 사용될 lm_inputs의 값을 labels로부터 받아왔다. 반면에 teacher forcing을 사용하지 않을 경우에는 output 값으로부터 lm_inputs을 만들었다.
 
 <그림 시작>
-그림9 (그림5)
+그림8 (그림5)
 티쳐포싱 그림
 <그림 끝>
 
-[그림9]를 보면 teacher forcing 기법을 사용할 경우와 그렇지 않은 경우를 잘 표현하고 있다. teacher forcing의 경우 GRU에 들어가는 입력이 label에서 온다. 처음 시작인 I만 Input에서 오고 그 다음 love, you는 label에서 입력된다. 출력을 보면 label과 전혀 다른 love, him, but 등을 출력하고 있지만 그것들을 학습에 사용하지 않고 학습에는 제대로된 정답인 love, you, </s>를 사용하는 것이 teacher forcing이다. 반면에 love, him 등을 다음 GRU의 입력으로 사용하는 경우가 teacher forcing 기법을 사용하지 않는 경우이다.
+[그림8]를 보면 teacher forcing 기법을 사용할 경우와 그렇지 않은 경우를 잘 표현하고 있다. teacher forcing의 경우 GRU에 들어가는 입력이 label에서 온다. 처음 시작인 I만 Input에서 오고 그 다음 love, you는 label에서 입력된다. 출력을 보면 label과 전혀 다른 love, him, but 등을 출력하고 있지만 그것들을 학습에 사용하지 않고 학습에는 제대로된 정답인 love, you, </s>를 사용하는 것이 teacher forcing이다. 반면에 love, him 등을 다음 GRU의 입력으로 사용하는 경우가 teacher forcing 기법을 사용하지 않는 경우이다.
 
 그 다음으로 train 함수에서 설명할 부분은 max_grad_norm 부분이다. 이 부분은 gradient clipping을 위한 부분이다. RNN 계열의 모델을 학습할 경우 gradient explosion 등이 발생하기 쉽다. gradient explosion이란 학습을 진행할 때 에러가 급격하게 커져서 모델의 파라미터 업데이트가 지나치게 많이 바뀌는 현상을 의미한다. 보통 학습률(learning rate)을 지정해서 업데이트되는 양을 조절하지만 학습률을 적용했음에도 불구하고 심하게 gradient가 폭발했기 때문에 학습이 제대로 되지 않는 현상이다. 이럴 경우 해결책으로 gradient clipping을 할 수 있는데 gradient clipping이란 gradient가 특정 임계치(threshold) 값을 넘어갈 경우 gradient를 gradient의 l2norm 값으로 나눠고 threshold 값을 곱해주는 것이다. [수식5]를 참고하자.
 
