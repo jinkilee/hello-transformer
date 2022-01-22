@@ -698,10 +698,10 @@ else
 수식5
 <수식 끝>
 
-train 함수 사용 예시는 [코드15]에 주석으로 설명돼 있는 Example을 참고하면 된다. run_gru.py를 실행하면 전체 학습 과정을 실행할 수 있다. run_gru.py를 실행하면 [코드16]과 같이 출력을 한다.
+train 함수 사용 예시는 [코드14]에 주석으로 설명돼 있는 Example을 참고하면 된다. run_gru.py를 실행하면 전체 학습 과정을 실행할 수 있다. run_gru.py를 실행하면 [코드15]과 같이 출력을 한다.
 
 <코드 시작>
-코드16
+코드15
 $ python run_gru.py --hidden_size=30
 0th iteration -> loss=58.4429
 0th iteration -> loss=60.8093
@@ -720,10 +720,10 @@ $ python run_gru.py --hidden_size=30
 run_gru.py에서는 chapter1/gru_lm/input_data.txt를 학습한다. 이 데이터는 "she sells sea shells by the sea shore. the shells she ~"로 반복되는 텍스트 데이터이다. 이 데이터를 학습 데이터로 사용한 이유는 이 책을 학습할 때 수월하게 하기 위해서이다. 보통 언어 모델을 학습하려면 고성능의 컴퓨팅 리소스를 필요로 한다. 하지만 공부를 목적으로 고성능의 컴퓨팅 리소스를 반드시 사용해야 한다면 그것은 효율적이지 않다. 따라서 일반적인 노트북 사양에서도 동작하는 언어 모델을 만들어 볼 수 있도록 데이터의 양과 복잡성을 크게 제한했다.
 
 1.4.3. GRU 언어 모델로 문장 생성하기
-마지막으로 <s>부터 문장을 생성해보자. 문장을 생성하는 generate_sentence_from_bos 함수는 [코드17]과 같이 구현할 수 있다.
+마지막으로 <s>부터 문장을 생성해보자. 문장을 생성하는 generate_sentence_from_bos 함수는 [코드16]과 같이 구현할 수 있다.
 
 <코드 시작>
-코드17
+코드16
 # chapter1/gru_lm/generate.py 참고
 def generate_sentence_from_bos(model, vocab, bos=1):
     '''
@@ -786,16 +786,17 @@ def generate_sentence_from_bos(model, vocab, bos=1):
     return generated_sentence
 <코드 끝>
 
-추론 과정에서는 label이 없기 때문에 모델의 output에서 가장 큰 값인 topi를 찾아서 그 값을 다음 iteration의 입력으로 사용하게 된다. 그러다가 topi가 eos와 같을 경우에는 문장 생성이 종료된 것으로 간주하고 generated_sentence를 리턴한다. 정상적으로 실행될 경우 아래와 같은 문장을 생성하게 된다.
-
-<블록 시작>
-<s> for if she sells sea shells by the sea shore then i'm sure she sells sea shore shells.
-<블록 끝>
-
-마지막으로 [블록6]에서는 hidden_size 변화에 따른 모델의 문장 생성 능력을 비교하고 있다. hidden_size=1과 hidden_size=30으로 각각 모델링을 한 후 학습된 모델로 문장을 생성하면 [블록6]과 같이 큰 차이를 나타낸다. hidden_size 외의 다른 조건은 동일하게 학습했다.
+추론 과정에서는 label이 없기 때문에 모델의 output에서 가장 큰 값인 topi를 찾아서 그 값을 다음 iteration의 입력으로 사용하게 된다. 그러다가 topi가 eos와 같을 경우에는 문장 생성이 종료된 것으로 간주하고 generated_sentence를 리턴한다. 정상적으로 실행될 경우 [블록6] 같은 문장을 생성하게 된다.
 
 <블록 시작>
 블록6
+<s> for if she sells sea shells by the sea shore then i'm sure she sells sea shore shells.
+<블록 끝>
+
+마지막으로 [블록7]에서는 hidden_size 변화에 따른 모델의 문장 생성 능력을 비교하고 있다. hidden_size=1과 hidden_size=30으로 각각 모델링을 한 후 학습된 모델로 문장을 생성하면 [블록7]과 같이 큰 차이를 나타낸다. hidden_size 외의 다른 조건은 동일하게 학습했다.
+
+<블록 시작>
+블록7
 # hidden_size = 1로 학습한 경우, 
 # $ python run_gru.py --hidden_size=1
 generated_sentence: <s> sea sea sea sea sea sea sea sea <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
