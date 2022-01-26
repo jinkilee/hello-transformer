@@ -30,7 +30,7 @@ https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf
 이 문제를 해결할 수 있는 방법이 바로 메타 러닝이다. 일반적인 기계학습에서의 학습과 메타 러닝을 이미지를 통해 간단하게 설명해보면 [그림1]과 같다.
 
 <그림 시작>
-그림1
+그림1: 기계학습과 메타러닝에서의 학습/평가 데이터셋 구성 차이
 중고거래 사이트 이미지 분류 모델 학습/평가 데이터셋 (기계학습 vs 메타러닝)
 <그림 끝>
 
@@ -39,10 +39,10 @@ https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf
 이 절에서 사용한 중고거래 사이트 예시로 돌아가보자. 모델을 처음 만들었을 때 메타 러닝을 고려해서 만들었다면 2010년도에 스마트폰이 나온 후에 추가적인 학습을 하지 않아도 된다. 간단하게 스마트폰 사진 몇 장과 스마트폰이 아닌 다른 클래스의 사진 몇 장을 모델에 입력으로 넣어주면 스마트폰인지 아닌지 구분할 수 있게 된다. [그림2]를 보자.
 
 <그림 시작>
-그림2
+그림2: 서포트 데이터셋과 쿼리 데이터셋을 이용한 메타러닝 모델 동작 구조
 <그림 끝>
 
-스마트폰에 대한 학습이 전혀 진행되지 않았어도 [그림2]와 같이 스마트폰을 분류할 수 있다. [그림2]의 모델은 메타 러닝 기법을 이용해서 학습된 모델이기 때문에 서로 다른 클래스로 구성된 이미지셋을 입력으로 넣었을 경우 같은 분류의 클래스끼리 묶어줄 수 있다. 서로 다른 클래스의 이미지를 구분할 수 있는 능력을 학습한 모델인 셈이다. 그래서 메타 러닝을 학습하는 방법을 학습하는 것이라고 정의하기도 한다.
+스마트폰에 대한 학습이 전혀 진행되지 않았어도 [그림2]와 같이 스마트폰을 분류할 수 있다. [그림2]의 모델은 메타 러닝 기법을 이용해서 학습된 모델이기 때문에 서로 다른 클래스로 구성된 이미지셋을 입력으로 넣었을 경우 같은 분류의 클래스끼리 묶어줄 수 있다. 서로 다른 클래스의 이미지를 구분할 수 있는 능력을 학습한 모델인 셈이다. 그래서 메타 러닝은 학습하는 방법을 학습하는 것이라고 정의하기도 한다.
 
 메타 러닝은 쉽지 않다. 특히 자연어처리 영역에 있어서 메타 러닝은 GPT2나 GPT3를 제외하고는 크게 주목받은 연구는 없었다. 이번 절에서는 메타 러닝 개념을 우리의 생활에 친숙한 예제를 통해서 알아봤다. 다음 절에서는 코드를 통해서 메타 러닝을 공부해보자.
 
@@ -116,7 +116,7 @@ kitchen_housewares
 메타 러닝을 학습하기 위해서 N-way, K-shot 방식을 사용하려고 한다. N-way의 N은 클래스의 개수이다. Amazon 리뷰 데이터셋에서는 positive/negative 두 개의 클래스를 구분하기 때문에 N은 2이다. K-shot의 K는 서포트 데이터셋의 개수이다. 6.1절에서 메타 러닝은 학습하는 것을 학습하는 기법이라고 소개했는데 이것을 가능하게 하는 방법 중 하나가 서포트 데이터셋을 활용하는 것이다. 메타 러닝에서 하나의 배치 데이터셋은 서포트 데이터셋과 쿼리 데이터셋으로 나뉘어 있다. 메타 러닝 모델은 쿼리 데이터와 서포트 데이터의 관계를 학습한다. [그림3]을 보면 하나의 배치 데이터셋이 64개로 이루어져 있다. 앞에 10개는 positive/negative 데이터셋을 각각 5개씩 가지고 있고, 뒤에 54개가 쿼리 데이터셋으로 positive/negative 데이터가 각각 27개씩 있다. 이번 절에서 사용하는 메타 러닝 모델은 각 배치에 대하여 서포트 데이터와 쿼리 데이터를 각각 인코딩한 후, 인코딩된 서포트 데이터셋과 인코딩된 쿼리 데이터를 이용해서 쿼리 데이터의 정답을 맞추는 방법으로 학습된다. 
 
 <그림 시작>
-그림3
+그림3: 2-way 5-shot으로 학습시 배치 데이터셋의 구성
 <그림 끝>
 
 이렇게 학습된 메타 러닝 모델은 새로운 물품에 대한 리뷰 데이터셋에도 쓰일 수 있다. 다만 몇 개의 서포트 데이터가 필요하다. 메타 러닝으로 학습돼 있지 않다면 새로운 물품에 대한 학습/검증/테스트 데이터셋을 최소 몇 만건 정도 수집해야 하며 수집 후에도 모델을 새로 학습해서 시스템에 새로 적용해야 한다. 따라서 메타 러닝 방식이 훨씬 효율적이라고 할 수 있다.
@@ -127,7 +127,7 @@ kitchen_housewares
 우선 데이터셋과 데이터로더를 만들어보자.
 
 <코드 시작>
-코드1
+코드1: 아마존 데이터셋 클래스 정의하기
 class AmazonDataset():
     def __init__(self, data_path, tokenizer, dtype):
         self.data_path = data_path
@@ -179,7 +179,7 @@ class AmazonDataset():
 [코드1]은 Amazon 리뷰 데이터셋을 읽어서 AmazonDataset 객체로 만드는 클래스이다. AmazonDataset을 학습/검증/테스트 용으로 용도를 나눠서 각각 따로 객체를 만들었다. [코드2]를 참고하라.
 
 <코드 시작>
-코드2
+코드2: 아마존 데이터셋 객체 생성하기
 train_dataset = AmazonDataset(data_path, tokenizer, 'train')
 dev_dataset = AmazonDataset(data_path, tokenizer, 'dev')
 test_dataset = AmazonDataset(data_path, tokenizer, 'test')
@@ -188,7 +188,7 @@ test_dataset = AmazonDataset(data_path, tokenizer, 'test')
 각각의 AmazonDataset 객체를 이용해서 데이터로더를 만들어보자. [코드3]은 AmazonDataLoader 클래스를 정의하는 __init__ 함수에 대한 구현이다.
 
 <코드 시작>
-코드3
+코드3: 아마존 데이터셋에 대한 데이터로더 클래스 정의하기
 class AmazonDataLoader():
     def __init__(self, dataset, batch_size, n_support):
         assert n_support % 2 == 0, 'n_support should be multiple of 2'
@@ -219,7 +219,7 @@ class AmazonDataLoader():
 메타 러닝의 학습이나 테스트 과정에서 데이터를 배치 단위로 만드는 코드는 [코드4]를 참고하라. [코드4]는 학습을 위한 배치를 생성하는 코드이다.
 
 <코드 시작>
-코드4
+코드4: 서포트/쿼리 데이터셋으로 배치 입력 만들기
 def get_batch(self):
 	category = self.categories[self.idx % len(self.categories)]
 	neg = self.neg[category]
@@ -275,7 +275,7 @@ def get_batch(self):
 AmazonDataLoader를 이용해서 배치 데이터를 생성해내는 코드는 [코드5]를 참고하자.
 
 <코드 시작>
-코드5
+코드5: 아마존 데이터셋에 대한 메타러닝 모델 학습을 위해 배치 입력 데이터 생성해보기
 train_dataset = AmazonDataset(data_path, tokenizer, 'train')
 dev_dataset = AmazonDataset(data_path, tokenizer, 'dev')
 test_dataset = AmazonDataset(data_path, tokenizer, 'test')
@@ -298,7 +298,7 @@ torch.Size([64, 602]) tensor(0.5000)
 Amazon 리뷰 데이터셋의 데이터셋과 데이터로더를 만들었다. 이제 메타 러닝을 위한 모델 클래스를 구현해보자.
 
 <코드 시작>
-코드6
+코드6: 아마존 데이터셋에 대한 메타러닝 모델 클래스 정의하기
 class FewShotInduction(nn.Module):
     def __init__(self, C, S, vocab_size, embed_size, hidden_size, d_a,
                  iterations, outsize, weights=None):
@@ -317,7 +317,7 @@ class FewShotInduction(nn.Module):
 [코드6]을 보면 Encoder가 배치로 입력되는 데이터 x를 인코딩해서 support_encoder와 query_encoder로 나눠준다. support_encoder를 Induction 클래스를 이용해서 class_vector를 생성하고, class_vector와 query_encoder를 이용해서 확률 probs를 생성한다. Encoder, Induction 그리고 Relation 서브 클래스의 구현은 chapter6/model.py를 참고하면 된다.
 
 <코드 시작>
-코드7
+코드7: 아마존 데이터셋에 대한 메타러닝 모델 객체 정의하기
 support = 5
 model = FewShotInduction(C=2,
                          S=support,
@@ -335,7 +335,7 @@ model = model.cuda()
 학습을 시작하기 전에 [코드8]에서 Criterion 클래스를 보자.
 
 <코드 시작>
-코드8
+코드8: N-way 5-shot을 위한 Criterion 클래스 정의하기
 class Criterion(_Loss):
     def __init__(self, way=2, shot=5):
         super(Criterion, self).__init__()
@@ -360,7 +360,7 @@ class Criterion(_Loss):
 메타 러닝 모델 학습을 위한 모든 과정을 코드와 함께 설명했다. [코드8]은 앞서 설명한 내용을 바탕으로 실제로 메타 러닝 모델을 학습하는 부분이다.
 
 <코드 시작>
-코드8
+코드8: 아마존 데이터셋을 이용해 메타러닝 모델 학습하기
 dev_interval = 100
 best_acc = -1.0
 tbar = tqdm(range(1, 10000))
@@ -437,7 +437,7 @@ Better acc! Saving model! -> 0.7551
 마지막으로 [코드9]에서는 학습된 메타 러닝 모델을 이용해서 테스트셋에 대한 정확도를 구하는 것을 구현했다.
 
 <코드 시작>
-코드9
+코드9: 학습된 메타러닝 모델 평가하기
 def test():
     model.eval()
     correct = 0.
@@ -465,7 +465,7 @@ Test Acc: 0.6549707651138306
 마지막으로 [코드8]에서 학습한 메타 러닝 모델이 제대로 학습된 것인지를 확인하기 위해 서포트 셋을 사용하지 않고(support=0) 학습해보자. 
 
 <코드 시작>
-코드10
+코드10: support=0으로 학습한 모델에 대한 평가하기
 # suppport=0으로 학습한 결과
   1%|          | 101/9999 [00:17<1:28:42,  1.86it/s, loss=tensor(0.2704, device='cuda:0', grad_fn=<MeanBackward0>)]
 Better acc! Saving model! -> 0.5959
@@ -484,7 +484,7 @@ Test Acc: 0.5084260702133179
 support=0으로 세팅해서 메타러닝을 하지 않을 경우에는 [코드10]과 같이 정확도가 0.5정도 나온다. 따라서 서포트 데이터셋을 통해서 쿼리 데이터셋을 예측하는 기법, 즉 메타 러닝 기법을 통해서 학습을 위한 학습이 가능하다고 말할 수 있다. support=5로 학습한 모델과 support=0으로 학습한 모델의 confusion matrix를 [표1]을 통해서 확인해보자. 서포트 데이터셋을 사용해서 학습한 모델이 훨씬 좋은 모델임을 알 수 있다.
 
 <표 시작>
-표1
+표1: support 수의 차이에 따른 메타러닝 모델의 성능 차이
 # support=5
 → neg/pos
 ↓ 0/1
@@ -511,7 +511,7 @@ We demonstrate language models can perform down-stream tasks in a zero-shot sett
 GPT2 논문의 Approach 섹션을 보면 일반적인 언어 모델의 공식을 P(output|input)으로 표현했다. 예를 들어서 텍스트 분류 모델을 학습했을 경우 주어진 입력 값에 대해서 positive=1, negative=0를 출력할 확률을 구한다. GPT2에서는 한 발자국 더 나아가서 입력 값에 테스크 정보를 더한다. 즉, P(output|input,task) 형태로 언어 모델 공식을 정했다. 여기에서 태스크는 여러 가지 종류의 자연어 처리 태스크를 의미한다. 예를 들어 텍스트 분류, 기계 번역, 질의 응답 등등이 될 수 있다. 이렇게 테스크의 정보를 입력의 또 다른 조건 값으로 제공하는 것을 태스크 컨디셔닝이라고 소개하고 있고, 태스크를 제공하는 방법은 자유로운 방식으로 가능하다고 설명하고 있다.
 
 <블록 시작>
-블록4
+블록4: 태스크 컨디셔닝 예시
 기계어 번역 태스크: (translate to french, english text, french text)
 질의응답 태스크: (answer the question, document, question, answer)
 <블록 끝>
@@ -539,7 +539,7 @@ and is then expected to complete further instances of the task simply by predict
 GPT3논문에서 in-context learning 개념을 [그림4]을 통해서 설명하고 있다.
 
 <그림 시작>
-그림4
+그림4: in-context learning 개념
 GPT3에 있는 in-context learning 그림
 https://arxiv.org/pdf/2005.14165.pdf
 <그림 끝>
@@ -583,7 +583,7 @@ Whether the Ministry of Gender Equality & Family should remain in existence agai
 [블록6]의 문장은 코리아 헤럴드 기사의 일부이다. GPT2를 통해서 그 다음 문장들을 생성해보자.
 
 <코드 시작>
-코드11
+코드11: GPT2 모델 로드하기
 MODEL_CLASSES = {
     'gpt2': (GPT2LMHeadModel, GPT2Tokenizer),
 }
@@ -601,7 +601,7 @@ model.eval()
 [코드11]은 GPT2 모델을 로딩하는 코드이다. 전체 코드는 이 책의 레포지토리에서 chapter6/gpt2-generation-example.ipynb를 참고하면 된다.
 
 <코드 시작>
-코드12
+코드12: GPT2를 이용해 문장 생성하기
 prompt = f"Whether the Ministry of Gender Equality & Family should remain in existence again surfaced as a hot button issue Friday "
 text = generate(model, tokenizer, prompt)
 
@@ -617,7 +617,7 @@ text = generate(model, tokenizer, prompt)
 사전학습된 GPT2를 이용해서 퓨샷 러닝을 해보자. 파인튜닝 없이 사전학습된 GPT2를 로딩한 후 퓨샷 세팅으로 간단한 실행을 해보자. 이 절의 소스코드는 레포지토리의 chapter6/gpt2-verb-example.ipynb를 참고하면 된다. 이 절에서는 예제 소스코드를 통해서 GPT2가 패턴을 이해하고 있다는 것을 확인해볼 것이다. 사용할 프롬프트는 [블록7]과 같다.
 
 <블록 시작>
-블록7
+블록7: GPT2 퓨샷 러닝을 위한 프롬프트 텍스트
 play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . click =
 <블록 끝>
 
@@ -628,7 +628,7 @@ play = played . sing = sang . view = viewed . act = acted . say = said . type = 
 이제 입력 값을 준비해보자. [코드12]를 통해 five_verbs.txt를 읽어서 텍스트 리스트 형태로 입력 값을 준비해보자.
 
 <코드 시작>
-코드12
+코드12: 퓨샷 러닝을 테스트할 동사 단어들
 verbs = []
 with open('five_verbs.txt', 'r') as f:
     for line in f:
@@ -641,7 +641,7 @@ with open('five_verbs.txt', 'r') as f:
 그 다음은 [코드12]에서 읽은 file_verbs.txt의 각 단어를 프롬프트의 마지막 끝에 입력해서 generate 함수에 넣어주면 된다. 이번 절에서는 10샷으로 설정했기 때문에 "원형 = 과거형"으로 이루어진 10개의 문장이 서포트셋으로 사용된다. 서포트셋과 최종적으로 사용할 프롬프트는 [블록8]를 통해 확인해보자.
 
 <블록 시작>
-블록8
+블록8: 퓨샷 러닝에서 사용되는 서포트셋과 프롬프트의 구성
 # 10개의 서포트셋
 play = played		# 1 shot
 sing = sang			# 2 shot
@@ -664,7 +664,7 @@ play = played . sing = sang . view = viewed . act = acted . say = said . type = 
 
 마지막으로 [코드13]을 통해서 [블록8]에서 준비한 5개의 프롬프트에 대한 결과를 확인해보자.
 <코드 시작>
-코드13
+코드13: 퓨샷 러닝을 통해 생성된 입력 데이터에 대한 과거형 동사
 plurals = []
 for verb in verbs:
     prompt = f"play = played . sing = sang . view = viewed . act = acted . say = said . type = typed . note = noted . see = saw . clean = cleaned . tell = told . {verb} ="
