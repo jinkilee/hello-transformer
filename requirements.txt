@@ -2,3 +2,5 @@ transformers==4.1.0
 jupyter
 sklearn
 matplotlib
+torch
+nltk
