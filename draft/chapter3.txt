@@ -444,158 +444,190 @@ N-gram 기반의 언어 모델에서는 N-gram 확률을 직접 곱해서 PPL을
 <블록 시작>
 블록3: 번역기 A, B, C의 결과
 번역할 문장: 알지? 나는 너를 항상 매우 사랑해.
-candidateA: know that I always love you that much.
-candidateB: You love I always.
-candidateC: I I I I I.
-정답1: You know, I always love you so much.
-정답2: Know right? I always love you a lot.
+후보문장A: know that I always love you that much.
+후보문장B: you love I always.
+후보문장C: I I I I I.
+정답문장1: you know I always love you so much.
+정답문장2: know right I always love you a lot.
 <블록 끝>
 
-굳이 BLEU 스코어를 계산하지 않아도 candidateA가 가장 좋은 문장이라는 것은 쉽게 알 수 있다. candidateB는 문법이 엉망이다. candidateC는 하나의 단어만 출력하고 있다. 여기에서는 제대로 BLEU 스코어를 구하는 방법을 알아보고 있으니 위의 candidate을 정답1과 정답2를 이용해서 평가해보자. 정답1과 정답2에서 나온 모든 단어를 열거해보면 [블록4]와 같다.
+굳이 BLEU 스코어를 계산하지 않아도 candidateA가 가장 좋은 문장이라는 것은 쉽게 알 수 있다. 후보문장B는 문법이 엉망이다. 후보문장C는 하나의 단어만 출력하고 있다. 여기에서는 제대로 BLEU 스코어를 구하는 방법을 알아보고 있으니 위의 후보문장들을 정답문장1과 정답문장2를 이용해서 평가해보자. BLEU를 계산하는 코드는 chapter3/bleu-example.ipynb를 참고하면 된다. 
+
+우선 BLEU 스코어를 구하는 방법에 대해서 알아보자. BLEU 스코어의 가장 처음 단계는 후보문장들의 단어 카운트를 세는 것부터 시작한다.
 
 <블록 시작>
-블록4: 정답으로 사용된 모든 단어들
-know right I always love you so much a lot
-<쁠록 끝>
-
-각각의 unigram count를 [블록4]의 단어들에 대해서 구한 후 candidateA, candidateB, candidateC의 단어 수로 나눠보자.
-
-<블록 시작>
-블록5: 번역기 A, B, C에 대한 unigram 스코어 계산
-candidateA: (know(1) + I(1) + always(1) + love(1) + you(1) + much(1)) / 8
-candidateB: (I(1) + always(1) + love(1) + you(1)) / 4
-candidateC: (I(5)) / 5
-<쁠록 끝>
-
-[블록5]를 보면 무언가 이상함을 느껴야 한다. 스코어를 구하고 있으니 스코어는 높어야 좋은 것인데 candidateB(4/4)와 candidateC(5/5)가 candidateA(6/8)보다 더 높다. 왜 그럴까? candidateB의 경우 순서를 고려하지 않았기 때문이고 candidateC의 경우에는 정답1, 정답2에는 한번 밖에 나오지 않았던 단어 I가 5번이나 나왔기 때문이다. candidateB의 경우 N-gram을 통해서 해결할 수 있고, candidateC의 경우 정답 문장에서 발현한 단어의 개수를 참고하는 조금 다른 카운팅 기법을 이용해서 해결할 수 있다. 단어의 실제 카운트 수와 비교해서 더 적은 카운트를 사용하는 것이다. 가령 정답1, 정답2에서 나온 you의 카운트 중 더 큰 수(2)와 candidateA에서 출현한 you의 개수(1)을 비교해서 더 적은 값(1)을 택하는 것이다. 이 방법을 modified unigram precision이라고 한다. unigram 대신에 N-gram을 사용하면 modified N-gram precision이 된다. modified unigram precision을 이용해서 candidate A~C를 다시 계산하면 [블록6]과 같은 결과를 얻을 수 있다.
-
-<블록 시작>
-블록6: 번역기 A, B, C에 대한 modified unigram 스코어 계산
-candidate A~C까지의 modified unigram precision
-0.3779644730092272 # know that I always love you that much.
-0.3423503955179092 # You love I always.
-0.3423503955179092 # I I I I I.
+블록4: 후보문장 A~C의 단어 카운트
+후보문장A: { 'know': 1, 'that': 2, 'I': 1, 'always': 1, 'love': 1, 'you': 1, 'much': 1 }
+후보문장B: { 'you': 1, 'love': 1, 'I': 1, 'always': 1 }
+후보문장C: { 'I': 5 }
 <블록 끝>
 
-candidateB의 경우 순서가 엉망이다. 이 순서를 고려하도록 N=1~4로 두고 modified N-gram precision을 수행해보자.
+[블록4]에서 카운트한 각 후보문장의 단어 개수와 실제 정답문장에서 사용되는 단어들을 비교해보자. 예를 들어 후보문장A를 이용해서 BLEU 스코어를 구한다고 했을 때, 후보문장A의 카운트를 정답문장1과 정답문장2의 카운트셋으로 비교하는 작업을 진행할 것이다. 정답문장1과 정답문장2의 카운트셋은 [블록5]와 같다.
 
 <블록 시작>
-블록7: 번역기 A, B, C에 대한 N-gram 스코어 계산
-# You love I always.
-modified 1-gram precision: 4/4
-modified 2-gram precision: 1/3
-modified 3-gram precision: 0/2
-modified 4-gram precision: 0/1
-<쁠록 끝>
+블록5
+정답문장1: { 'you': 1, 'know': 1, 'I': 1, 'always': 1, 'love': 1, 'you': 1, 'so': 1, 'much': 1 }
+정답문장2: { 'know': 1, 'right': 1, 'I': 1, 'always': 1, 'love': 1, 'you': 1, 'a': 1, 'lot': 1 }
+<블록 끝>
 
-[블록7]은 [코드8]을 실행해서 얻은 결과이다. [코드8]에는 modified N-gram precision을 구하는 함수가 구현돼 있다.
+정답문장1과 정답문장2에서 사용된 단어를 하나로 합쳐보자. 합칠 때 정답문장1과 정답문장2에서 동시에 나타나는 단어에 대해서는 둘 중 큰 값으로 사용하자. 예를 들어 정답문장1에서 know가 5번 나타났고 정답문장2에서 know가 8번 나타났다면 8을 사용한다. 정답문장1과 정답문장2를 합치면 [블록6]과 같이 합쳐질 수 있다. 정답문장1과 정답문장2에서는 모든 단어가 1씩 나타났으므로 모든 단어의 카운트 빈도는 1이 된다.
+
+<블록 시작>
+블록6
+정답문장 1&2: { 'you': 1, 'I': 1, 'always': 1, 'love': 1, 'so': 1, 'much': 1, 'know': 1, 'right': 1, 'a': 1, 'lot': 1 }
+<블록 끝>
+
+이제 [블록4]의 후보문장A와 [블록6]의 정답문장 1&2를 비교해보자. 기본적으로 BLEU 스코어는 정답문장에서 사용된 단어들이 후보문장에서 얼마나 자주 나타나는지를 나타내는 지표이다. 후보문장A에서 총 8개의 단어가 사용됐다. 그 중에서 정답문장 1&2에 나타난 단어의 카운트 수는 6개이다.
+
+<블록 시작>
+블록7
+후보문장A에서 나타난 단어 카운트의 합 -> know=1 + that=2 + I=1 + always=1 + love=1 + you=1 + much=1 -> 총 8
+후보문장A에서 나타난 단어가 후보문장A와 실제 정답문장 1&2에서 각각 몇 번씩 나왔는지 비교
+* know: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* that: 후보문장A에서 2번 출연했으나 실제 정답문장 1&2에서는 0번 출연 -> 0개 맞음
+* I: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* always: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* love: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* you: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* much: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+-> 총 6개 맞음
+후보문장A의 유니그램 정밀도: 6/8
+<블록 끝>
+
+[블록7]을 보면 유니그램 정밀도를 구하는 과정이 설명돼 있다. 후보문장A에서 사용된 단어들 중 실제로 정답으로 사용된 것이 몇 개인지를 카운트하는 단순한 계산이다. 후보문장A에서 know는 한번, that은 두번, I는 한번, always는 한번, love는 한번, you는 한번, much도 한번 사용됐다. 이 단어들이 전부다 정답지에서 같은 빈도로 나타나지 않았을 것이다. 정답문장 1&2에서 실제로 비교해봤더니, know는 실제로 한번 출연했다. 그러면 know는 맞는 것이다. 다음 단어인 that의 경우 후보문장A에서 2번 나왔는데 정답문장 1&2에서는 한번도 나오지 않았다. 즉 that은 두번 다 틀린 것이다. 마찬가지 원리로 I, always, love, you, much에 대해서 보면, 모두 후보문장A에서 한번씩 출연했고 실제 정답문장 1&2에서도 한번씩 출연했다. 즉 모두 정답이다. 따라서 최종적으로 후보문장A의 유니그램 정밀도는 6/8이 된다.
+
+그러면 후보문장A, 후보문장B, 후보문장C의 유니그램 정밀도를 모두 구해보자.
+
+<블록 시작>
+블록8
+# 후보문장A의 유니그램 정밀도: 6/8 -> [블록7] 참고
+
+# 후보문장B의 유니그램 정밀도:
+후보문장B에서 나타난 단어 카운트의 합 -> you=1 + love=1 + I=1 + always=1 -> 총 4
+후보문장B에서 나타난 단어가 후보문장B와 실제 정답문장 1&2에서 각각 몇 번씩 나왔는지 비교
+* you: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* love: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* I: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+* always: 후보문장A에서 1번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+-> 총 4개 맞음
+후보문장B의 유니그램 정밀도: 4/4
+
+# 후보문장C의 유니그램 정밀도:
+후보문장C에서 나타난 단어 카운트의 합 -> I=5 -> 총 5
+후보문장C에서 나타난 단어가 후보문장C와 실제 정답문장 1&2에서 각각 몇 번씩 나왔는지 비교
+* I: 후보문장C에서 5번 출연했으나 실제 정답문장 1&2에서는 1번 출연 -> 1개 맞음
+-> 총 1개 맞음
+후보문장C의 유니그램 정밀도: 1/5
+<블록 끝>
+
+[블록8]을 보기 전에도 뭔가 계산 방식이 이상하다는 것을 눈치챈 독자들이 있었을 것이다. 유니그램 방식으로 단어의 빈도 수만을 가지고 정밀도를 구하면 순서가 바뀌는 것을 고려할 수 없다. [블록8]을 보면 후보문장B는 "you love I always"인데, 이는 문법이 엉망이다. 그런데 이 단어들이 정답문장 1&2에서 모두 같은 수로 쓰였다는 이유 하나만으로 정밀도가 1이 된다. 이 문제를 해결하기 위해서 BLEU 스코어를 구할 떄는 기본적으로 유니그램부터 N-Gram까지 정밀도를 N번 구해서 각각 가중치를 준다. N을 4정도로 정해서 유니그램, 바이그램, 3-Gram, 4-Gram으로 후보문장A~C까지의 정밀도를 구해보자.
+
+<블록 시작>
+블록9
+# 후보문장A의 1~4그램 정밀도: 
+1-Gram: 6/8
+2-Gram: 3/7
+3-Gram: 2/6
+4-Gram: 1/5
+
+# 후보문장B의 1~4그램 정밀도: 
+1-Gram: 4/4
+2-Gram: 1/3
+3-Gram: 0/2
+4-Gram: 0/1
+
+# 후보문장C의 1~4그램 정밀도: 
+1-Gram: 1/5
+2-Gram: 0/4
+3-Gram: 0/3
+4-Gram: 0/2
+<블록 끝>
+
+그리고 1~4-Gram까지의 가중치를 각각 균등하게 0.25로 정하면, BLEU 스코어는 [블록9]에서 구한 1~4-Gram에 대한 정밀도에 Log를 씌운 후 0.25씩 가중치를 곱한 것을 합친다.
+
+<블록 시작>
+블록10
+# 후보문장A에 대한 가중치 적용 후 합
+0.25*log(6/8) + 0.25*log(3/7) + 0.25*log(2/6) + 0.25*log(1/5) = -0.9607575334852987
+
+# 후보문장B에 대한 가중치 적용 후 합
+0.25*log(4/4) + 0.25*log(1/3) + 0.25*log(0/2) + 0.25*log(0/1) = -9.48499344414321
+
+# 후보문장C에 대한 가중치 적용 후 합
+0.25*log(1/5) + 0.25*log(0/4) + 0.25*log(0/3) + 0.25*log(0/2) = -14.217870036072801
+<블록 끝>
+
+[블록10]에서 log(0)인 부분은 계산 불가능하므로 아주 작은 숫자 log(1/100000000)으로 치환 후 계산했다. BLEU 스코어는 [블록10]에서 구한 값 자연로그 e에 대한 exponential 함수를 취해준다.
+
+<블록 시작>
+블록11
+# 후보문장A에 대한 exponential 적용한 값
+exp(-0.9607575334852987) = 0.38260294162784475
+
+# 후보문장B에 대한 exponential 적용한 값
+exp(-9.48499344414321) = 7.598356856515924e-05
+
+# 후보문장C에 대한 exponential 적용한 값
+exp(-14.217870036072801) = 6.687403049764207e-07
+<블록 끝>
+
+마지막으로 [블록11]에 brevity penalty를 곱해준 값이 최종적으로 BLEU 스코어가 된다. brevity penalty는 후보문장의 길이와 정답문장의 길이를 비교해서 결정된다. 보통 후보문장은 한 개이고 정답문장은 여러 개가 있는데, 그 중에서 후보문장의 길이와 가장 차이가 적은 정답문장을 택한다. 그 정답문장의 길이와 후보문장의 길이를 비교해서, [코드8]에서와 brevity penalty를 구한다.
 
 <코드 시작>
-코드8: N-gram을 이용한 modified N-gram 계산하기
-def word_counter(tokens, n):
-    return Counter(ngrams(tokens, n))
-	
-def modified_count(candidate, references, n):
-    cand_cnt = word_counter(candidate.split(), n)
-    temp = Counter()
-    for ref in references:
-        tokens = ref.split()
-        ref_cnt = word_counter(tokens, n)
-        for k, v in ref_cnt.items():
-            if k in temp:
-                temp[k] = max(ref_cnt[k], temp[k])
-            else:
-                temp[k] = ref_cnt[k]
-    
-    return Counter({tok:min(temp[tok], cand_cnt[tok]) for tok in cand_cnt})
-	
-def modified_ngram_precision(candidate, references, n):
-    min_cnt = modified_count(candidate, references, n)
-    total_cnt = word_counter(candidate.split(), n)
-    
-    min_cnt_sum = sum(min_cnt.values())
-    total_cnt_sum = sum(total_cnt.values())
-    #print('modified {}-gram precision: {}/{}'.format(n, min_cnt_sum, total_cnt_sum))
-    return min_cnt_sum / total_cnt_sum
-	
-
-	
->>> candidate = 'You love I always'
->>> references = [
->>>     'You know, I always love you so much',
->>>     'Know right? I always love you a lot',
->>> ]
->>> for i in range(4):
->>>     modified_ngram_precision(candidate, references, i+1)
-<코드 끝>
-
-[코드8]에서는 N-gram을 N=1~4로 두고 실행했다. 각 결과를 보면 unigram일 때는 순서를 해석할 수 없기 때문에 precision이 1.0으로 계산됐지만 bi-gram만 보더라도 precision이 크게 떨어지는 것을 알 수 있다. BLEU 스코어를 구할 때는 1~N까지의 precision에 가중치를 준다. 이 가중치는 정해져있지 않지만 합이 1이 되는 형태로 정의하면 된다.
-
-최종적으로 BLEU 스코어는 [코드9]과 같이 구할 수 있다.
-
-<코드 시작>
-코드9: BLEU 스코어 계산하기
-def brevity_penalty(candidate, references):
-    candidate = candidate.lower()
-    cand_len = len(candidate.split())
-    diff = np.inf
-    for ref in references:
-        ref = ref.lower()
-        tokens = ref.split()
-        if diff > abs(len(tokens) - cand_len):
-            ref_len = len(tokens)
-            diff = abs(len(tokens) - cand_len)
-            
-    if cand_len > ref_len:
+코드8
+def brevity_penalty(closest_ref_len, hyp_len):
+	'''
+	closest_ref_len: 후보문장과 가장 길이 차이가 작은 문장의 길이
+	hyp_len: 후보문장의 길이의 길이
+	'''
+    if hyp_len > closest_ref_len:
         return 1
-    elif cand_len == 0:
+    elif hyp_len == 0:
         return 0
     else:
-        return np.exp(1 - ref_len/cand_len)
-		
-def bleu_score(candidate, reference_list):
-    candidate = candidate.lower()
-    cand_len = len(candidate.split())
-    weights = [1/cand_len] * cand_len
-    bp = brevity_penalty(candidate, references)
-    precisions = [modified_ngram_precision(candidate, references, n=i+1) for i in range(len(weights))] 
-    
-    score = 0
-    for w, p in zip(weights, precisions):
-        if p == 0:
-            continue
-        score += (w * np.log(p))
-    
-    return bp * np.exp(score)
+        return math.exp(1 - closest_ref_len / hyp_len)
 <코드 끝>
 
-[코드9]에서 함수 brevity_penalty에 대해서 간단하게 설명해보면, 짧은 문장은 precision이 높게 나올 가능성이 있기 때문에 그것에 대한 페널티를 주는 것이다. 예를 들어 번역 문장이 "it is"라고 해보자. "it is"는 자주 나올 가능성이 높은 조합이다. 이것만으로 정답 문장들과 precision을 비교해보면 당연히 높게 나올 수 밖에 없다. 그것을 해결하기 위해서 [수식2]와 같은 공식을 이용해서 짧은 문장에 대해서는 페널티를 주는 것이다.
+후보문장의 길이가 더 길 경우에는 brevity penalty가 1이다. 그 이유는 이미 N-Gram 방식을 통해서 패널티를 적용 받고 있기 때문에 추가적인 패널티를 주지 않은 것이다. 그런데 후보문장의 길이가 더 짧을 경우에는 엉망으로 번역된 문장임에도 불구하고 유니그램 또는 바이그램 정밀도가 생각보다 높게 나오는 경우가 발생한다. 후보문장B의 바이그램 카운트가 그런 경우이다. [블록10]을 보면 후보문장B의 바이그램 정밀도는 1/3으로 문법이 엉망인 것에 비하면 생각보다 정밀도가 높다. 정밀도를 조금 더 자세하게 분석해보자. 후보문장B의 바이그램 카운트에서는 "you know" 밖에 맞은 것이 없는데도 불구하고 생각보다 분모부분이 크지 않아서 정밀도 값이 상대적으로 높게 나온 경우이다. 이런 경우에 대한 패널티를 적용하기 위해서 [코드8]과 같이 brevity penalty를 적용하는 것이다.
+ 
+[코드8]의 규칙으로 후보문장A~C의 brevity penalty를 계산하면 [블록12]와 같은 결과를 갖는다.
 
-<수식 시작>
-수식2: brevity penalty 계산 공식
-<수식 끝>
+<블록 시작>
+블록12
+# 후보문장A의 brevity penalty
+후보문장의 길이 = 8
+후보문장과 가장 길이 차이가 적은 정답문장의 길이 = 8
+brevity penalty = 1
 
-BLEU 스코어를 구하는 공식을 최종적으로 구현했으니 [코드9]을 이용해서 sentence A~C까지의 최종 BLEU 스코어를 구해보면 [표3]와 같은 결과를 얻을 수 있다.
+# 후보문장B의 brevity penalty
+후보문장의 길이 = 4
+후보문장과 가장 길이 차이가 적은 정답문장의 길이 = 8
+brevity penalty = 0.36787944117144233
 
-<표 시작>
-표3: BLEU 스코어 비교
-cand = 'know that I always love you that much.'
-bleu_score(cand, references)
-0.6046116297711386
+# 후보문장C의 brevity penalty
+후보문장의 길이 = 5
+후보문장과 가장 길이 차이가 적은 정답문장의 길이 = 8
+brevity penalty = 0.5488116360940264
+<블록 끝>
 
-cand = 'you love I always.'
-bleu_score(cand, references)
-0.30934850332660563
+[블록12]에서 구한 brevity penalty와 [블록11]에서 구한 exponential 값을 곱해준 것이 최종적인 BLEU 스코어이다.
 
-cand = 'I I I I I.'
-bleu_score(cand, references)
-0.5488116360940264
-<표 끝>
+<블록 시작>
+블록13
+# 후보문장A의 BLEU 스코어
+bleu score = 1 * 0.38260294162784475 = 0.38260294162784475
+
+# 후보문장B의 BLEU 스코어
+bleu score = 0.36787944117144233 * 7.598356856515924e-05 = 2.795279274196275e-05
+
+# 후보문장C의 BLEU 스코어
+bleu score = 0.5488116360940264 * 6.687403049764207e-07 = 3.670124608961276e-07
+<블록 끝>
 
 트랜스포머의 BLEU 스코어는 EN-FR(영어 → 프랑스어)와 EN-DE(엉어 → 독일어) 모델에서 모두 SOTA를 기록했다. 
 
 <표 시작>
-표4: 트랜스포머의 BLEU 스코어
+표3: 트랜스포머의 BLEU 스코어
 논문에 BLEU SOTA 표
 Transformer (big) 28.4 41.8
 <표 끝>
