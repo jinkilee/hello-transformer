@@ -252,11 +252,11 @@ Label	sentence
 https://nyu-mll.github.io/CoLA/
 <표 끝>
 
-이 책의 레포지토리에서 "research/cola_classification/classifier.ipynb" 주피터 노트북에 텍스트 분류를 위한 모델을 구현했다. 택스트 분류를 위한 데이터는 [코드2]와 같이 다운로드하면 된다.
+이 책의 레포지토리에서 "chapter4/cola_classification/classifier.ipynb" 주피터 노트북에 텍스트 분류를 위한 모델을 구현했다. 택스트 분류를 위한 데이터는 [코드2]와 같이 다운로드하면 된다.
 
 <코드 시작>
 코드2: CoLA 데이터셋 다운로드하기
-$ cd research/cola_classification
+$ cd chapter4/cola_classification
 # 데이터셋 백업
 $ wget https://nyu-mll.github.io/CoLA/cola_public_1.1.zip
 $ unzip cola_public_1.1.zip
@@ -340,7 +340,7 @@ class BertPooler(nn.Module):
         return pooled_output
 <코드 끝>
 
-BertForSequenceClassification 모델을 이용해서 CoLA 데이터셋을 학습시킨 부분이 [코드5]이다. 전체 코드는 "research/cola_classification/classifier.ipynb"에서 살펴보자.
+BertForSequenceClassification 모델을 이용해서 CoLA 데이터셋을 학습시킨 부분이 [코드5]이다. 전체 코드는 "chapter4/cola_classification/classifier.ipynb"에서 살펴보자.
 
 <코드 시작>
 코드5: BERT를 이용한 문장 분류 모델 학습하기
@@ -621,7 +621,7 @@ class BertForQuestionAnswering(BertPreTrainedModel):
         )
 <코드 끝>
 
-[코드11]에 정의한 모델을 사용해서 질의응답 모델을 학습할 수 있다. 질의응답 모델의 학습은 research/squad/squad-training.ipynb를 참고하면 된다. 학습을 진행하면 [블록11]과 같이 Loss가 감소하게 된다.
+[코드11]에 정의한 모델을 사용해서 질의응답 모델을 학습할 수 있다. 질의응답 모델의 학습은 chapter4/squad/squad-training.ipynb를 참고하면 된다. 학습을 진행하면 [블록11]과 같이 Loss가 감소하게 된다.
 
 <블록 시작>
 블록11: BERT를 이용한 질의응답 모델 학습하기
@@ -813,7 +813,7 @@ number of BERT Encoder parameters: 85054464
 number of ALBERT Encoder parameters: 7186944
 <블록 끝>
 
-BERT 인코더 파라미터의 개수는 ALBERT 인코더 파라미터 개수의 약 11.8배이다. 임베딩과 인코더의 파라미터 개수를 비교하는 코드는 research/chapter5/parameter_count_comparision.ipynb을 통해 확인하면 된다.
+BERT 인코더 파라미터의 개수는 ALBERT 인코더 파라미터 개수의 약 11.8배이다. 임베딩과 인코더의 파라미터 개수를 비교하는 코드는 chapter4/parameter_count_comparision.ipynb을 통해 확인하면 된다.
 
 여기에서 한번 비판적으로 생각해보자. Cross-layer parameter sharing 기법에서 파라미터 개수를 줄이는 원리는 굉장히 간단하다. 하지만 ALBERT처럼 하나의 AlbertLayer를 만들어서 그것을 반복해서 사용해도 모델의 성능상 문제가 없을까? [코드14]에서 AlbertLayer 한 개로 입력 x값을 계속 업데이트하고 있다. for 문의 각 단계에서 x가 업데이트되기 전과 후의 L2 거리와 코사인 거리를 구해서 그것을 그래프로 그리면 [그림10]과 같이 그릴 수 있다. 
 
@@ -832,7 +832,7 @@ Bai et al. (2019) (Deep Equilibrium Models, DQE) for Transformer networks. Diffe
 observations, Dehghani et al. (2018) show that UT outperforms a vanilla Transformer.
 <인용 끝>
 
-research/chapter5/albert_parameter_sharing.ipynb를 보면 [그림10]과 같이 입력 x와 업데이트된 x의 차이가 점차 줄어들게 되는 것을 보여주고 있다.
+chapter4/albert_parameter_sharing.ipynb를 보면 [그림10]과 같이 입력 x와 업데이트된 x의 차이가 점차 줄어들게 되는 것을 보여주고 있다.
 
 4.5.3. Sentence order prediction
 ALBERT에서 또 하나 집고 넘어가야 할 부분이 SOP(Sentence Order Prediction)이다. BERT에서의 NSP가 언어 모델을 학습하는데 있어서 유용한지에 대한 의구심이 있어서 NSP를 조금 다른 방식으로 변형한 것이다. SOP는 두 개의 연결된 문장을 사용한다. 그리고 문장의 순서를 바꾸지 않으면 1, 바꾸면 0으로 정의하고 학습한다.
