@@ -10,6 +10,8 @@ from torch.nn.utils.rnn import pad_sequence
 from model import GRULanguageModel
 from dataset import GRULanguageModelDataset
 
+nltk.download('punkt')
+
 def collate_fn(batch):
     batch = pad_sequence(batch, batch_first=True)
     return batch
