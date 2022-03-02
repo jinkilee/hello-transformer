@@ -110,7 +110,7 @@ class SquadDataset(Dataset):
                 is_training=True if not is_inference else False)
             print('is_training: {}'.format(True if not is_inference else False))
 
-            torch.save(self.examples, cached_examples_file)
+            # torch.save(self.examples, cached_examples_file)
             torch.save(self.features, cached_features_file)
 
         '''
