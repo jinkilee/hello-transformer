@@ -4,3 +4,4 @@ sklearn
 matplotlib
 torch
 nltk
+sentencepiece
