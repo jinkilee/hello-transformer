@@ -1,3 +1,8 @@
+'''
+아래의 코드는 SQuAD 2.0 데이터셋을 다운로드하는 공식 홈페이지에서 공개한 평가 스크립트입니다.
+reference: https://rajpurkar.github.io/SQuAD-explorer/
+'''
+
 """Official evaluation script for SQuAD version 2.0.
 
 In addition to basic functionality, we also compute additional statistics and
