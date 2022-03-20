@@ -1,3 +1,8 @@
+'''
+SQuAD 데이터셋에 대한 평가 스크립트입니다. pytorch-transformers에서 구현한 내용을 참고했습니다.
+reference: https://github.com/nlpyang/pytorch-transformers/blob/master/examples/run_squad.py
+'''
+
 # coding=utf-8
 # Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
