@@ -31,6 +31,13 @@ class SquadExample():
 
 class SquadDataset(Dataset):
     def __init__(self, path, tokenizer, is_train=True, is_inference=False):
+        '''
+        path: SquadDataset 데이터셋 위치
+        tokenizer: Squad 데이터셋을 토크나이징할 토크나이저, ex) BertTokenizer
+        is_train: SquadDataset을 정의하는 목적이 모델 학습용일 경우 True, 그렇지 않으면 False
+        is_inference: SquadDataset을 정의하는 목적이 인퍼런스용일 경우 True, 그렇지 않으면 False
+        '''
+        
         if is_train:
             filename = os.path.join(path, 'train-v2.0.json')
         else:
