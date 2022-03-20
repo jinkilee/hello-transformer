@@ -1,3 +1,9 @@
+'''
+Squad 데이터셋을 처리하기 위한 함수들입니다. 이 소스코드는 pytorch-transformers에서 구현돼 있는 소스코드입니다.
+
+reference: https://github.com/nlpyang/pytorch-transformers/blob/master/examples/utils_squad.py
+'''
+
 import collections
 from tqdm import trange
 
