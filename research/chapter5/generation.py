@@ -1,3 +1,8 @@
+'''
+아래의 소스코드는 아래의 깃헙의 구현을 사용했습니다.
+
+https://github.com/rakeshchada/gpt2-singular-plural/blob/master/generate_plural.py
+'''
 import torch
 import torch.nn.functional as F
 
