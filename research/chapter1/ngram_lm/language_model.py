@@ -61,15 +61,6 @@ class SimpleNgramLanguageModel():
                 return ncount / mcount
             return {v: ngram_prob(v, c) for v, c in nvocab.items()}
 
-    def smoothing(smt_type='laplace'):
-        if smt_type == 'laplace':
-            return None
-        elif smt_type == 'add_one':
-            return None
-
-    def generate_sentence(self):
-        return 'hello'
-
     def build_vocab(self, data):
         vocab = {}
         for d in data:
