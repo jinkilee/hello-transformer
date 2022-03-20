@@ -3,6 +3,12 @@ from torch.utils.data import DataLoader
 
 class SquadDataLoader(DataLoader):
     def __init__(self, dataset, batch_size, is_inference=False, shuffle=True):
+        '''
+        dataset: SquadDataset으로 정의한 데이터셋 객체
+        batch_size: 배치 사이즈
+        is_inference: SquadDataLoader를 인퍼런스 목적으로 사용할 경우 True, 그렇지 않으면 False
+        shuffle: 데이터의 순서를 섞을 경우 True, 그렇지 않으면 False
+        '''
         self.is_inference = is_inference
         super().__init__(dataset, collate_fn=self.squad_collate_fn, batch_size=batch_size, shuffle=shuffle)
         
