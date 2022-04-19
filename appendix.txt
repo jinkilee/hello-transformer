@@ -1,0 +1,47 @@
+# 부록
+https://openreview.net/pdf?id=rJ4km2R5t7
+Sparse Attention -> longformer, bigbird
+
+Performer?
+
+3. GLUE 데이터셋
+NLP 모델을 평가하기 위한 데이터셋 중에서 가장 많이 사용되는 데이터셋으로 GLUE를 들수 있다. GLUE는 General Language Understanding Evaluation의 약자이다. 언어 능력을 평가할때 글의 핵심을 파악하는 능력, 문맥의 순서를 파악하는 능력 등등 여러가지 평가 기준이 있다. GLUE는 9개의 서브테스크로 언어 모델의 성능을 평가한다. 9개의 서브테스크는 CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, RTE, WNLI이며, 이 서브테스크들은 단일 문장 또는 문장 쌍들로 구성돼 있다. 이 장에서는 각각의 데이터셋이 어떤 문제들로 구성돼 있는지에 대해서 알아보자.
+
+3.1. CoLA 데이터셋
+Corpus of Linguistic Acceptability의 약자로, 영어 문장의 문법적인 수용성을 평가하는 데이터셋이다. 0은 문법적으로 수용되지 않는 문장을, 1은 문법적으로 수용되는 문장을 의미한다. CoLA 데이터셋의 레이블은 균형잡혀 있지 않는 unbalanced classification data이다. 평가할 때 사용되는 스코어는 Matthew correlation coefficient를 사용한다.
+
+3.2. SST-2 데이터셋
+Stanford Sentiment Treebank 데이터셋이다. 영화 리뷰에 대한 사람의 감정을 positive/negative로 나눈 데이터셋이다. SST-2는 accuracy를 통해 평가된다.
+
+3.3. MRPC
+MRPC(Microsoft Research Paraphrase Corpus)는 마이크로소프트에서 공개한 문장 쌍 데이터셋이고 온라인 뉴스로부터 자동으로 수집된 데이터셋이다. 이 데이터셋은 문장 쌍으로 되어 있고, 두 문장의 의미가 같은지 다른지를 0과 1로 판단하는 데이터셋이다. 이 데이터셋에 대한 평가는 accuracy와 F1 스코어로 측정한다.
+
+3.4. QQP
+QQP는 Quora로부터 확보한 질문을 쌍으로 연결해둔 데이터셋이다. Quora는 네이버 지식인과 비슷한 질의응답 웹사이트이다. Quora에는 중복된 질문이 많이 올라온다. 질문을 쌍으로 연결해서 중복된 질문인지 그렇지 않은지를 0과 1로 구분한 데이터셋이다. 이 데이터셋에 대한 평가는 accuracy와 F1 스코어로 측정한다.
+
+3.5. STS-B
+STS-B는 Semantic Textual Similarity Benchmark의 약자로 뉴스, 비디오, 이미지 캡션 등으로부터 추출한 문장 쌍 데이터셋이다. 각 데이터셋은 유사도 스코어를 1부터 5로 구분한 문장 쌍들로 구성돼 있다. 이 데이터셋에 대한 평가는 Pearson and Spearman correlation coefficient로 측정한다.
+
+3.6. MNLI
+MNLI 데이터셋은 Multi-Genre Natural Language inference의 약자이다. 이 데이터셋은 가설(hypothesis)이 전제(premise)를 수반(entailment)하는지, 모순(contradiction)하는지 또는 중립(neutral)적인지를 나타내는 데이터셋이다. 전제 데이터셋은 번역된 연설문이나 픽션 또는 정부의 리포트로부터 추출했다. 평가할 때는 accuracy로 측정한다. MNLI는 matched와 mismatched 데이터셋으로 나뉜다. matched 데이터셋은 in-domain 데이터셋으로 같은 도메인 상에서 생성된 가설/전제 데이터셋이고, mismatched 데이터셋은 cross-domain 데이터셋으로 서로 다른 도메인의 데이터로부터 가설/전제 데이터셋을 만든 것이다.
+
+
+3.7. QNLI
+QNLI는 스탠포드 질문/응답 데이터셋으로부터 생성한 데이터셋이다. 문장과 질문을 쌍으로 두고 질문에 대한 응답이 문장 내에 있는지 없는지를 판단하는 데이터셋이다. 이 데이터셋의 평가는 accuracy를 이용한다.
+
+
+3.8. RTE
+RTE는 Recognizaing Textual Entailment의 약자이다. 이 데이터셋은 RTE1, RTE2, RTE3, RTE5를 합친 데이터셋이고 뉴스와 위키피디아 텍스트로 이루어져 있다. 두 문장을 쌍으로 만들어서 그 두 문장이 서로 수반되는 문장인지 그렇지 않은지를 분류한 데이터셋이다. 레이블이 neutral이거나 또는 not_entailment일 경우에는 not_entailment로 통일했다. 데이터셋의 평가는 accuracy를 이용한다.
+
+3.9. WNLI
+Winograd Schema Challenge라는 독해능력 테스크로부터 생성한 데이터셋이다. Winograd Schema Challenge는 문장에 있는 특정 단어를 가르키는 레퍼런스를 선택지로부터 찾는 문제이다. 예를 들어서 [블록1]을 보자.
+
+<블록 시작>
+블록1: Winograd Schema Challenge 예제 데이터
+문장: The city councilmen refused the demonstrators a permit because they [feared/advocated] violence.
+단어: The city councilmen
+선택지: [feared/advocated]
+<블록 끝>
+
+they가 the city councilmen을 가르키게 하려면 선택되야 하는 동사는 "feared"이다. WNLI 데이터셋은 선택지 중에서 feared가 선택된다면 entailment로 레이블링하고 advocated로 선택되면 not_entailment로 레이블링해서 만들어졌다. 이 데이터셋의 평가는 accuracy를 이용한다. 이 데이터셋은 레이블 상에 문제가 있어서 BERT에서는 평가시 제외했다.
+
