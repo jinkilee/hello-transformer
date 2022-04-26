@@ -74,7 +74,7 @@ Performer?
 그림4: 글로벌 어텐션 + 로컬 어텐션 + 랜덤 어텐션
 <그림 끝>
 
-BERT에서의 어텐션은 하나의 토큰이 모든 토큰과 연결돼 있는 구조이다. 빅버드의 어텐션인 [그림4]를 보면 모든 토큰들이 연결돼 있지는 않지만 상당히 많이 연결돼 있는 것을 볼 수 있다. 빅버드는 
+BERT에서의 어텐션은 하나의 토큰이 모든 토큰과 연결돼 있는 구조이다. 빅버드의 어텐션인 [그림4]를 보면 모든 토큰들이 연결돼 있지는 않지만 상당히 많이 연결돼 있는 것을 볼 수 있다.
 
 
 3. GLUE 데이터셋
@@ -117,6 +117,18 @@ Winograd Schema Challenge라는 독해능력 테스크로부터 생성한 데이
 <블록 끝>
 
 they가 the city councilmen을 가르키게 하려면 선택되야 하는 동사는 "feared"이다. WNLI 데이터셋은 선택지 중에서 feared가 선택된다면 entailment로 레이블링하고 advocated로 선택되면 not_entailment로 레이블링해서 만들어졌다. 이 데이터셋의 평가는 accuracy를 이용한다. 이 데이터셋은 레이블 상에 문제가 있어서 BERT에서는 평가시 제외했다.
+
+GLUE 데이터셋은 뉴욕대학교(NYU)의 자연어처리 랩(The Machine Learning for Language Group at NYU CILVR)의 깃허브 레포지토리로부터 다운로드 받을 수 있다.
+
+<코드 시작>
+$ git clone https://github.com/nyu-mll/GLUE-baselines.git
+$ cd GLUE-baselines
+$ python download_glue_data.py --data_dir glue_data --tasks all
+...
+코드1: GLUE 데이터셋 다운로드
+<코드 끝>
+
+
 
 
 
