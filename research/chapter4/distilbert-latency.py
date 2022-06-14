@@ -7,8 +7,8 @@ from transformers import BertModel, BertTokenizer
 
 dbtokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 dbmodel = DistilBertModel.from_pretrained("distilbert-base-uncased", num_labels = 2).cuda()
-btokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
-bmodel = BertModel.from_pretrained("distilbert-base-uncased", num_labels = 2).cuda()
+btokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+bmodel = BertModel.from_pretrained("bert-base-uncased", num_labels = 2).cuda()
 
 input_ids = np.random.randint(0, len(btokenizer), (1, 512))
 attention_mask = np.ones_like(input_ids)
