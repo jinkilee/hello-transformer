@@ -1,0 +1,329 @@
+4.9.1. CoLA 데이터셋
+<블록 시작>
+블록19
+# label=0
+They drank the pub.
+The professor talked us.
+
+# label=1
+They drank the pub dry.
+The professor talked us into a stupor.
+We yelled ourselves hoarse.
+<블록 끝>
+
+
+
+
+4.9.2. SST-2 데이터셋
+<블록 시작>
+블록20
+# negative=0
+remains utterly satisfied to remain the same throughout
+on the worst revenge-of-the-nerds clichés the filmmakers could dredge up
+that 's far too tragic to merit such superficial treatment
+
+# positive=1
+demonstrates that the director of such hollywood blockbusters as patriot games can still turn out a small , personal film with an emotional wallop .
+of saucy
+<블록 끝>
+
+
+4.9.3. MRPC
+<블록 시작>
+블록21
+# not_same=0
+sentence_A: Around 0335 GMT , Tab shares were up 19 cents , or 4.4 % , at A $ 4.56 , having earlier set a record high of A $ 4.57 .
+sentence_B: Tab shares jumped 20 cents , or 4.6 % , to set a record closing high at A $ 4.57 .
+
+sentence_A: Yucaipa owned Dominick 's before selling the chain to Safeway in 1998 for $ 2.5 billion .
+sentence_B: Yucaipa bought Dominick 's in 1995 for $ 693 million and sold it to Safeway for $ 1.8 billion in 1998 .
+
+# same=1
+sentence_A: Amrozi accused his brother , whom he called " the witness " , of deliberately distorting his evidence .
+sentence_B: Referring to him as only " the witness " , Amrozi accused his brother of deliberately distorting his evidence .
+
+sentence_A: They had published an advertisement on the Internet on June 10 , offering the cargo for sale , he added .
+sentence_B: On June 10 , the ship 's owners had published an advertisement on the Internet , offering the explosives for sale .
+<블록 끝>
+
+
+4.9.4. QQP
+<블록 시작>
+블록22
+# same questions
+question_A: How do I control my horny emotions?
+question_B: How do you control your horniness?
+
+question_A: What can one do after MBBS?
+question_B: What do i do after my MBBS ?
+
+# not same questions
+question_A: How is the life of a math student? Could you describe your own experiences?
+question_B: Which level of prepration is enough for the exam jlpt5?
+
+question_A: What causes stool color to change to yellow?
+question_B: What can cause stool to come out as little balls?
+
+question_A: Where can I find a power outlet for my laptop at Melbourne Airport?
+question_B: Would a second airport in Sydney, Australia be needed if a high-speed rail link was created between Melbourne and Sydney?
+<블록 끝>
+
+
+4.9.5. STS-B
+<블록 시작>
+블록23
+# score 0~1
+sentence_A: Nokia apologises for 'faked' ad
+sentence_B: US waives riders for Pak aid
+
+sentence_A: 20-member parliamentary, trade team leaves for India
+sentence_B: Commerce secretary to take leave of absence
+
+sentence_A: Europe shares bounce as more China stimulus seen
+sentence_B: Oil prices rise on hopes for stimulus
+
+# score 1~2
+sentence_A: The man is playing the piano.
+sentence_B: The man is playing the guitar.
+
+sentence_A: Deadline passes with no new Iran sanctions
+sentence_B: EU Moves Closer to New Iran Sanctions
+
+sentence_A: Taiwan rattled by strong earthquake
+sentence_B: China rocked by twin earthquakes
+
+# score 2~3
+sentence_A: A man is playing on a guitar and singing.
+sentence_B: A woman is playing an acoustic guitar and singing.
+
+sentence_A: Norway memorial honours 77 massacre victims
+sentence_B: Norway marks anniversary of massacre
+
+sentence_A: Iran says UN nuclear talks will continue
+sentence_B: Iran says nuclear talks with UN 'constructive'
+
+# score 3~4
+sentence_A: A man is playing a flute.
+sentence_B: A man is playing a bamboo flute.
+
+sentence_A: Maldives president quits after police mutiny, protests
+sentence_B: Maldives president quits after weeks of protest
+
+sentence_A: Myanmar: Opposition claims Suu Kyi win
+sentence_B: Voters in Myanmar hopeful as Suu Kyi's party claims win
+
+# score 4~5
+sentence_A: Some men are fighting.
+sentence_B: Two men are fighting.
+
+sentence_A: Syrian forces move to retake Aleppo
+sentence_B: Syrian Regime Bids To Retake City Of Aleppo
+
+sentence_A: A woman picks up and holds a baby kangaroo.
+sentence_B: A woman picks up and holds a baby kangaroo in her arms.
+<블록 끝>
+
+
+4.9.6. MNLI
+<블록 시작>
+블록24
+# neutral
+sentence_A: Conceptually cream skimming has two basic dimensions - product and geography.
+sentence_B: Product and geography are what make cream skimming work.
+
+sentence_A: yeah i tell you what though if you go price some of those tennis shoes i can see why now you know they're getting up in the hundred dollar range
+sentence_B: The tennis shoes have a range of prices.
+
+sentence_A: But a few Christian mosaics survive above the apse is the Virgin with the infant Jesus, with the Archangel Gabriel to the right (his companion Michael, to the left, has vanished save for a few feathers from his wings).
+sentence_B: Most of the Christian mosaics were destroyed by Muslims.
+
+# entailment
+sentence_A: The joys of deriding portly Austrian burghers in the '60s haven't prevented us from becoming a nation of American fatties.
+sentence_B: America is a nation with a lot of over-weight people.
+
+sentence_A: In addition, it carries mail that is sealed against inspection and acts as a watchdog over fraudulent use of the mails.
+sentence_B: It also contains measures to prevent mail fraud.
+
+sentence_A: How do you know? All this is their information again.
+sentence_B: This information belongs to them.
+
+# contradiction
+sentence_A: Gays and lesbians.
+sentence_B: Heterosexuals.
+
+sentence_A: At the end of Rue des Francs-Bourgeois is what many consider to be the city's most handsome residential square, the Place des Vosges, with its stone and red brick facades.
+sentence_B: Place des Vosges is constructed entirely of gray marble.
+
+sentence_A: It has also led to computer security and other information technologyrelated legislation.
+sentence_B: It has still not caused any legislation relating to information technology.
+<블록 끝>	
+
+
+4.9.7. QNLI
+블록25
+<블록 시작>
+# not_entailment
+How were the Portuguese expelled from Myanmar?	From the 1720s onward, the kingdom was beset with repeated Meithei raids into Upper Myanmar and a nagging rebellion in Lan Na.
+Who starred in 'True Love'?	The show starred Ted Danson as Dr. John Becker, a doctor who operated a small practice and was constantly annoyed by his patients, co-workers, friends, and practically everything and everybody else in his world.
+Who was elected as the Watch Tower Society's president in January of 1917?	His election was disputed, and members of the Board of Directors accused him of acting in an autocratic and secretive manner.
+
+# entailment
+When is the term 'German dialects' used in regard to the German language?	When talking about the German language, the term German dialects is only used for the traditional regional varieties.
+What was the name of the island the English traded to the Dutch in return for New Amsterdam?	At the end of the Second Anglo-Dutch War, the English gained New Amsterdam (New York) in North America in exchange for Dutch control of Run, an Indonesian island.
+What does the word 'customer' properly apply to?	The bill also required rotation of principal maintenance inspectors and stipulated that the word "customer" properly applies to the flying public, not those entities regulated by the FAA.
+What did Arsenal consider the yellow and blue colors to be after losing a FA Cup final wearing red and white?	Arsenal then competed in three consecutive FA Cup finals between 1978 and 1980 wearing their "lucky" yellow and blue strip, which remained the club's away strip until the release of a green and navy away kit in 1982–83.
+<블록 끝>
+
+
+
+4.9.8. RTE
+<블록 시작>
+블록26
+# not_entailment
+sentence_A: No Weapons of Mass Destruction Found in Iraq Yet.
+sentence_B: Weapons of Mass Destruction Found in Iraq.
+
+sentence_A: A man is due in court later charged with the murder 26 years ago of a teenager whose case was the first to be featured on BBC One's Crimewatch. Colette Aram, 16, was walking to her boyfriend's house in Keyworth, Nottinghamshire, on 30 October 1983 when she disappeared. Her body was later found in a field close to her home. Paul Stewart Hutchinson, 50, has been charged with murder and is due before Nottingham magistrates later.
+sentence_B: Paul Stewart Hutchinson is accused of having stabbed a girl.	
+
+sentence_A: Another French daily newspaper talks about PixVillage.
+sentence_B: PixVillage is a French newspaper.
+
+# entailment
+sentence_A: A place of sorrow, after Pope John Paul II died, became a place of celebration, as Roman Catholic faithful gathered in downtown Chicago to mark the installation of new Pope Benedict XVI.
+sentence_B: Pope Benedict XVI is the new leader of the Roman Catholic Church.
+
+sentence_A: Herceptin was already approved to treat the sickest breast cancer patients, and the company said, Monday, it will discuss with federal regulators the possibility of prescribing the drug for more breast cancer patients.
+sentence_B: Herceptin can be used to treat breast cancer.
+
+sentence_A: Judie Vivian, chief executive at ProMedica, a medical service company that helps sustain the 2-year-old Vietnam Heart Institute in Ho Chi Minh City (formerly Saigon), said that so far about 1,500 children have received treatment.
+sentence_B: The previous name of Ho Chi Minh City was Saigon.
+<블록 끝>
+
+
+4.9.9. WNLI
+<블록 시작>
+블록27
+# not_entailment
+sentence_A: Steve follows Fred's example in everything. He influences him hugely.
+sentence_B: Steve influences him hugely.
+
+sentence_A: George got free tickets to the play, but he gave them to Eric, because he was particularly eager to see it.
+sentence_B: George was particularly eager to see it.
+
+sentence_A: John was jogging through the park when he saw a man juggling watermelons. He was very impressive.
+sentence_B: John was very impressive.
+
+# entailment
+sentence_A: I stuck a pin through a carrot. When I pulled the pin out, it had a hole.
+sentence_B: The carrot had a hole.
+
+sentence_A: John couldn't see the stage with Billy in front of him because he is so short.
+sentence_B: John is so short.
+
+sentence_A: The police arrested all of the gang members. They were trying to stop the drug trade in the neighborhood.
+sentence_B: The police were trying to stop the drug trade in the neighborhood.
+<블록 끝>
+
+마지막으로 4.9.1부터 4.9.9까지의 GLUE 데이터셋을 [표6]으로 간단하게 정리해보자. 
+
+<표 시작>
+표6
+GLUE 데이터셋 정리
+<표 끝>
+
+
+4.9.10. GLUE 데이터셋의 평가 지표
+[표6]에서 보면 GLUE 데이터셋은 9개의 서브 데이터셋으로 이루어져 있고, 각 서브 데이터셋을 평가할 때 사용되는 평가 지표는 다르다. 이번 절에서는 GLUE 데이터셋을 평가하는 평가지표들에 대해서 알아보도록 하자. 
+
+우선, SST-2, MRPC, QQP, MNLI, QNLI, RTE, WNLI 서브 데이터셋을 평가하는데 사용하는 Accuracy와 F1 스코어에 대해서 알아보자. Accuracy와 F1 스코어에 대해서 알려면 우선 True Positive, True Negative, False Positive, False Negative의 개념부터 알아야 한다. 분류 문제에 있어서 체점은 크게 맞고 틀린 것으로 나눌 수 있다. 그런데 맞았을 경우를 보면, 1을 1이라고 맞춘 것과 0을 0이라고 맞춘 것으로 나눌 수 있다. 마찬가지 원리로 틀렸을 경우를 보면, 0을 1이라고 해서 틀린 경우와 1을 0이라고 해서 틀린 경우로 나눌 수 있다. [표7]을 보자.
+
+<표 시작>
+표7
+둘리네 가족 코로나 자가검사 키트 결과와 실제 감염 여부
+<표 끝>
+
+[표7]에서 둘리네 가족이 코로나 자가검사 키트를 실시한 결과와 실제 감염 여부를 보여주고 있다. [표7]에서 검사 결과가 맞은 사람은 둘리, 도우너, 희동이, 고길동, 공실이 이다. 그 중에서 고길동을 제외한 나머지 사람은 검사 결과가 Positive로 나와서 True Positive이다. 반면 고길동은 검사 결과는 맞아서 True이지만 검사 결과가 Negative로 나왔기 때문에 True Negative이다. 마이콜과 도치는 검사 결과가 틀리게 나왔다. 하지만 두 사람의 경우는 반대의 경우이다. 마이콜은 검사 결과가 Positive인데 코로나는 감염되지 않은 경우이고, 도치는 검사 결과가 Negative인데 코로나에 감염된 경우이다. 마이콜의 경우 False Positive이고 도치의 경우 False Negative이다. 
+
+Accuracy는 전체 데이터 중에서 몇 개나 맞았는지를 확률로 나타낸 것이다. 즉, True Positive와 True Negative를 합친 것을 전체의 데이터 개수로 나누어주면 쉽게 구할 수 있다. 그러나 Accuracy만으로 분류 문제의 성능을 평가하기에는 무리가 있다. Accuracy는 False Positive와 False Negative를 동일한 기준으로 평가한다. 테스크의 경우 False Positive는 용인할 수 있으나 False Negative는 그렇지 못한 경우가 있다. 코로나의 PCR 검사가 대표적이다. 코로나에 걸리지 않았으나 PCR 검사가 양성인 경우(False Positive)는 그 사람만 자가 격리를 하면 되기 때문에 큰 문제가 발생하지 않는다. 하지만 코로나에 걸렸는데 PCR 검사가 음성인 경우(False Negative)에는 그 사람이 다른 곳에 돌아다님으로 인해서 많은 사람이 코로나에 걸리게 될 수도 있다.
+
+Accuracy의 이러한 단점을 보안하기 위해서 정밀도과 재현율을 계산한다. [수식3]은 정밀도과 재현율의 계산 공식을 나타낸다.
+
+<수식 시작>
+수식3
+정밀도 = True Positive / (True Positive + False Positive)
+재현율 = True Positive / (True Positive + False Negative)
+정밀도과 재현율을 구하는 공식
+<수식 끝>
+
+[수식3]은 [표7]을 2x2 메트릭스로 표현하면 조금 더 쉽게 구할 수 있다.
+
+<표 시작>
+표8
+표7에 대한 혼동 행렬
+<표 끝>
+
+[표8]은 [표7]의 결과를 Positive/Negative와 True/False로 구분해서 2x2 행렬로 표현한 것이다. 이런 행렬을 혼동 행렬(confusion matrix)라고 한다. confusion matrix를 구하면 True Positive, True Negative 등의 값을 한 눈에 알 수 있기 때문에 정밀도나 재현율을 구하기 쉽다.
+
+그렇다면 정밀도와 재현율이 모두 좋으면 분류 모델의 성능은 좋은 것인가? 그렇다. 정밀도와 재현율이 모두 충분히 좋으면 분류 모델로서 완벽하다. 하지만 하나의 모델을 평가할 때 두 개의 지표를 사용하는 것은 좋지 않다. 따라서 F1 스코어를 사용한다. F1 스코어는 정밀도와 재현율의 조화 평균 값이다. F1 스코어를 구하는 공식은 [수식4]를 참고하라.
+
+<수식 시작>
+수식4
+F1 score = 2x(정밀도x재현율) / (정밀도 + 재현율)
+F1 스코어 공식
+<수식 끝>
+
+GLUE 데이터셋의 경우, SST-2, MNLI, QNLI, RTE, WNLI는 Accuracy를 계산해서 모델을 평가했고, MRPC와 QQP는 F1 스코어도 계산해서 모델의 성능을 평가했다.
+
+그렇다면 모델의 F1 스코어의 단점은 없을까? 예를 들어서 [표9]와 같은 혼동 행렬에 대해서 Accuracy와 F1 스코어를 구하면 Accuracy는 0.9700이고, F1 스코어는 0.9847가 된다. 하지만 이는 True Negative와 False Negative의 경우에 대한 고려가 되지 않았다. 그럼에도 불구하고 F1 스코어는 0.9847이라는 높은 값으로 계산된다. 이러한 경우를 해결하기 위해서 메튜 상관 계수(Matthew correlation coefficient)를 사용한다. 메튜 상관 계수를 구하는 공식은 [수식5]를 참고하라.
+
+<표 시작>
+표9
+F1 스코어로 모델의 성능을 잘 표현할 수 없는 혼동 행렬
+<표 끝>
+
+<수식 시작>
+수식5
+Matthew correlation coefficient = (TPxTN - FPxFN) / 루트((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
+메튜 상관 계수 공식
+<수식 끝>
+
+[수식5]를 통해서 [표9]의 메튜 상관 계수를 구하면 분모가 0이기 때문에 0으로 계산된다. 메튜 상관 계수는 -1에서 1까지의 값을 갖는다는 것을 생각하면 좋은 모델이 아니라는 것을 알 수 있다. GLUE 데이터셋에서 CoLA 데이터셋의 경우 메튜 상관 계수를 이용해서 성능을 평가한다.
+
+마지막으로 GLUE 데이터셋의 STS-B 데이터셋을 평가할 때 사용하는 피어슨 상관 계수(Pearson correlation coefficient)와 스피어맨 상관 계수(Spearman correlation coefficient)이다. STS-B는 두 문장의 0(유사하지 않을 경우)부터 5(유사할 경우)까지 나타낸 데이터셋으로 회귀 문제와 비슷한 성격의 문제이다. 따라서 상관 계수를 이용해서 모델을 평가한다. 
+
+피어슨 상관 계수는 두 변수 간의 선형 관계를 나타내는 계수이다. 쉽게 말해서 x값이 증가할 때 y값은 증가하는 경향인지 감소하는 경항인지 또는 아무런 관계가 없는지를 측정한다. 피어슨 상관 계수는 두 변수 값이 같이 증가하는 경향이면 +1에 가까운 값을 갖고, 하나의 변수가 증가할 때 다른 하나의 변수는 감소하는 경향이라면 -1에 가까운 값을 갖게 된다. 두 변수의 값이 서로 독립적이라면 0에 가까운 값을 갖게 된다. 여기에서 중요한 점은 피어슨 상관 계수는 선형 관계를 나타내기 때문에 하나의 변수 값이 증가한 만큼 다른 변수의 값도 일정 비율로 증가하기를 기대한다. [코드18]을 보면 x1과 y1의 관계는 완벽한 선형 관계이기 때문에 피어슨 상관 계수가 1이지만, x2와 y2의 관계는 선형 관계가 완벽하지 않기 때문에 상관 계수가 1이 아닌 0.9761을 갖는다.
+
+<코드 시작>
+코드18
+>>> from scipy import stats
+>>> x1 = [1,2,3,4,5]
+>>> y1 = [2,4,6,8,10]
+>>> stats.pearsonr(x1, y1)
+(1.0, 0.0)
+>>> x2 = [1,2,3,4,5]
+>>> y2 = [2,5,6,7,10]
+>>> stats.pearsonr(x2, y2)
+(0.9761870601839527, 0.004395375691816565)
+피어슨 상관 계수 예시
+<코드 끝>
+
+스피어맨 상관 계수 역시 두 변수 간의 관계를 +1과 -1 사이에 나타내며, +1에 가까울수록 두 변수는 같이 증가하는 경향을 보인다는 뜻이고, -1에 가까울수록 두 변수는 서로 반대 방향으로 변하는 경향을 갖고 있다는 뜻이다. 그렇지만 스피어맨 상관 계수는 두 변수가 선형 관계임을 기대하지 않는다. 즉, 하나의 변수가 증가했을때 다른 변수가 증가만 하면 되지 굳이 같은 비율로 증가할 필요가 없다는 것이다. [코드19]를 참고하라.
+
+<코드 시작>
+코드18
+>>> from scipy import stats
+>>> x1 = [1,2,3,4,5]
+>>> y1 = [2,4,6,8,10]
+>>> stats.pearsonr(x1, y1)
+(0.9999999999999999, 1.4042654220543672e-24)
+>>> x2 = [1,2,3,4,5]
+>>> y2 = [2,5,6,7,10]
+>>> stats.spearmanr(x2, y2)
+(0.9999999999999999, 1.4042654220543672e-24)
+스피어맨 상관 계수 예시
+<코드 끝>
+
+[코드18]에서 0.9999999999999999로 나온 값은 소수점 연산으로 인한 오차이므로 1이라고 해도 무방하다. (x1, y1)과 (x2, y2)가 모두 한 값이 증가할 때 다른 값이 증가하므로 스피어맨 상관 계수는 +1로 동일하다.
+
+4장에서는 BERT의 사전학습과 파인튜닝 과정을 자세하게 알아봤고 BERT 이후에 발표된 모델들에 대해서도 공부해봤다. 그리고 언어 모델을 평가하는데 널리 사용되는 GLUE 데이터셋에 대해서도 알아봤다. GLUE 데이터셋은 여러 개의 서브 데이터셋으로 이루어져 있으며 각 서브 데이터셋을 평가하는 방법에 대해서도 알아봤다. 다음 장에서는 자연어 처리에서의 메타러닝에 대해서 알아보자. 

@@ -1,0 +1,52 @@
+p139의 "chapter4/albert_parameter_sharing.ipynb를 보면 그림 4.10과 같이 입력 x와 업데이트된 x의 차이가 점차 줄어들게 되는 것을 보여주고 있다." 삭제 후 아래의 내용 추가하시면 됩니다.
+------------------------------------------------------------------------
+
+[그림10]의 그래프를 실제로 구현해보자. 코드는 chapter4/albert_parameter_sharing.ipynb를 참고하면 된다. 이 코드에서는 ALBERT 모델을 로딩 후 "Hello, my dog is cute"이라는 샘플 문장을 이용해서 이 문장의 히든 스테이트 값이 레이어를 거치면서 어떻게 변하고 있는지를 설명한다.
+
+모델을 로딩하는 부분과 샘플 문장을 모델의 입력으로 만드는 부분은 [코드15]를 참고하라.
+
+<코드 시작>
+model_nm = 'albert-large-v1'
+tokenizer = AlbertTokenizer.from_pretrained(model_nm)
+model = AlbertModel.from_pretrained(model_nm)
+input_ids = torch.tensor(tokenizer.encode("Hello, my dog is cute", add_special_tokens=True)).unsqueeze(0)  # Batch size 1
+outputs = model(input_ids)
+last_hidden_states = outputs[0]
+emb_output = model.embeddings(input_ids)
+코드15: ALBERT 모델 로딩과 입력 값 생성
+<코드 끝>
+
+[코드15]에서 만든 입력 값을 히든 스테이트로 만들어보자.
+
+<코드 시작>
+emb_output = model.embeddings(input_ids)
+hidden_states = model.encoder.embedding_hidden_mapping_in(emb_output)
+코드16: 입력 값에 대한 히든 스테이트 생성
+<코드 끝>
+
+[코드16]에서 만든 히든 스테이트가 ALBERT의 레이어를 지나면서 어떻게 변하는지 살펴보자. 각 레이어에서의 거리 값을 계산하기 위해서 코사인 유사도를 사용했다.
+
+<코드 시작>
+dist = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+distance_list = []
+for i in range(n_layers):
+    input_embedding = hidden_states
+    layer_out = model.encoder.albert_layer_groups[0](
+        hidden_states,
+        extended_attention_mask,
+        head_mask[0*n_layers:(0+1)*n_layers]
+    )
+    hidden_states = layer_out[0]
+    output_embedding = hidden_states
+    
+    distance = torch.dist(input_embedding, output_embedding, p=2)
+    print(i, hidden_states.shape, input_embedding.shape, output_embedding.shape, distance)
+    distance_list.append(distance)
+코드17: 각 레이어마다의 히든스테이트 변화량 계산
+<코드 끝>
+
+[코드17]을 실행하면 [그림11]과 같이 레이어를 거칠수록 히든 스테이트의 변화량이 점점 감소하는 것을 확인할 수 있다.
+
+<그림 시작>
+그림11: 각 레이어마다의 히든 스테이트 변화량
+<그림 끝>

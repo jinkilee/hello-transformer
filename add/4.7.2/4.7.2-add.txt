@@ -1,0 +1,53 @@
+p149에서 "마지막으로 DistilBERT를 지식 증류하는데" 전에 아래의 내용을 추가해주세요
+코드와 블록이 추가되어 넘버링을 다시 해야 합니다.
+코드: 코드 17부터 다시
+블록: 블록 16부터 다시
+
+-------------------------------------------------------------
+
+모델의 실행 속도 측면에서 성능을 측정해보면 DistilBERT가 BERT보다 약 2배 빠르다. [코드17]을 보자.
+
+<코드 시작>
+코드17
+DistilBERT와 BERT의 실행 속도 비교
+dbtokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+dbmodel = DistilBertModel.from_pretrained("distilbert-base-uncased", num_labels = 2).cuda()
+btokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
+bmodel = BertModel.from_pretrained("distilbert-base-uncased", num_labels = 2).cuda()
+
+input_ids = np.random.randint(0, len(btokenizer), (1, 512))
+attention_mask = np.ones_like(input_ids)
+input_ids = torch.from_numpy(input_ids)
+attention_mask = torch.from_numpy(attention_mask)
+input_ids = input_ids.cuda()
+attention_mask = attention_mask.cuda()
+
+inputs = {
+    'input_ids': input_ids,
+    'attention_mask': attention_mask,
+}
+
+def get_latency(model, inputs):
+    start = time.time()
+    for _ in tqdm(range(100)):
+        output = model(**inputs)
+        #output = bbmodel(**encoded_input)
+    end = time.time()
+    #print(f'latency: {(end - start)/100}')
+    return (end - start) / 100
+
+latency = get_latency(bmodel, inputs)
+print(f'BERT latency={latency:.4f}')
+latency = get_latency(dbmodel, inputs)
+print(f'DistilBERT latency={latency:.4f}')
+<코드 끝>
+
+[코드17]은 이 책의 레포지토리에 있는 chapter4/distilbert-latency.py를 참고하면 된다. [코드17]을 GPU 환경에서 실행할 경우 [블록16]과 같은 결과를 얻을 수 있다.
+
+<블록 시작>
+블록16
+DistilBERT와 BERT의 실행 속도 비교
+BERT latency=0.0112
+DistilBERT latency=0.0055
+<블록 끝>
+
