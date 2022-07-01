@@ -1,0 +1,451 @@
+이 책에서 BERT가 출연하게 되기까지의 히스토리와 핵심 기술인 어탠션 네트워크에 대해서 자세하게 설명했다. 그리고 BERT 이후에 연구된 여러 언어 모델들을 소개하며 각 언어 모델에서 사용한 핵심 아이디어와 개선점 등을 알고리즘 관점에서 설명했다.
+부록에서는 알고리즘적인 관점이 아닌 경량화 기법의 관점에서 설명하고자 한다. 특히 경량화 기법 중에서 양자화(Quantization)에 대해서 소개하려고 한다.
+
+1. 양자화
+양자화는 연속적인 무한한 값을 구분된 유한한 값으로 맵핑하는 과정이다. 컴퓨터 사이언스의 관점에서의 양자화는 특정 범위 내에 무한하게 있는 실수(floating-point number)를 유한한 갯수의 정수로 맵핑하는 과정이다. -100에서 100 사이에는 무한개의 실수가 있다. 하지만 실수가 아닌 정수는 201개로 유한하다. 그렇다면 -100과 -99 사이에 있는 숫자를 모두 -100으로 맵핑한다면 어느 정도의 오차를 감수하고 무한한 값의 범위를 유한하게 줄일 수 있지 않을까? 이것이 양자화의 핵심 개념이다. 양자화를 하면 컴퓨터 사이언스적인 관점에서 어떤 장점이 있을까? 숫자를 표현하는 비트 수를 크게 줄일 수 있다. 32비트로 표현된 실수를 8비트로 표현한다면 모델의 사이즈를 약 1/4로 줄일 수 있게 되며, 곱셈 연산에 드는 시간 또한 감소하게 된다. 이 절에서는 모델의 파라미터를 구성하는 행렬의 실수 값을 어떻게 정수로 양자화하는지 알아보고, 그 기법을 이용해서 BERT를 실제로 양자화하여 성능의 감소를 최소화하면서도 실행 속도를 더욱 빠르게 하는 방법에 대해서 알아보려고 한다.
+
+1.1. 양자화에 대한 수학적인 이해와 코드 구현
+우선 특정 범위 내에 있는 무한한 실수를 유한한 범위의 정수로 맵핑하는 과정에 대해서 수학적으로 자세하게 알아보자. [수식1]을 보자.
+
+<수식 시작>
+수식1: 실수 x와 정수 xq의 관계 (역양자화)
+x가 A와 B 사이의 실수일 때
+x = s(xq - z)
+단, s는 실수이고 z는 정수이며 xq는 x를 양자화한 값
+<수식 끝>
+
+[수식1]에서 x라는 하나의 실수를 표현하기 위해서 양자화된 값(xq)과 실수 하나(s)와 정수 하나(z)를 사용해서 표현하고 있다. [수식1]을 xq에 대해서 전개해보자.
+
+<수식 시작>
+수식2: 실수 x와 정수 xq의 관계 (양자화)
+xq가 a와 b 사이의 정수일 때
+xq = round(1/s * x + z)
+단, s는 실수이고 z는 정수이며 x는 A와 B 사이의 실수
+<수식 끝>
+
+[수식2]는 양자화 과정을 나타내고, [수식1]은 역양자화(de-quantization) 과정이다. 어떤 실수 x가 A와 B 사이에 있다면 x를 양자화해서 xq를 얻는 과정이 양자화 과정이다. 그리고 xq를 이용해서 다시 x를 만들어내는 과정이 역양자화 과정이다. 그 과정을 조금 더 자세하게 표현하면 [블록1]과 같이 나열할 수 있다.
+
+<블록 시작>
+블록1: 양자화-역양자화 과정
+STEP 1: 실수 x와 정수 xq의 min, max 값을 이용해서 s와 z를 구한다.
+STEP 2: s와 z를 이용해서 x를 양자화한다.
+STEP 3: xq를 s와 z로 역양자화해서 실수 x에 대한 근사 값을 구한다.
+<블록 끝>
+
+s와 z를 x와 xq의 min, max로 구하는 방법은 [수식3]으로 설명할 수 있다.
+
+<수식 시작>
+수식3: s와 z 유도 공식
+A = s(a - z) ... ①
+B = s(b - z) ... ②
+
+①과 ②의 식을 빼면
+s = (B - A)/(b - a)
+
+①과 ②의 식을 더하고 s를 치환해서 전환하면
+z = round((Ba - Ab) / (B - A))
+<수식 끝>
+
+이 과정을 코드로 구현하면 [코드1]과 같다. [코드1]은 research/appendix/quantization_example.py를 참고하라.
+
+<코드 시작>
+코드1: n 비트에 대한 s, z 계산 함수
+def make_nbit_quantization_variables(x_min, x_max, n=8):
+    xq_min = -2 ** (n - 1)
+    xq_max = 2 ** (n - 1) - 1
+    s = (x_max - x_min) / (xq_max - xq_min)
+    z = int((x_max * xq_min - x_min * xq_max) / (x_max - x_min))
+    return s, z
+<코드 끝>
+
+그 다음 단계는 계산한 s, z를 이용해서 x를 양자화 하는 단계이다. 양자화에 대한 수식은 [수식2]를 참고하면 되고, 코드 구현은 [코드2]를 보면 된다.
+
+<코드 시작>
+코드2: s, z를 이용한 양자화 함수
+
+def value_clipping(x, x_max, x_min):
+    x[x > x_max] = x_max
+    x[x < x_min] = x_min
+    return x
+
+def quantization_nbit(mat, s, z, n=8):
+    mat = np.round((1/s * mat) + z, decimals=0)
+    clipped_mat = value_clipping(mat, 2 ** (n-1) - 1, -2 ** (n-1))
+    return clipped_mat.astype(np.int8)
+<코드 끝>
+
+[코드2]는 [코드1]에서 구한 s와 z 값을 이용해서 양자화를 하는 함수이다. [코드2]의 중간에 보면 value_clipping 함수도 있는데 이 함수는 최소값 이하의 값과 최대값 이후의 값을 각각 최소값과 최대값으로 치환해주는 함수이다. 양자화를 하면 그 값의 결과는 반드시 특정 범위 내에 있어야 하기 때문이다. 이 책에서는 8비트로 양자화하는 것을 기준으로 하기 때문에 8비트 정수의 최소값과 최대값인 -128과 127을 사용해서 value_clipping 함수를 실행한다. [코드2]의 리턴 값을 보면 8비트 정수 타입으로 변환해서 리턴하는 것을 볼 수 있다. 
+
+마지막 단계는 [코드1]과 [코드2]에서 구한 값을 이용해서 역양자화를 하는 단계이다. [수식1]이 역양자화를 진행하는 수식이며, 코드 구현은 [코드3]을 보면 된다.
+
+<코드 시작>
+코드3: 역양자화 함수
+def dequantization(mat_q, s, z):
+    mat = s * (mat_q - z)
+    mat = mat.astype(np.float32)
+    return mat
+<코드 끝>
+
+[코드1]부터 [코드3]까지 구현한 함수를 이용해서 하나의 행렬을 양자화 후 다시 역양자화하면 [코드4]와 같은 결과를 얻을 수 있다.
+
+<코드 시작>
+코드4: 임의의 행렬 x에 대한 양자화 및 역양자화 결과
+min_x_float = -100.0
+max_x_float = 80.0
+s_x, z_x = make_nbit_quantization_variables(min_x_float, max_x_float, n=8)
+x = np.random.uniform(low=min_x_float, high=max_x_float,
+                      size=(2, 3)).astype(np.float32)
+x_q = quantization_nbit(x, s_x, z_x, n=8)
+x_dq = dequantization(x_q, s_x, z_x)
+print(f'x = {x}')
+print(f'-> s_x, z_x: {s_x} {z_x}')
+print(f'x_dq = {x_dq}')
+<코드 끝>
+
+<블록 시작>
+블록2: [코드4]의 실행 결과
+x = [[ -1.2135693  28.734085    8.497408 ]
+ [ -1.9210271 -23.742136   16.26094  ]]
+-> s_x, z_x: 0.7058823529411765 13
+x_dq = [[ -1.4117647  28.941177    8.470589 ]
+ [ -2.1176472 -24.         16.235294 ]]
+<블록 끝>
+
+[블록2]를 보면 역양자화를 할 때 round 등의 연산이 실행되기 때문에 어느 정도의 오차가 발생하지만 최초의 x 행렬을 근사하고 있는 것을 볼 수 있다.
+
+
+1.2. 양자화된 행렬을 이용한 행렬 곱셈과 덧셈
+부록 1.1절에서 행렬을 양자화해서 다시 역양자화하는 과정에 대해서 자세하게 알아봤다. 이번 절에서는 양자화된 행렬을 이용해서 행렬의 곱셈과 덧셈을 알아보려고 한다. 우선 양자화된 행렬을 이용한 행렬의 곱셈과 덧셈을 [수식4]를 통해서 알아보자.
+
+<수식 시작>
+수식4: 양자화된 행렬을 이용한 행렬의 곱셈과 덧셈
+참고: https://leimao.github.io/article/Neural-Networks-Quantization/
+<수식 끝>
+
+[수식4]를 보면 두 행렬 X와 W를 곱하고 b행렬을 더해서 Y를 만드는 과정을 수식으로 나타내고 있다. [수식4]를 코드로 구현하면 [코드5]와 같이 구현할 수 있다.
+
+<코드 시작>
+코드5: 양자화된 행렬을 이용한 행렬 곱셈과 덧셈
+def quantized_matrix_multiplication(x_q, w_q, b_q, s_x, z_x, s_w, z_w, s_b, z_b, s_y, z_y):
+    p = w_q.shape[0]
+    y_q = z_y + \
+            (s_b / s_y * (b_q.astype(np.int32) - z_b)).astype(np.int8) + \
+            ((s_x * s_w / s_y) * (np.matmul(x_q.astype(np.int32), w_q.astype(np.int32)) - \
+                z_w * np.sum(x_q.astype(np.int32), axis=1, keepdims=True) - \
+                z_x * np.sum(w_q.astype(np.int32), axis=0, keepdims=True) + \
+                p* z_x * z_w)).astype(np.int8)
+    y_q = y_q.astype(np.int8)
+    return y_q
+<코드 끝>
+
+[코드5]를 보면 xq와 wq를 곱한 후 bq를 더하는 연산을 하는 과정을 하나의 함수로 구현했다. 이 함수가 필요로 하는 파라미터는 xq, wq, bq 행렬과 이 세 행렬에 대한 s, z값이 필요하다. 이 값은 충분히 구할 수 있다. 그런데 y 행렬에 대한 s와 z값도 필요하다. 이 값은 xq, wq, bq 행렬 값 등을 통해서 계산되는데 이 책에서는 그 방법에 대해서는 다루지 않고 특정 상수로 정해두고 사용하려고 한다. [코드5]의 수식을 보면 [수식4]를 그대로 구현해둔 것임을 알 수 있다. 다만 행렬의 덧셈과 곱셈을 하는 과정에서 int8이 아닌 int32를 사용한 이유는 int8 행렬을 서로 곱하거나 더했을 때 결과가 int8을 넘을 수 있기 때문이다. [코드5]을 이용해서 양자화 행렬 연산을 해보자.
+
+<코드 시작>
+코드6: 양쟈화된 행렬을 이용한 행렬 곱셈과 덧셈 예시
+min_y_float = -3000.0
+max_y_float = 3000.0
+s_y, z_y = make_nbit_quantization_variables(min_y_float, max_y_float, n=8)
+y_q = quantized_matrix_multiplication(x_q, w_q, b_q, s_x, z_x, s_w, z_w, s_b, z_b, s_y, z_y)
+y_dq = dequantization(y_q, s_y, z_y)
+y = x @ w + b
+print(f'y = {y}')
+print(f'-> s_y, z_y: {s_y} {z_y}')
+print(f'y_dq = {y_dq}')
+<코드 끝>
+
+[코드6]을 실행하면 [블록3]과 같은 결과를 얻을 수 있다.
+
+<블록 시작>
+블록3: 양자화된 행렬을 이용한 행렬 곱셈과 덧셈 결과
+y = [[242.46051  95.31735 217.99707 574.97864]
+ [-88.28122 172.45425 216.39148 212.0112 ]]
+-> s_y, z_y: 23.529411764705884 0
+y_dq = [[235.29411   94.117645 211.76471  541.17645 ]
+ [-94.117645 164.70589  211.76471  211.76471 ]]
+<블록 끝>
+
+[블록3]에서 y와 y_dq를 보면 어느 정도의 오차는 있지만 값이 비슷하게 복원되는 것을 알 수 있다.
+
+
+1.3. 동적 양자화와 정적 양자화
+양자화를 하는 방법에 있어서 동적 양자화와 정적 양자화로 나눌 수 있다. 동적 양자화의 가장 큰 특징은 모델을 구성하는 행렬들의 s와 z값을 매번 계산해서 양자화한다는 것이다. 따라서 학습된 모델이 있을 경우 추가적인 학습이 필요하지 않다. 그렇지만 동적 양자화의 경우 모델 내에서 출력 텐서와 활성화 텐서에 대한 s와 z값을 알지 못하기 때문에 그 값을 매번 계산해줘야 하는 오버헤드가 있다. 그럼에도 불구하고 많은 경우 오버헤드로 인한 느려짐보다는 int8 연산으로 인한 빨라짐이 더욱 큰 경우가 많다. 동적 양자화는 [코드7]과 같이 실행할 수 있다. 전체적인 원리는 이전 절에서 자세하게 설명했으므로 여기에서는 [코드7]의 실행 결과만 살펴보려고 한다. 전체 코드는 이 책의 레포지토리의 소스코드 research/appendix/quantization_example.ipynb를 참고하라.
+
+<코드 시작>
+코드7: 예제 모델에 대한 동적 양자화
+class SampleNet(nn.Module):
+    def __init__(self, quantize_statically=False):
+        super(SampleNet, self).__init__()
+        self.quantize_statically = quantize_statically
+        in_channels = 112
+        out_channels = 112
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, groups=1, bias=False)
+        self.fc = nn.Linear(3, 2, bias=False)
+        self.relu = nn.ReLU(inplace=False)
+        self.quant = QuantStub()
+        self.dequant = DeQuantStub()
+
+    def forward(self, x):
+        if self.quantize_statically:
+            x = self.quant(x)
+        x = self.conv(x)
+        x = self.fc(x)
+        x = self.relu(x)
+        
+        if self.quantize_statically:
+            x = self.dequant(x)
+        return x
+
+model = SampleNet(quantize_statically=False)
+model_int8_dynamic = torch.quantization.quantize_dynamic(model, qconfig_spec=None, dtype=torch.qint8, mapping=None, inplace=False)
+
+np.random.seed(100)
+x = torch.from_numpy(np.random.random((b, w, h, c))).float()
+
+o1_dynamic = model_int8_dynamic.conv(x)
+o2_dynamic = model_int8_dynamic.fc(o1_dynamic)
+o3_dynamic = model_int8_dynamic.relu(o2_dynamic)
+<코드 끝>
+
+위 코드의 실행 결과인 o1_dynamic, o2_dynamic, o3_dynamic을 출력해보면 모두 float32 텐서이다. model_int8_dynamic의 경우 중간의 fully-connected 레이어가 DynamicQuantizedLinear로 바뀌었는데 이 부분의 출력 텐서인 o2_dynamic 역시 float32 텐서이다. 이는 모델의 입력 텐서를 처리할 때 동적 양자화의 경우 레이어마다 양자화된다는 것을 알 수 있다.
+
+그렇다면 정적 양자화를 거치게 되면 구체적으로 뭐가 다를까? 정적 양자화는 입력 텐서에 대한 양자화를 계산할 때 s와 z를 계산하지 않는다. 정적 양자화에서는 s와 z가 미리 계산돼 있다. 이 값을 미리 계산하는 과정을 캘리브레이션(calibration)이라고 한다. 그리고 정적 양자화에서는 레이어 류전(layer fusion)이라는 방법을 통해서 레이어를 조금 더 효율적으로 합칠 수 있다. 따라서 정적 양자화에서는 s와 z를 계산하는데 드는 오버헤드를 없앨 수 있고 동시에 조금 더 효율적으로 합쳐진 레이어로 입력 텐서에 대한 계산을 하기 때문에 모델의 연산 속도가 동적으로 양자화했을 때보다 빠르다.
+
+그렇다면 정적 양자화를 통해 모델을 양자화할 때 모델의 s와 z값이 어떻게 미리 계산될 수 있는지 알아보자. 이 값들을 미리 계산하기 위해서는 레이블링이 되지 않은 데이터가 필요하다. 레이블링 되지 않은 데이터를 모델의 입력 값으로 넣어주면서 특정 데이터가 들어왔을 때 값이 어떻게 변하는지에 대한 통계를 구한다. 정적 양자화 과정에서 모델 내부에 히스토그램 옵저버를 삽입한 후 옵저버로 하여금 입력 텐서가 모델에 입력될 때마다 s와 z의 값을 조금씩 조정하도록 한다. 따라서 이 때 사용되는 데이터는 모델을 학습할 때 사용했던 데이터이거나 그 데이터와 최대한 유사한 분포를 가진 데이터여야 한다. 그렇지 않으면 s와 z 값이 전혀 다른 값으로 조정되어 버리기 때문에 양자화 후 모델과 양자화 전 모델의 정확도 성능이 크게 달라질 수 있다. 이와 같이 적절한 s와 z값을 구하기 위해서 레이블링 되지 않은 데이터를 입력해주면서 s와 z값을 조금씩 조정해주는 과정이 캘리브레이션이다.
+
+정적 양자화에서 사용되는 또 다른 기법으로 레이어 퓨전이 있다. 레이어 퓨전은 쉽게 말해서 몇 개의 레이어를 하나로 합치는 기법이다. 최근의 성능 좋은 딥러닝 모델에서 자주 쓰이는 패턴 중에 Conv2D 레이어 다음에 BatchNorm 레이어로 이어지는 패턴이 있다. Conv2D와 BatchNorm 레이어를 수식으로 표현해보면 레이어 퓨전이 무엇인지 정확하게 알 수 있다.
+
+<수식 시작>
+수식5: Conv2D와 BatchNorm을 단일 레이어로 만드는 수식
+# Conv2D
+fi = conv2d(xi)
+   = Wconv*xi + Bconv
+Wconv = (out, k, k, c) -> (out, k^2*c)
+
+# BatchNorm
+oi = r(fi-u)/root(o^2 + e) + b
+   = r*fi/root(o^2 + e) + b - r*u/root(o^2 + e)
+   = 행렬
+   = Wbn * fi + Bbn
+
+# Conv2D + BatchNorm Fusion
+oi = Wbn*fi + Bbn
+   = Wbn*(Wconv*xi + Bconv) + Bbn
+   = Wbn*Wconv*xi + Wbn*Bconv + Bbn
+   = Wfused*xi + Bfused
+<수식 끝>
+
+[수식5]를 보면 BatchNorm과 Conv2D를 수식으로 표현한 것이다. Conv2D는 입력 텐서를 연산해서 fi를 생성한다. Conv2D의 가중치는 (out, k, k, c) 형태에서 (out, k^2*c) 형태의 2차원 행렬로 형태를 변형(reshape)해서 만든다. 이렇게 하면 Conv2D 연산은 단순한 행렬의 곱셈과 덧셈으로 나타낼 수 있다. Conv2D의 출력을 fi라고 하면 이 fi는 BatchNorm의 입력이다. BatchNorm 역시 행렬로 변형하면 행렬의 곱셈과 덧셈으로 치환할 수 있다. BatchNorm은 fi 텐서를 입력 텐서로 사용해서 oi를 계산한다. 이 식을 하나로 합쳐서 전개하면 Wbn과 Wconv를 곱한 행렬을 하나의 행렬(Wfused)으로 표현할 수 있고 나머지 Wbn*Bconv + Bbn 역시 Bfused라는 하나의 행렬로 표현할 수 있다. 결국 Conv2D와 BatchNorm 두 개의 레이어를 연산하는데 Wfused와 Bfused 두 개가 필요한 샘이다. 레이어 퓨전을 하지 않으면 더욱 많은 수의 파라미터가 필요하게 된다.
+
+정적 양자화를 이해하기 위해 캘리브레이션과 레이어 퓨전에 대해서 알아봤다. 이제 코드를 통해서 정적 양자화에 대해서 공부해보자.
+
+<코드 시작>
+코드8: SampleNet 모델에 대한 정적 양자화
+# define model
+model = SampleNet(quantize_statically=True)
+
+# layer fusion
+fused_model = torch.quantization.fuse_modules(model, [['fc', 'relu']], inplace=False)
+fused_model.qconfig = torch.quantization.get_default_qconfig('fbgemm')
+
+# insert histogram observer
+fused_model_with_observer = torch.quantization.prepare(fused_model)
+
+# calibration
+for _ in range(100):
+    inputs = torch.rand(b, w, h, c)
+    fused_model_with_observer(inputs)
+
+# convert
+model_int8_static = torch.quantization.convert(fused_model_with_observer)
+<코드 끝>
+
+[코드8]을 보자. 모델을 정의한 후 정적 양자화의 첫번째 단계는 레이어 퓨전이다. fc 레이어와 relu 레이어를 하나로 합치고 있다. qconfig 설정 값은 코드를 실행하는 시스템의 아키텍쳐에 따라서 fbgemm과 qnnpack으로 나뉜다. fbgemm은 인텔 기반의 아키텍쳐를 사용할 경우이고 qnnpack 은 ARM 기반의 아키텍쳐를 사용할 경우 설정해주면 된다. 그 다음에 히스토그램 옵저버를 추가하는 부분이다. 여기에서는 옵저버를 추가하기만 했기 때문에 아직 최소값과 최대값이 구해지지 않았으므로 s와 z 역시 구해지지 않았다. 최소값과 최대값은 캘리브레이션을 진행한 후에 세팅된다. 캘리브레이션을 한 후에 마지막으로 convert 함수를 통해서 int8 모델을 만든다. 최종적으로 만들어진 int8 모델을 보면 s와 z값이 계산돼 있고 히스토그램 옵저버가 사라진 것을 볼 수 있다.
+
+<블록 시작>
+블록4: 정적 양자화의 각 과정의 모델 철력 값
+# define model
+SampleNet(
+  (conv): Conv2d(112, 112, kernel_size=(1, 1), stride=(1, 1), bias=False)
+  (fc): Linear(in_features=3, out_features=2, bias=False)
+  (relu): ReLU()
+  (quant): QuantStub()
+  (dequant): DeQuantStub()
+)
+
+# layer fusion
+SampleNet(
+  (conv): Conv2d(112, 112, kernel_size=(1, 1), stride=(1, 1), bias=False)
+  (fc): LinearReLU(
+    (0): Linear(in_features=3, out_features=2, bias=False)
+    (1): ReLU()
+  )
+  (relu): Identity()
+  (quant): QuantStub()
+  (dequant): DeQuantStub()
+)
+
+# insert histogram observer
+SampleNet(
+  (conv): Conv2d(
+    112, 112, kernel_size=(1, 1), stride=(1, 1), bias=False
+    (activation_post_process): HistogramObserver()
+  )
+  (fc): LinearReLU(
+    (0): Linear(in_features=3, out_features=2, bias=False)
+    (1): ReLU()
+    (activation_post_process): HistogramObserver()
+  )
+  (relu): Identity()
+  (quant): QuantStub(
+    (activation_post_process): HistogramObserver()
+  )
+  (dequant): DeQuantStub()
+)
+fused_model_with_observer.fc.activation_post_process.min_val # inf
+fused_model_with_observer.fc.activation_post_process.max_val # -inf
+
+# calibration
+fused_model_with_observer.fc.activation_post_process.min_val # 0
+fused_model_with_observer.fc.activation_post_process.max_val # 1.1778
+
+# convert
+SampleNet(
+  (conv): QuantizedConv2d(112, 112, kernel_size=(1, 1), stride=(1, 1), scale=0.020792240276932716, zero_point=68, bias=False)
+  (fc): QuantizedLinearReLU(in_features=3, out_features=2, scale=0.008626477792859077, zero_point=0, qscheme=torch.per_channel_affine)
+  (relu): Identity()
+  (quant): Quantize(scale=tensor([0.0081]), zero_point=tensor([0]), dtype=torch.quint8)
+  (dequant): DeQuantize()
+)
+<블록 끝>
+
+[블록4]에서 각 단계 별로 변형된 모델을 출력해봤다. 히스토그램 옵저버가 추가되는 과정과 calibration 전과 후에 min_val과 max_val의 값이 바뀐다는 것을 잘 이해해야 한다.
+
+마지막으로 각 단계에 대해서 출력 값을 살펴보자.
+
+<코드 시작>
+코드9: 정적 양자화 각 단계에 대한 출력 텐서 값 확인
+o1_static = model_int8_static.quant(x)
+o2_static = model_int8_static.conv(o1_static)
+o3_static = model_int8_static.fc(o2_static)
+o4_static = model_int8_static.relu(o3_static)
+o5_static = model_int8_static.dequant(o4_static)
+
+>>> o1_static.int_repr()
+tensor([[[[ 67,  34,  52],
+          [104,   1,  15],
+          [ 83, 102,  17],
+          ...,
+          [108,  14,  21],
+          [ 58,  96, 105],
+          [ 26,   9,  97]],
+          ...,
+          [ 45,  37,  90],
+          [ 65,  52, 103],
+          [ 28, 107,  85]]]], dtype=torch.uint8)
+<코드 끝>
+
+[코드9]에서 o1_static만 출력했지만 o5_static을 제외한 나머지 출력 텐서들은 모두 int_repr() 함수를 통해서 int8 형태로 표현된다.
+
+지금까지 동적 양자화와 정적 양자화에 대해서 자세하게 알아봤다. 다음 절에서는 BERT를 동적 양자화하는 예제에 대해서 공부해보려고 한다.
+
+1.4. BERT 양자화하기
+이전 절까지 양자화의 원리를 코드를 통해서 설명해봤다. 이번 절에서는 BERT를 양자화해보려고 한다. 3장과 4장에서 공부한 BERT의 구조를 생각해보면 BERT를 구성하는 핵심은 어탠션 연산을 수행하는 레이어이다. 이 레이어는 행렬의 곱을 수행하는 레이어이기 때문에 이전 절에서 배운 양자화를 통해서 모델을 양자화할 수 있다. 이번 절에서는 4.2.10절에서 구현했던 BERT 문장 분류 모델을 양자화해보려고 한다.
+
+파이토치에서 모델 양자화는 API를 통해서 간단하게 할 수 있다. 파이토치에서는 모델을 양자화하기 위한 API를 제공하고 있다. [코드7]을 보자. 전체 코드는 이 책의 레포지토리에서 research/appendix/cola_classifier_quantization.ipynb를 참고하라.
+
+<코드 시작>
+코드7: 파이토치 모델 양자화하기
+# 학습한 모델 로딩
+model.load_state_dict(torch.load('cola_model.bin', map_location='cpu'))
+model.eval()
+quantized_model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+<코드 끝>
+
+[코드7]에서는 파이토치에서 제공하는 동적 양자화(quantize_dynamic) 함수를 이용해서 BERT 모델을 양자화하고 있다. 입력으로 주어진 모델에서 Linear 레이어를 int8로 양자화하는 것이다. quantize_dynamic 함수로 양자화하면 float32 모델은 [블록5]와 같이 바뀐다.
+
+<블록 시작>
+블록5: float32와 int8 모델의 어탠션 레이어 차이
+# float32 모델
+(attention): BertAttention(
+	(self): BertSelfAttention(
+		(query): Linear(in_features=768, out_features=768, bias=True)
+		(key): Linear(in_features=768, out_features=768, bias=True)
+		(value): Linear(in_features=768, out_features=768, bias=True)
+		(dropout): Dropout(p=0.1, inplace=False)
+	)
+	(output): BertSelfOutput(
+		(dense): Linear(in_features=768, out_features=768, bias=True)
+		(LayerNorm): LayerNorm((768,), eps=1e-12, elementwise_affine=True)
+		(dropout): Dropout(p=0.1, inplace=False)
+	)
+)
+
+# int8 모델
+(attention): BertAttention(
+	(self): BertSelfAttention(
+		(query): DynamicQuantizedLinear(in_features=768, out_features=768, dtype=torch.qint8, qscheme=torch.per_tensor_affine)
+		(key): DynamicQuantizedLinear(in_features=768, out_features=768, dtype=torch.qint8, qscheme=torch.per_tensor_affine)
+		(value): DynamicQuantizedLinear(in_features=768, out_features=768, dtype=torch.qint8, qscheme=torch.per_tensor_affine)
+		(dropout): Dropout(p=0.1, inplace=False)
+	)
+	(output): BertSelfOutput(
+		(dense): DynamicQuantizedLinear(in_features=768, out_features=768, dtype=torch.qint8, qscheme=torch.per_tensor_affine)
+		(LayerNorm): LayerNorm((768,), eps=1e-12, elementwise_affine=True)
+		(dropout): Dropout(p=0.1, inplace=False)
+	)
+)
+<블록 끝>
+
+[블록5]는 12로 구성된 BERT 레이어 중 한 개이다. 셀프 어탠션 레이어에서 Linear 레이어들이 DynamicQuantizedLinear로 바뀐 것을 볼 수 있다. BERT의 경우 셀프 어텐션이 전체 모델의 핵심이고 파라미터의 대부분을 차지하고 있기 때문에 이 부분을 양자화하면 이론적으로는 모델 사이즈가 약 1/4로 줄어들 수 있다. 모델 파일의 사이즈를 확인해보자. [블록6]을 참고하라.
+
+<블록 시작>
+블록6: 양자화된 모델의 파일 사이즈
+$ ls -alh *.bin
+-rw-rw-r-- 1 jkfirst jkfirst 418M  6월 23 04:37 cola_model.bin
+-rw-rw-r-- 1 jkfirst jkfirst 174M  6월 28 19:19 cola_model_quantized.bin
+<블록 끝>
+
+[블록5]에서 BertSelfOutput 레이어는 양자화되지 않았기 때문에 그런 부분을 포함하면 실제로는 약 1/3정도로 사이즈가 줄게 된다.
+
+모델의 실행 속도도 측정해보자.
+
+<코드 시작>
+코드8: float32와 int8 모델의 실행 속도 비교
+def measure_accuracy_and_latency(model, dataloader):
+    tbar = tqdm(dataloader, desc='Inference', leave=True)
+    
+    label_list = []
+    pred_list = []
+    start = time.time()
+    for i, d in enumerate(tbar):
+        input_ids, token_type_ids, attention_mask, labels = d
+                
+        # do inference
+        pred = model(input_ids=input_ids, attention_mask=attention_mask)
+        pred = pred[0].argmax(dim=1)
+        
+        label_list.extend(labels.cpu().data.numpy())
+        pred_list.extend(pred.cpu().data.numpy())
+    end = time.time()
+
+    labels = np.array(label_list)
+    preds = np.array(pred_list)
+    
+    acc = (labels == preds).mean()
+    latency = (end - start) / len(labels)
+    
+    print(f'acc={acc:.3f} latency={latency:.4f}')
+
+>>> measure_accuracy_and_latency(model, test_dataloader)
+acc=0.816 latency=0.0054
+>>> measure_accuracy_and_latency(quantized_model, test_dataloader)
+acc=0.814 latency=0.0025
+<코드 끝>
+
+[코드8]을 보면 약 2배의 실행 속도 차이가 난다는 것을 알 수 있다. 실행 속도 차이가 2배가 나더라도 정확도 측면에서는 0.816과 0.814로 거의 비슷하게 유지되는 것을 확인할 수 있다.
+
+
+
+
