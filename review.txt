@@ -22,4 +22,84 @@ p102, "수식 4.5를 통해서" -> "수식 4.6을 통해서"
 p102, "[표9]의 메튜 상관 계수를" -> "표 4.9의 메튜 상관 계수를"
 
 
+-------
 
+
+The dominant sequence transduction ~ large and limited training data. 까지 삭제해주세요. 
+
+- The dominant sequence transduction models are based on complex recurrent or
+convolutional neural networks
+- We propose a new simple network architecture, the Transformer
+- state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs
+
+- 대부분의 시퀀스 모델은 복잡한 RNN이나 CNN 구조로 돼어 있다.
+- 새로운 네트워크 구조인 트랜스포머를 제안한다.
+- 8개의 GPU를 사용해서 3.5일간 학습한 결과 BLEU 스코어 41.8이라는 SoTA 결과를 달성했다.
+
+--------------------------------------------------------
+
+The training data generator chooses 15% of the token positions at random for prediction. If
+the i-th token is chosen, we replace the i-th token with (1) the [MASK] token 80% of the time
+(2) a random token 10% of the time (3) the unchanged i-th token 10% of the time. 
+
+학습 데이터셋 제너레이터는 15%정도의 토큰 위치를 랜덤으로 선택한다. 만일 i번째 토큰이 선택됐을 경우, i번째 토큰을 (1)80%의 확률로 [MASK]로 바꾸고 (2)10%의 확률로 랜덤 토큰으로 바꾸고 (3)10%의 확률로 바꾸지 않고 그대로 내버려 둔다. 그러고 난 후 
+
+"Then, Ti will be used to predict the original token with cross entropy loss." -> 삭제해주세요
+
+--------------------------------------------------------
+
+It is critical to use a document-level corpus rather than a shuffled sentence-level corpus
+such as the Billion Word Benchmark (Chelba et al., 2013) in order to extract long contiguous
+sequences.
+
+길고 연속적인 시퀀스를 얻기 위해서 랜덤으로 섞인 문장 단위의 코퍼스를 이용하는 것 보다 도큐먼트 단위의 코퍼스를 사용하는 것이 매우 중요하다.
+
+--------------------------------------------------------
+
+As such, untying the WordPiece embedding size E from the hidden layer size H allows us to
+make a more efficient usage of the total model parameters as informed by modeling needs
+
+워드피스 임베딩 사이즈 E를 히든 레이어 사이즈 H와 다른 값을 쓰면(untying) 전체 모델 파라미터
+를 더 효과적으로 사용할 수 있다.
+
+--------------------------------------------------------
+
+Similar strategies have been explored by Dehghani et al. (2018) (UniversalT ransformer, UT)
+and Bai et al. (2019) (Deep Equilibrium Models, DQE) for Transformer networks. Different from
+our observations, Dehghani et al. (2018) show that UT outperforms a vanilla Transformer.
+
+비슷한 전략이 Dehghani가 발표한 논문에서 소개된 적이 있다. Dehghani에 따르면 UT가 기본 트랜스포머 모델을 앞서나갔다.
+
+--------------------------------------------------------
+
+When the correct labels are known for all or some of the transfer set, this method can be
+significantly improved by also training the distilled model to produce the correct labels.
+
+올바른 레이블이 트랜스퍼 셋에 어느 정도 주어질 경우, 올바른 레이블을 학습에 사용하면 이 기법의 정확도가 크게 향상됐다.
+
+--------------------------------------------------------
+
+Our suspicion is that the prevalence of single task training on single domain datasets
+is a major contributor to the lack of generalization observed in current systems... (중략)
+... Multitask learning (Caruana, 1997) is a promising framework for improving general
+performance
+
+현재의 시스템 상에서 발견되는 일반화의 부족은 단일 테스크 학습을 위한 단일 도메인 데이터셋 때문일 것이라고 추측했다 ... (중략) ... 멀티테스크 학습을 통해서 일반화 성능을 향상시켰다.
+
+--------------------------------------------------------
+
+We demonstrate language models can perform down-stream tasks in a zero-shot setting –
+without any parameter or architecture modification.
+
+언어 모델이 제로샷 세팅에서 추가적인 파라미터나 구조의 변경 없이 특정 언어 모델 테스크를 수행할 수 있다는 것을 보였다.
+--------------------------------------------------------
+
+attempts to do this via what we call “In-context Learning”, using the text input of a pretrained
+language model as a form of task specification: the model is conditioned on a natural
+language instruction and/or a
+few demonstrations of the task and is then expected to complete further instances of the
+task simply by predicting what comes next.
+
+"인컨텍스트 러닝"이라고 불리는 방법에서는 사전 학습된 모델의 텍스트 입력 값을 테스크를 특정 짓는 형태로서 사용된다. 즉 언어 모델이 조건적으로 분기되어 다음 단어가 무엇인지를 예측하는 원리를 통해 전체 테스크를 수행하도록 기대되어진다.
+
+--------------------------------------------------------
