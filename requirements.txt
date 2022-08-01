@@ -1,7 +1,9 @@
-transformers==4.1.0
+transformers==4.5.0
+numpy
 jupyter
 sklearn
 matplotlib
-torch
 nltk
 sentencepiece
+tqdm
+pandas
