@@ -26,7 +26,7 @@ $ pip install -r requirements.txt
 $ python -m ipykernel install --user --name env_hello_two --display-name env_hello_two
 ```
 
-4. 모델 파일
+모델 파일
 ------------------------
 이 책에서 사용하는 모델 파일 중에서 크기가 크지 않은 파일은 git 레포지토리를 통해 직접 다운로드 받을 수 있다.
 
