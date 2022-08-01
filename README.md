@@ -14,10 +14,19 @@ $ source env_hello/bin/activate
 
 2. pip을 사용해서 파이선 패키지를 설치합니다.
 ```
+# cpu 환경에서 사용할 경우, chapter4의 BERT 파인튜닝 모델의 학습을 위한 .ipynb 파일 실행이 어려움
 $ pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+
+# cuda 버전이 10.2일 경우
 $ pip install torch torchvision torchaudio
+
+# cuda 버전이 11.3일 경우
 $ pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+# cuda 버전이 11.6일 경우
 $ pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
+
+# torch 이외의 패키지 설치
 $ pip install -r requirements.txt
 ```
 
