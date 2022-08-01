@@ -39,13 +39,44 @@ $ python -m ipykernel install --user --name env_hello_two --display-name env_hel
 ------------------------
 이 책에서 사용하는 모델 파일 중에서 크기가 크지 않은 파일은 git 레포지토리를 통해 직접 다운로드 받을 수 있습니다. 큰 모델 파일의 경우에는 아래와 같이 쪼개진 tar.gz 파일을 다시 합쳐서 압축을 푸는 방식으로 얻을 수 있습니다.
 ```
+# research/chapter4/cola_classification
 $ cd research/chapter4/cola_classification/models/
 $ cat models.tar.gz.parta* > models.tar.gz
 $ tar xvfz models.tar.gz
 $ ls -al *.bin
 -rw-rw-r-- 1 jkfirst jkfirst 438019245  8월  2 02:47 cola_model.bin
 -rw-rw-r-- 1 jkfirst jkfirst 438019245  8월  2 02:56 cola_model_no_pretrained.bin
+
+# research/chapter4/squad
+$ cd research/chapter4/squad/models
+$ cat models.tar.gz.parta* > models.tar.gz
+$ tar xvfz models.tar.gz
+$ ls -al *.bin
 ```
 
 참고 문헌
 ------------------------
+1. chapter1
+```
+```
+
+2. chapter2
+```
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017). Attention Is All You Need. CoRR, abs/1706.03762. http://arxiv.org/abs/1706.03762
+```
+
+3. chapter3
+```
+```
+
+4. chapter4
+```
+```
+
+5. chapter5
+```
+```
+
+6. 부록
+```
+```
