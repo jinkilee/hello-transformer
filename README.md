@@ -6,7 +6,7 @@
 
 파이선 패키지 설치
 ------------------------
-1. 가상환경을 설치합니다.
+1. 가상환경을 설치합니다. (파이선 버전은 3.6 이상을 권고합니다)
 ```
 $ virtualenv -p /usr/bin/python3.8 env_hello
 $ source env_hello/bin/activate
