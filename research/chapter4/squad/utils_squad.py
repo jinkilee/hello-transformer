@@ -21,8 +21,6 @@ reference: https://github.com/nlpyang/pytorch-transformers/blob/master/examples/
 # limitations under the License.
 """ Load SQuAD dataset. """
 
-from __future__ import absolute_import, division, print_function
-
 import json
 import logging
 import math
@@ -30,9 +28,7 @@ import collections
 from tqdm import tqdm
 from io import open
 
-#from transformers.tokenization_bert import BasicTokenizer, whitespace_tokenize
 from transformers.models.bert.tokenization_bert import whitespace_tokenize, BasicTokenizer
-# Required by XLNet evaluation method to compute optimal threshold (see write_predictions_extended() method)
 
 logger = logging.getLogger(__name__)
 
