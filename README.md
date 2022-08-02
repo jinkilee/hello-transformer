@@ -56,25 +56,25 @@ $ ls -al *.bin
 
 참고 문헌
 ------------------------
+# https://asouqi.github.io/bibtex-converter/
 1. chapter1
-```
-```
+- Jurafsky, D., & Martin, J. H. (2009). Speech and language processing (2. ed., [Pearson International Edition], p. 1024 S.). Prentice Hall, Pearson Education International. http://aleph.bib.uni-mannheim.de/F/?func=find-b&request=285413791&find_code=020&adjacent=N&local_base=MAN01PUBLIC&x=0&y=0
 
 2. chapter2
 - Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017). Attention Is All You Need. CoRR, abs/1706.03762. http://arxiv.org/abs/1706.03762
 
 3. chapter3
-```
-```
+- Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2018). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. CoRR, abs/1810.04805. http://arxiv.org/abs/1810.04805
 
 4. chapter4
-```
-```
+- Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2018). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. CoRR, abs/1810.04805. http://arxiv.org/abs/1810.04805
+- Lan, Z., Chen, M., Goodman, S., Gimpel, K., Sharma, P., & Soricut, R. (2019). ALBERT: A Lite BERT for Self-supervised Learning of Language Representations. CoRR, abs/1909.11942. http://arxiv.org/abs/1909.11942
+
 
 5. chapter5
-```
-```
 
 6. 부록
-```
-```
+
+
+
+
