@@ -32,7 +32,7 @@ $ pip install -r requirements.txt
 
 3. 주피터 노트북 커널을 추가합니다.
 ```
-$ python -m ipykernel install --user --name env_hello_two --display-name env_hello_two
+$ python -m ipykernel install --user --name env_hello --display-name env_hello
 ```
 
 모델 파일
@@ -62,9 +62,6 @@ $ ls -al *.bin
 
 2. chapter2
 - Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017). Attention Is All You Need. CoRR, abs/1706.03762. http://arxiv.org/abs/1706.03762
-```
-Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017). Attention Is All You Need. CoRR, abs/1706.03762. http://arxiv.org/abs/1706.03762
-```
 
 3. chapter3
 ```
