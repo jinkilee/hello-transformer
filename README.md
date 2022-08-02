@@ -56,7 +56,7 @@ $ ls -al *.bin
 
 참고 문헌
 ------------------------
-[//]: # https://asouqi.github.io/bibtex-converter/
+[//]: # (https://asouqi.github.io/bibtex-converter/)
 1. chapter1
 - Jurafsky, D., & Martin, J. H. (2009). Speech and language processing (2. ed., [Pearson International Edition], p. 1024 S.). Prentice Hall, Pearson Education International. http://aleph.bib.uni-mannheim.de/F/?func=find-b&request=285413791&find_code=020&adjacent=N&local_base=MAN01PUBLIC&x=0&y=0
 
