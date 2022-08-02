@@ -52,6 +52,7 @@ $ cd research/chapter4/squad/models
 $ cat models.tar.gz.parta* > models.tar.gz
 $ tar xvfz models.tar.gz
 $ ls -al *.bin
+-rw-rw-r-- 1 jkfirst jkfirst 435656113  8월  2 13:10 squad_model.bin
 ```
 
 참고 문헌
