@@ -62,6 +62,12 @@ $ ls -al *.bin
 #### 1. chapter1
 - Jurafsky, D., & Martin, J. H. (2009). Speech and language processing (2. ed., [Pearson International Edition], p. 1024 S.). Prentice Hall, Pearson Education International. http://aleph.bib.uni-mannheim.de/F/?func=find-b&request=285413791&find_code=020&adjacent=N&local_base=MAN01PUBLIC&x=0&y=0
 
+- Mikolov, T., Chen, K., Corrado, G., & Dean, J. (2013). Efficient Estimation of Word Representations in Vector Space. CoRR, abs/1301.3781. http://dblp.uni-trier.de/db/journals/corr/corr1301.html#abs-1301-3781
+
+- Sak, H., Senior, A. W., & Beaufays, F. (2014). Long Short-Term Memory Based Recurrent Neural Network Architectures for Large Vocabulary Speech Recognition. CoRR, abs/1402.1128. http://arxiv.org/abs/1402.1128
+
+- Chung, J., Çaglar Gülçehre, Cho, K., & Bengio, Y. (2014). Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling. CoRR, abs/1412.3555. http://arxiv.org/abs/1412.3555
+
 #### 2. chapter2
 - Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polosukhin, I. (2017). Attention Is All You Need. CoRR, abs/1706.03762. http://arxiv.org/abs/1706.03762
 
